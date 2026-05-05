@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 2 — Variables, Data Types & Operators</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f4ef;
+  --ink:#1a1814;
+  --muted:#8a8680;
+  --border:#ddd9d0;
+  --surface:#eeeae3;
+  --surface2:#e4e0d8;
+  --gold:#c8922a;
+  --gold-light:#f5e8cc;
+  --blue:#2a5fc8;
+  --blue-light:#dde6f5;
+  --green:#2a7a4b;
+  --green-light:#d6eedd;
+  --red:#c82a2a;
+  --red-light:#f5dddd;
+  --purple:#7a2ac8;
+  --purple-light:#ead6f5;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Lora',serif;
+  font-size:18px;
+  line-height:1.85;
+}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  position:relative;
+  overflow:hidden;
+  border-bottom:2px solid var(--ink);
+}
+
+.hero-left{
+  padding:5rem 4rem 5rem 5rem;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  border-right:2px solid var(--ink);
+  position:relative;
+  z-index:2;
+}
+
+.hero-right{
+  background:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:3rem;
+  position:relative;
+  overflow:hidden;
+}
+
+.series-tag{
+  font-family:'Syne',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  opacity:0;
+  animation:up 0.5s ease forwards 0.1s;
+}
+
+.series-tag::before{
+  content:'';
+  width:30px;height:1px;
+  background:var(--gold);
+}
+
+.hero-num{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(7rem,14vw,13rem);
+  font-weight:800;
+  line-height:0.85;
+  color:var(--surface2);
+  letter-spacing:-0.04em;
+  opacity:0;
+  animation:up 0.6s ease forwards 0.2s;
+  user-select:none;
+}
+
+.hero-titles{
+  opacity:0;
+  animation:up 0.6s ease forwards 0.35s;
+}
+
+.hero-titles h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2rem,4.5vw,3.6rem);
+  font-weight:800;
+  line-height:1.05;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+  margin-bottom:0.5rem;
+}
+
+.hero-titles h1 span{color:var(--gold)}
+
+.hero-sub{
+  font-size:15px;
+  color:var(--muted);
+  font-family:'Syne',sans-serif;
+  font-weight:400;
+  margin-top:0.75rem;
+  line-height:1.5;
+}
+
+.hero-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  opacity:0;
+  animation:up 0.6s ease forwards 0.5s;
+}
+
+.pill{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  font-weight:500;
+  padding:5px 12px;
+  border:1.5px solid var(--border);
+  border-radius:2px;
+  color:var(--muted);
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+}
+
+.pill.active{border-color:var(--gold);color:var(--gold)}
+
+/* terminal in hero right */
+.terminal{
+  width:100%;
+  max-width:420px;
+  background:#111;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  opacity:0;
+  animation:up 0.7s ease forwards 0.5s;
+}
+
+.term-bar{
+  background:#222;
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.term-dot{width:11px;height:11px;border-radius:50%}
+.term-dot.r{background:#ff5f57}
+.term-dot.y{background:#febc2e}
+.term-dot.g{background:#28c840}
+
+.term-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  color:#444;
+  margin-left:auto;
+  letter-spacing:0.1em;
+}
+
+.term-body{
+  padding:1.5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  line-height:1.9;
+}
+
+.kw{color:#c4a8f7}
+.fn{color:#7eb8f7}
+.st{color:#a8e6a3}
+.nm{color:#f0c96b}
+.cm{color:#3d3d4a;font-style:italic}
+.op{color:#f07070}
+.wh{color:#e8e6e0}
+.out{color:#6ec68c}
+.prompt{color:#444}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:5rem 2.5rem 8rem}
+
+/* SECTION LABEL */
+.sec-label{
+  font-family:'Syne',sans-serif;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:1.25rem;
+  margin-top:4.5rem;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-label:first-child{margin-top:0}
+
+h2{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(1.7rem,3.5vw,2.5rem);
+  font-weight:800;
+  line-height:1.1;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+  margin-bottom:1.25rem;
+}
+
+h3{
+  font-family:'Syne',sans-serif;
+  font-size:1.2rem;
+  font-weight:700;
+  color:var(--ink);
+  margin:2.5rem 0 0.75rem;
+}
+
+p{margin-bottom:1.25rem;color:#3a3630}
+
+strong{color:var(--ink);font-weight:600}
+
+em{font-style:italic;color:var(--gold)}
+
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:2px 7px;
+  border-radius:3px;
+  color:var(--blue);
+}
+
+hr{border:none;border-top:2px solid var(--border);margin:4rem 0}
+
+/* INTRO QUOTE */
+.opener{
+  font-size:clamp(1.1rem,2.5vw,1.55rem);
+  font-family:'Lora',serif;
+  font-style:italic;
+  color:var(--ink);
+  border-left:4px solid var(--gold);
+  padding-left:1.75rem;
+  margin:2rem 0 3rem;
+  line-height:1.6;
+}
+
+/* TYPE CARDS */
+.type-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:0;
+  border:2px solid var(--ink);
+  margin:2rem 0;
+}
+
+.type-card{
+  padding:2rem;
+  border-right:2px solid var(--ink);
+  border-bottom:2px solid var(--ink);
+  position:relative;
+  transition:background 0.2s;
+}
+
+.type-card:hover{background:var(--surface)}
+.type-card:nth-child(2),.type-card:nth-child(4){border-right:none}
+.type-card:nth-child(3),.type-card:nth-child(4){border-bottom:none}
+
+.type-badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  font-weight:600;
+  padding:3px 10px;
+  border-radius:2px;
+  display:inline-block;
+  margin-bottom:0.75rem;
+  letter-spacing:0.05em;
+}
+
+.int-badge{background:var(--blue-light);color:var(--blue)}
+.float-badge{background:var(--gold-light);color:var(--gold)}
+.str-badge{background:var(--green-light);color:var(--green)}
+.bool-badge{background:var(--purple-light);color:var(--purple)}
+
+.type-card h4{
+  font-family:'Syne',sans-serif;
+  font-size:1.3rem;
+  font-weight:800;
+  margin-bottom:0.5rem;
+  letter-spacing:-0.01em;
+}
+
+.type-card p{
+  font-size:14px;
+  color:var(--muted);
+  margin:0 0 0.75rem;
+  line-height:1.55;
+}
+
+.type-example{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  background:var(--surface2);
+  padding:8px 12px;
+  border-radius:3px;
+  color:var(--ink);
+  line-height:1.7;
+}
+
+/* CODE BLOCK */
+.code-block{
+  background:var(--ink);
+  border-radius:6px;
+  overflow:hidden;
+  margin:2rem 0;
+}
+
+.code-hdr{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+  background:#111;
+  border-bottom:1px solid #2a2a2a;
+}
+
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:10px;height:10px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+
+.code-lang{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  color:#444;
+  letter-spacing:0.1em;
+  margin-left:6px;
+}
+
+.copy-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  color:#444;
+  background:none;
+  border:1px solid #333;
+  border-radius:3px;
+  padding:3px 10px;
+  cursor:pointer;
+  letter-spacing:0.05em;
+  transition:all 0.2s;
+}
+.copy-btn:hover{color:var(--gold);border-color:var(--gold)}
+
+pre{
+  padding:1.5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13.5px;
+  line-height:1.85;
+  overflow-x:auto;
+  color:#e8e6e0;
+}
+
+.output-box{
+  background:#0d0d0f;
+  border:2px solid var(--ink);
+  border-top:none;
+  padding:1rem 1.5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  color:#6ec68c;
+  margin-top:-2rem;
+  margin-bottom:2rem;
+  border-radius:0 0 6px 6px;
+}
+
+.out-lbl{
+  font-size:9px;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:#333;
+  margin-bottom:6px;
+}
+
+/* OPERATOR TABLE */
+.op-table{
+  width:100%;
+  border-collapse:collapse;
+  margin:2rem 0;
+  font-size:15px;
+}
+
+.op-table th{
+  font-family:'Syne',sans-serif;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding:10px 16px;
+  border-bottom:2px solid var(--ink);
+  text-align:left;
+  background:var(--surface);
+}
+
+.op-table td{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+
+.op-table tr:last-child td{border-bottom:none}
+.op-table tr:hover td{background:var(--surface)}
+
+.op-sym{
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px;
+  font-weight:600;
+  color:var(--red);
+  white-space:nowrap;
+}
+
+.op-desc{color:var(--muted);font-size:14px}
+
+.op-eg{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;
+  color:var(--blue);
+  white-space:nowrap;
+}
+
+/* CALLOUT */
+.callout{
+  padding:1.5rem 1.75rem;
+  margin:2rem 0;
+  border-left:4px solid var(--gold);
+  background:var(--gold-light);
+  border-radius:0 6px 6px 0;
+  font-size:15px;
+  line-height:1.65;
+  color:#4a3a10;
+}
+.callout.blue{border-color:var(--blue);background:var(--blue-light);color:#0f2a5a}
+.callout.green{border-color:var(--green);background:var(--green-light);color:#0a3a1f}
+.callout.red{border-color:var(--red);background:var(--red-light);color:#4a0f0f}
+
+.callout-title{
+  font-family:'Syne',sans-serif;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  margin-bottom:0.4rem;
+  color:inherit;
+  opacity:0.7;
+}
+
+/* VISUAL TYPE CONVERSION */
+.conversion-flow{
+  display:flex;
+  align-items:center;
+  gap:0;
+  margin:2rem 0;
+  border:2px solid var(--ink);
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.conv-box{
+  flex:1;
+  padding:1.5rem;
+  text-align:center;
+}
+
+.conv-box:not(:last-child){border-right:2px solid var(--ink)}
+.conv-arrow{
+  width:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--surface2);
+  align-self:stretch;
+  font-size:20px;
+  color:var(--muted);
+  flex-shrink:0;
+}
+
+.conv-type{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  margin-bottom:0.4rem;
+}
+
+.conv-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.4rem;
+  font-weight:600;
+  line-height:1.2;
+}
+
+.conv-fn{
+  font-size:11px;
+  color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+  margin-top:0.4rem;
+}
+
+/* PROFILE CARD PROJECT */
+.project-box{
+  border:2px solid var(--ink);
+  border-radius:6px;
+  overflow:hidden;
+  margin:2.5rem 0;
+}
+
+.project-hdr{
+  background:var(--ink);
+  color:var(--bg);
+  padding:1rem 1.5rem;
+  font-family:'Syne',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.project-hdr span{
+  font-weight:400;
+  opacity:0.5;
+  font-size:10px;
+}
+
+/* CHALLENGE */
+.challenge{
+  background:var(--ink);
+  color:var(--bg);
+  border-radius:6px;
+  padding:2.5rem;
+  margin:3rem 0;
+}
+
+.challenge-tag{
+  font-family:'Syne',sans-serif;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:0.75rem;
+}
+
+.challenge h3{
+  font-family:'Syne',sans-serif;
+  font-size:1.4rem;
+  font-weight:800;
+  color:var(--bg);
+  margin:0 0 1rem;
+}
+
+.challenge-list{list-style:none;margin-top:1rem}
+
+.challenge-list li{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  color:#b0aca8;
+  padding:8px 0;
+  border-bottom:1px solid #2a2a2a;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  line-height:1.5;
+}
+
+.challenge-list li:last-child{border-bottom:none}
+
+.challenge-list li::before{
+  content:'[ ]';
+  font-size:10px;
+  color:#3a3a3a;
+  flex-shrink:0;
+}
+
+/* FOOTER */
+.post-footer{
+  border-top:2px solid var(--border);
+  padding-top:3rem;
+  margin-top:4rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:2rem;
+  flex-wrap:wrap;
+}
+
+.footer-prev,.footer-next{
+  font-family:'Syne',sans-serif;
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+}
+
+.footer-prev strong,.footer-next strong{
+  display:block;
+  font-size:16px;
+  color:var(--ink);
+  text-transform:none;
+  letter-spacing:0;
+  margin-top:4px;
+  font-family:'Lora',serif;
+  font-weight:600;
+}
+
+/* ANIMATIONS */
+@keyframes up{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-left">
+    <div class="series-tag">Python for Data Science & AI — Blog 02 of 20</div>
+
+    <div>
+      <div class="hero-num">02</div>
+      <div class="hero-titles">
+        <h1>Variables,<br>Data <span>Types</span><br>& Operators</h1>
+        <p class="hero-sub">The building blocks of every Python program.<br>10 min read · Beginner · Hands-on</p>
+      </div>
+    </div>
+
+    <div class="hero-pills">
+      <span class="pill active">Theory</span>
+      <span class="pill active">Code</span>
+      <span class="pill">int · float · str · bool</span>
+      <span class="pill">f-strings</span>
+      <span class="pill">type()</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot r"></div>
+        <div class="term-dot y"></div>
+        <div class="term-dot g"></div>
+        <span class="term-label">variables.py</span>
+      </div>
+      <div class="term-body">
+        <div><span class="cm"># your first variables</span></div>
+        <div><span class="wh">name</span> <span class="op">=</span> <span class="st">"Arjun"</span></div>
+        <div><span class="wh">age</span>  <span class="op">=</span> <span class="nm">22</span></div>
+        <div><span class="wh">gpa</span>  <span class="op">=</span> <span class="nm">8.7</span></div>
+        <div><span class="wh">active</span> <span class="op">=</span> <span class="kw">True</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(name))</span></div>
+        <div><span class="out">&lt;class 'str'&gt;</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fn">print</span><span class="wh">(</span><span class="nm">2</span> <span class="op">**</span> <span class="nm">8</span><span class="wh">)</span></div>
+        <div><span class="out">256</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cm"># f-string magic</span></div>
+        <div><span class="fn">print</span><span class="wh">(</span><span class="st">f"Hi, </span><span class="op">{</span><span class="wh">name</span><span class="op">}</span><span class="st">!"</span><span class="wh">)</span></div>
+        <div><span class="out">Hi, Arjun!</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    In the last blog, we ran our first Python program. Now it's time to understand what's actually happening when you write code — and it all starts with variables.
+  </div>
+
+  <!-- WHAT IS A VARIABLE -->
+  <div class="sec-label">01 — Theory</div>
+  <h2>What is a Variable?</h2>
+
+  <p>Think of a variable as a <strong>labelled box</strong>. You give the box a name, put something inside it, and Python remembers it for you. Whenever you need that thing again, you just use the label.</p>
+
+  <p>In Python, creating a variable is as simple as writing a name, an equals sign, and a value:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Creating variables — name = value</span>
+<span class="wh">city</span>    <span class="op">=</span> <span class="st">"Mumbai"</span>
+<span class="wh">temp</span>    <span class="op">=</span> <span class="nm">34</span>
+<span class="wh">raining</span> <span class="op">=</span> <span class="kw">False</span>
+
+<span class="fn">print</span><span class="wh">(city, temp, raining)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Mumbai 34 False
+  </div>
+
+  <p>Notice Python didn't ask you to declare a "type" like Java or C. Python figures out the type <em>automatically</em> based on what you store. This is called <strong>dynamic typing</strong> — one of Python's best beginner-friendly features.</p>
+
+  <div class="callout blue">
+    <div class="callout-title">Naming rules for variables</div>
+    Variable names can contain letters, numbers, and underscores. They <strong>cannot start with a number</strong> and <strong>cannot have spaces</strong>. Use snake_case (words separated by underscores) — it's the Python convention. Examples: <code>student_name</code>, <code>total_score</code>, <code>is_active</code>.
+  </div>
+
+  <hr>
+
+  <!-- DATA TYPES -->
+  <div class="sec-label">02 — Theory</div>
+  <h2>The 4 Core Data Types</h2>
+
+  <p>Every value in Python belongs to a <strong>data type</strong>. As a beginner, there are four types you'll use constantly:</p>
+
+  <div class="type-grid">
+    <div class="type-card">
+      <div class="type-badge int-badge">int</div>
+      <h4>Integer</h4>
+      <p>Whole numbers — no decimal point. Can be positive, negative, or zero. Used for counting things.</p>
+      <div class="type-example">age = 22<br>score = -5<br>year = 2024</div>
+    </div>
+    <div class="type-card">
+      <div class="type-badge float-badge">float</div>
+      <h4>Float</h4>
+      <p>Numbers with a decimal point. Used for measurements, percentages, prices — anything with precision.</p>
+      <div class="type-example">gpa = 8.75<br>price = 299.99<br>pi = 3.14159</div>
+    </div>
+    <div class="type-card">
+      <div class="type-badge str-badge">str</div>
+      <h4>String</h4>
+      <p>Text — any characters wrapped in single or double quotes. Names, sentences, anything you'd read.</p>
+      <div class="type-example">name = "Arjun"<br>msg = 'Hello!'<br>city = "Delhi"</div>
+    </div>
+    <div class="type-card">
+      <div class="type-badge bool-badge">bool</div>
+      <h4>Boolean</h4>
+      <p>Only two possible values: <code>True</code> or <code>False</code>. The foundation of all logic in programming.</p>
+      <div class="type-example">is_student = True<br>has_paid = False<br>logged_in = True</div>
+    </div>
+  </div>
+
+  <h3>Checking types with type()</h3>
+
+  <p>You already saw <code>type()</code> in Blog 1. It tells you the data type of any value or variable. Super useful when debugging:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">name</span>       <span class="op">=</span> <span class="st">"Priya"</span>
+<span class="wh">marks</span>      <span class="op">=</span> <span class="nm">95</span>
+<span class="wh">percentage</span> <span class="op">=</span> <span class="nm">95.0</span>
+<span class="wh">passed</span>     <span class="op">=</span> <span class="kw">True</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(name))</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(marks))</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(percentage))</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(passed))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    &lt;class 'str'&gt;<br>
+    &lt;class 'int'&gt;<br>
+    &lt;class 'float'&gt;<br>
+    &lt;class 'bool'&gt;
+  </div>
+
+  <div class="callout">
+    <div class="callout-title">Key insight</div>
+    Notice that <code>95</code> is an <strong>int</strong> but <code>95.0</code> is a <strong>float</strong>. The decimal point makes all the difference. Python treats them differently even though they represent the same number mathematically. This will matter when you do division later.
+  </div>
+
+  <hr>
+
+  <!-- TYPE CONVERSION -->
+  <div class="sec-label">03 — Theory</div>
+  <h2>Type Conversion</h2>
+
+  <p>Sometimes you need to convert a value from one type to another. Python gives you built-in functions to do this — <code>int()</code>, <code>float()</code>, <code>str()</code>, and <code>bool()</code>.</p>
+
+  <div class="conversion-flow">
+    <div class="conv-box">
+      <div class="conv-type int-badge" style="display:inline-block;padding:2px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:10px;">str</div>
+      <div class="conv-val" style="color:#2a7a4b;margin:8px 0;">"42"</div>
+      <div class="conv-fn">text version</div>
+    </div>
+    <div class="conv-arrow">→</div>
+    <div class="conv-box" style="background:var(--blue-light)">
+      <div class="conv-type" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--blue);">int()</div>
+      <div class="conv-val" style="color:var(--blue);margin:8px 0;">42</div>
+      <div class="conv-fn">now a number</div>
+    </div>
+    <div class="conv-arrow">→</div>
+    <div class="conv-box" style="background:var(--gold-light)">
+      <div class="conv-type" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--gold);">float()</div>
+      <div class="conv-val" style="color:var(--gold);margin:8px 0;">42.0</div>
+      <div class="conv-fn">decimal added</div>
+    </div>
+    <div class="conv-arrow">→</div>
+    <div class="conv-box" style="background:var(--green-light)">
+      <div class="conv-type" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--green);">str()</div>
+      <div class="conv-val" style="color:var(--green);margin:8px 0;">"42.0"</div>
+      <div class="conv-fn">back to text</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Converting between types</span>
+<span class="wh">user_input</span> <span class="op">=</span> <span class="st">"25"</span>          <span class="cm"># input() always returns a string</span>
+<span class="wh">age</span> <span class="op">=</span> <span class="fn">int</span><span class="wh">(user_input)</span>      <span class="cm"># convert to int to do math</span>
+<span class="fn">print</span><span class="wh">(age </span><span class="op">+</span> <span class="nm">5</span><span class="wh">)</span>              <span class="cm"># works! → 30</span>
+
+<span class="cm"># str → float</span>
+<span class="wh">price_str</span> <span class="op">=</span> <span class="st">"199.99"</span>
+<span class="wh">price</span> <span class="op">=</span> <span class="fn">float</span><span class="wh">(price_str)</span>
+<span class="fn">print</span><span class="wh">(price </span><span class="op">*</span> <span class="nm">1.18</span><span class="wh">)</span>         <span class="cm"># price with 18% GST → 235.9882</span>
+
+<span class="cm"># int → str (useful for printing)</span>
+<span class="wh">score</span> <span class="op">=</span> <span class="nm">87</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Your score: "</span> <span class="op">+</span> <span class="fn">str</span><span class="wh">(score))</span>   <span class="cm"># → Your score: 87</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    30<br>235.9882<br>Your score: 87
+  </div>
+
+  <div class="callout red">
+    <div class="callout-title">Common mistake to avoid</div>
+    You cannot add a string and a number directly. <code>"Age: " + 25</code> will throw a <strong>TypeError</strong>. You must convert first: <code>"Age: " + str(25)</code>. Or better — just use an f-string: <code>f"Age: {25}"</code>. F-strings handle conversion automatically.
+  </div>
+
+  <hr>
+
+  <!-- OPERATORS -->
+  <div class="sec-label">04 — Theory</div>
+  <h2>Operators</h2>
+
+  <p>Operators are symbols that perform operations on values. Python has several kinds — let's go through the ones you'll use every day.</p>
+
+  <h3>Arithmetic Operators</h3>
+
+  <table class="op-table">
+    <thead>
+      <tr>
+        <th>Operator</th>
+        <th>Name</th>
+        <th>Example</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="op-sym">+</span></td>
+        <td class="op-desc">Addition</td>
+        <td><span class="op-eg">10 + 3</span></td>
+        <td><span class="op-eg">13</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">-</span></td>
+        <td class="op-desc">Subtraction</td>
+        <td><span class="op-eg">10 - 3</span></td>
+        <td><span class="op-eg">7</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">*</span></td>
+        <td class="op-desc">Multiplication</td>
+        <td><span class="op-eg">10 * 3</span></td>
+        <td><span class="op-eg">30</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">/</span></td>
+        <td class="op-desc">Division (always float)</td>
+        <td><span class="op-eg">10 / 3</span></td>
+        <td><span class="op-eg">3.333...</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">//</span></td>
+        <td class="op-desc">Floor division (no decimal)</td>
+        <td><span class="op-eg">10 // 3</span></td>
+        <td><span class="op-eg">3</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">%</span></td>
+        <td class="op-desc">Modulo (remainder)</td>
+        <td><span class="op-eg">10 % 3</span></td>
+        <td><span class="op-eg">1</span></td>
+      </tr>
+      <tr>
+        <td><span class="op-sym">**</span></td>
+        <td class="op-desc">Exponent (power)</td>
+        <td><span class="op-eg">2 ** 10</span></td>
+        <td><span class="op-eg">1024</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <div class="callout-title">The modulo operator — more useful than it looks</div>
+    <code>%</code> gives you the <strong>remainder</strong> after division. This is incredibly useful in data science. For example: <code>number % 2 == 0</code> tells you if a number is even. <code>index % n</code> is used for cycling through lists. You'll see it everywhere.
+  </div>
+
+  <h3>Comparison Operators</h3>
+
+  <p>These always return <code>True</code> or <code>False</code>. They're the engine behind every <code>if</code> statement you'll ever write:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">x</span> <span class="op">=</span> <span class="nm">10</span>
+<span class="wh">y</span> <span class="op">=</span> <span class="nm">3</span>
+
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">==</span> <span class="wh">y)</span>    <span class="cm"># Equal to        → False</span>
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">!=</span> <span class="wh">y)</span>    <span class="cm"># Not equal        → True</span>
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">&gt;</span>  <span class="wh">y)</span>    <span class="cm"># Greater than     → True</span>
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">&lt;</span>  <span class="wh">y)</span>    <span class="cm"># Less than        → False</span>
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">&gt;=</span> <span class="wh">y)</span>    <span class="cm"># Greater or equal → True</span>
+<span class="fn">print</span><span class="wh">(x</span> <span class="op">&lt;=</span> <span class="wh">y)</span>    <span class="cm"># Less or equal    → False</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    False<br>True<br>True<br>False<br>True<br>False
+  </div>
+
+  <h3>Assignment Operators (shortcuts)</h3>
+
+  <p>Instead of writing <code>x = x + 5</code>, Python lets you write <code>x += 5</code>. These shorthand operators update a variable in place:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">score</span> <span class="op">=</span> <span class="nm">100</span>
+
+<span class="wh">score</span> <span class="op">+=</span> <span class="nm">10</span>     <span class="cm"># score = score + 10  → 110</span>
+<span class="wh">score</span> <span class="op">-=</span> <span class="nm">5</span>      <span class="cm"># score = score - 5   → 105</span>
+<span class="wh">score</span> <span class="op">*=</span> <span class="nm">2</span>      <span class="cm"># score = score * 2   → 210</span>
+<span class="wh">score</span> <span class="op">//=</span> <span class="nm">3</span>     <span class="cm"># score = score // 3  → 70</span>
+
+<span class="fn">print</span><span class="wh">(score)</span>     <span class="cm"># → 70</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    70
+  </div>
+
+  <hr>
+
+  <!-- F-STRINGS -->
+  <div class="sec-label">05 — Practical</div>
+  <h2>F-Strings: Python's Superpower</h2>
+
+  <p>We touched on f-strings in Blog 1. Now let's go deeper. An <strong>f-string</strong> (formatted string literal) lets you embed any Python expression — variables, math, function calls — directly inside a string. Just prefix with <code>f</code> and use <code>{curly braces}</code>.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">name</span>   <span class="op">=</span> <span class="st">"Rohan"</span>
+<span class="wh">marks</span>  <span class="op">=</span> <span class="nm">450</span>
+<span class="wh">total</span>  <span class="op">=</span> <span class="nm">500</span>
+
+<span class="cm"># Basic variable embedding</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Student: </span><span class="op">{</span><span class="wh">name</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Math inside f-strings</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Percentage: </span><span class="op">{</span><span class="wh">marks</span><span class="op">/</span><span class="wh">total</span><span class="op">*</span><span class="nm">100</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+
+<span class="cm"># Rounding inside f-strings</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Percentage: </span><span class="op">{</span><span class="wh">marks</span><span class="op">/</span><span class="wh">total</span><span class="op">*</span><span class="nm">100</span><span class="op">:.2f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+
+<span class="cm"># Conditional expression inside f-string</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Result: </span><span class="op">{</span><span class="st">'Pass'</span> <span class="kw">if</span> <span class="wh">marks</span> <span class="op">&gt;=</span> <span class="nm">250</span> <span class="kw">else</span> <span class="st">'Fail'</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Student: Rohan<br>
+    Percentage: 90.0%<br>
+    Percentage: 90.00%<br>
+    Result: Pass
+  </div>
+
+  <div class="callout green">
+    <div class="callout-title">The :.2f format specifier</div>
+    Inside an f-string, <code>:.2f</code> after a variable means "show this float with exactly 2 decimal places." You'll use this constantly in data science — for displaying prices, percentages, model accuracy scores, etc. Try <code>:.4f</code> for 4 decimal places.
+  </div>
+
+  <hr>
+
+  <!-- PUTTING IT TOGETHER -->
+  <div class="sec-label">06 — Practical project</div>
+  <h2>Project: Student Profile Card</h2>
+
+  <p>Let's combine everything — variables, types, operators, and f-strings — into one practical program. This is the kind of thing you'd build in your first week at a data science internship.</p>
+
+  <div class="project-box">
+    <div class="project-hdr">student_profile.py <span>mini project · beginner</span></div>
+    <div class="code-block" style="margin:0;border-radius:0">
+      <div class="code-hdr" style="background:#0d0d0f">
+        <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+        <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+      </div>
+      <pre><span class="cm"># ── Student Profile Card ──────────────────────────────</span>
+
+<span class="cm"># Basic info — str</span>
+<span class="wh">name</span>       <span class="op">=</span> <span class="st">"Ananya Sharma"</span>
+<span class="wh">college</span>    <span class="op">=</span> <span class="st">"IIT Delhi"</span>
+<span class="wh">department</span> <span class="op">=</span> <span class="st">"Computer Science"</span>
+
+<span class="cm"># Numbers — int and float</span>
+<span class="wh">age</span>          <span class="op">=</span> <span class="nm">20</span>
+<span class="wh">year</span>         <span class="op">=</span> <span class="nm">2</span>
+<span class="wh">marks</span>        <span class="op">=</span> <span class="nm">432</span>
+<span class="wh">total_marks</span>  <span class="op">=</span> <span class="nm">500</span>
+<span class="wh">cgpa</span>         <span class="op">=</span> <span class="nm">8.9</span>
+
+<span class="cm"># Booleans</span>
+<span class="wh">scholarship</span>  <span class="op">=</span> <span class="kw">True</span>
+<span class="wh">hostel</span>       <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cm"># Calculations</span>
+<span class="wh">percentage</span>   <span class="op">=</span> <span class="wh">(marks</span> <span class="op">/</span> <span class="wh">total_marks)</span> <span class="op">*</span> <span class="nm">100</span>
+<span class="wh">grad_year</span>    <span class="op">=</span> <span class="nm">2024</span> <span class="op">+</span> <span class="wh">(</span><span class="nm">4</span> <span class="op">-</span> <span class="wh">year)</span>
+
+<span class="cm"># Print the profile card</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"="</span> <span class="op">*</span> <span class="nm">40</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  STUDENT PROFILE CARD"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"="</span> <span class="op">*</span> <span class="nm">40</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Name       : </span><span class="op">{</span><span class="wh">name</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Age        : </span><span class="op">{</span><span class="wh">age</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  College    : </span><span class="op">{</span><span class="wh">college</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Dept       : </span><span class="op">{</span><span class="wh">department</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Year       : </span><span class="op">{</span><span class="wh">year</span><span class="op">}</span><span class="st"> of 4"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Marks      : </span><span class="op">{</span><span class="wh">marks</span><span class="op">}</span><span class="st"> / </span><span class="op">{</span><span class="wh">total_marks</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Percentage : </span><span class="op">{</span><span class="wh">percentage</span><span class="op">:.2f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  CGPA       : </span><span class="op">{</span><span class="wh">cgpa</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Grad Year  : </span><span class="op">{</span><span class="wh">grad_year</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Scholarship: </span><span class="op">{</span><span class="st">'Yes'</span> <span class="kw">if</span> <span class="wh">scholarship</span> <span class="kw">else</span> <span class="st">'No'</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"  Hostel     : </span><span class="op">{</span><span class="st">'Yes'</span> <span class="kw">if</span> <span class="wh">hostel</span> <span class="kw">else</span> <span class="st">'No'</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"="</span> <span class="op">*</span> <span class="nm">40</span><span class="wh">)</span></pre>
+    </div>
+  </div>
+
+  <div class="output-box" style="margin-top:0;border-radius:0 0 6px 6px">
+    <div class="out-lbl">Output</div>
+    ========================================<br>
+    &nbsp;&nbsp;STUDENT PROFILE CARD<br>
+    ========================================<br>
+    &nbsp;&nbsp;Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Ananya Sharma<br>
+    &nbsp;&nbsp;Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 20<br>
+    &nbsp;&nbsp;College&nbsp;&nbsp;&nbsp;&nbsp;: IIT Delhi<br>
+    &nbsp;&nbsp;Dept&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Computer Science<br>
+    &nbsp;&nbsp;Year&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 2 of 4<br>
+    &nbsp;&nbsp;Marks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 432 / 500<br>
+    &nbsp;&nbsp;Percentage : 86.40%<br>
+    &nbsp;&nbsp;CGPA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 8.9<br>
+    &nbsp;&nbsp;Grad Year&nbsp;&nbsp;: 2026<br>
+    &nbsp;&nbsp;Scholarship: Yes<br>
+    &nbsp;&nbsp;Hostel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: No<br>
+    ========================================
+  </div>
+
+  <p>Look at how much you just did in one small program — you used <strong>all 4 data types</strong>, <strong>arithmetic operators</strong>, <strong>f-strings with formatting</strong>, and even a conditional expression inside a string. That's real Python.</p>
+
+  <hr>
+
+  <!-- RECAP -->
+  <div class="sec-label">07 — Recap</div>
+  <h2>What You Learned Today</h2>
+
+  <table class="op-table">
+    <thead>
+      <tr><th>Concept</th><th>What it is</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Variable</strong></td>
+        <td class="op-desc">A named container that stores a value</td>
+        <td><span class="op-eg">name = "Arjun"</span></td>
+      </tr>
+      <tr>
+        <td><strong>int</strong></td>
+        <td class="op-desc">Whole numbers, positive or negative</td>
+        <td><span class="op-eg">age = 22</span></td>
+      </tr>
+      <tr>
+        <td><strong>float</strong></td>
+        <td class="op-desc">Numbers with a decimal point</td>
+        <td><span class="op-eg">gpa = 8.75</span></td>
+      </tr>
+      <tr>
+        <td><strong>str</strong></td>
+        <td class="op-desc">Text in single or double quotes</td>
+        <td><span class="op-eg">city = "Delhi"</span></td>
+      </tr>
+      <tr>
+        <td><strong>bool</strong></td>
+        <td class="op-desc">True or False — the basis of logic</td>
+        <td><span class="op-eg">active = True</span></td>
+      </tr>
+      <tr>
+        <td><strong>type()</strong></td>
+        <td class="op-desc">Check the type of any value</td>
+        <td><span class="op-eg">type(3.14) → float</span></td>
+      </tr>
+      <tr>
+        <td><strong>int(), float(), str()</strong></td>
+        <td class="op-desc">Convert between types</td>
+        <td><span class="op-eg">int("42") → 42</span></td>
+      </tr>
+      <tr>
+        <td><strong>f-string</strong></td>
+        <td class="op-desc">Embed values and expressions in text</td>
+        <td><span class="op-eg">f"Hi, {name}!"</span></td>
+      </tr>
+      <tr>
+        <td><strong>**</strong></td>
+        <td class="op-desc">Exponent (power)</td>
+        <td><span class="op-eg">2 ** 8 → 256</span></td>
+      </tr>
+      <tr>
+        <td><strong>%</strong></td>
+        <td class="op-desc">Modulo — gives the remainder</td>
+        <td><span class="op-eg">10 % 3 → 1</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="challenge-tag">Your challenge for today</div>
+    <h3>Build your own profile card</h3>
+    <ul class="challenge-list">
+      <li>Create variables for your name, city, age, and what you're studying</li>
+      <li>Create a float variable for your CGPA or a score you care about</li>
+      <li>Calculate your percentage from marks and total marks</li>
+      <li>Use type() on every variable and print all the types</li>
+      <li>Convert your age from int to float, and back — print both</li>
+      <li>Print a full profile card using f-strings with :.2f formatting</li>
+      <li>Bonus: add a boolean is_employed and show "Yes"/"No" with a conditional f-string</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="footer-prev">
+      ← Previous
+      <strong>Blog 1 — Getting Started with Python</strong>
+    </div>
+    <div class="footer-next" style="text-align:right">
+      Next →
+      <strong>Blog 3 — Control Flow: if, for, while</strong>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
