@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 3 — Control Flow: if, for, while | Python for Data Science & AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=IBM+Plex+Mono:wght@400;600&family=Cabinet+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #080f1e;
+    --navy2:  #0e1a2e;
+    --navy3:  #162035;
+    --teal:   #00d4aa;
+    --teal2:  #00a882;
+    --amber:  #f5a623;
+    --coral:  #ff6b6b;
+    --text:   #e8eef5;
+    --muted:  #7a8fa6;
+    --border: #1e2d42;
+    --code-bg:#060d18;
+    --ff-head: 'Fraunces', serif;
+    --ff-body: 'Cabinet Grotesk', sans-serif;
+    --ff-code: 'IBM Plex Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--ff-body);
+    font-size: 17px;
+    line-height: 1.85;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 0 72px;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 30%, rgba(0,212,170,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, rgba(245,166,35,0.07) 0%, transparent 50%),
+      linear-gradient(180deg, #060d18 0%, #080f1e 100%);
+  }
+  /* Animated grid lines */
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridShift 20s linear infinite;
+  }
+  @keyframes gridShift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 60px 60px; }
+  }
+
+  /* Big decorative number */
+  .hero-num {
+    position: absolute;
+    top: -40px; right: -20px;
+    font-family: var(--ff-head);
+    font-size: clamp(240px, 28vw, 380px);
+    font-weight: 900;
+    color: rgba(0,212,170,0.04);
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 32px;
+    width: 100%;
+  }
+
+  .series-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,212,170,0.08);
+    border: 1px solid rgba(0,212,170,0.25);
+    color: var(--teal);
+    font-family: var(--ff-code);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 4px;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .series-pill::before { content: '▶'; font-size: 8px; }
+
+  .hero h1 {
+    font-family: var(--ff-head);
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--teal);
+  }
+  .hero h1 span {
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: var(--ff-code);
+  }
+  .meta-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+
+  /* Scroll indicator */
+  .scroll-line {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--teal));
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── LAYOUT ── */
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .content { padding: 96px 0 80px; }
+
+  /* ── SECTION HEADERS ── */
+  .sec-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .sec-num {
+    font-family: var(--ff-code);
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sec-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+  .sec-tag {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  h2 {
+    font-family: var(--ff-head);
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+  h2 .hl { color: var(--teal); }
+
+  h3 {
+    font-family: var(--ff-head);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--amber);
+    margin: 40px 0 14px;
+    font-style: italic;
+  }
+
+  p { color: #b8c8d8; margin-bottom: 18px; }
+  p:last-child { margin-bottom: 0; }
+
+  section { margin-bottom: 80px; }
+
+  /* ── CONCEPT BOX ── */
+  .concept-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin: 36px 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .concept-item {
+    background: var(--navy2);
+    padding: 28px 22px;
+    transition: background 0.2s;
+    position: relative;
+  }
+  .concept-item:hover { background: var(--navy3); }
+  .concept-item::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .concept-item:nth-child(1)::after { background: var(--teal); }
+  .concept-item:nth-child(2)::after { background: var(--amber); }
+  .concept-item:nth-child(3)::after { background: var(--coral); }
+  .concept-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .concept-name {
+    font-family: var(--ff-code);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .concept-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── CODE BLOCK ── */
+  .code-wrap {
+    margin: 28px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  }
+  .code-bar {
+    background: var(--navy3);
+    padding: 11px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .cd { width: 11px; height: 11px; border-radius: 50%; }
+  .cd-r { background: #ff5f56; }
+  .cd-y { background: #ffbd2e; }
+  .cd-g { background: #27c93f; }
+  .code-fname {
+    font-family: var(--ff-code);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .code-wrap pre {
+    background: var(--code-bg);
+    padding: 24px 26px;
+    font-family: var(--ff-code);
+    font-size: 13.5px;
+    line-height: 1.75;
+    overflow-x: auto;
+    color: #cdd6e8;
+    tab-size: 4;
+  }
+
+  /* Syntax colours */
+  .kw  { color: #7dd3fc; }   /* if elif else for while break continue in not and or */
+  .fn  { color: #86efac; }   /* print, range, int, input, len */
+  .st  { color: #fca5a5; }   /* strings */
+  .nu  { color: #fdba74; }   /* numbers */
+  .cm  { color: #4b5e72; font-style: italic; } /* comments */
+  .op  { color: #c4b5fd; }   /* operators */
+  .vr  { color: #e2e8f0; }   /* variables */
+  .em  { color: var(--teal); } /* emphasis / output label */
+
+  /* Output block */
+  .out-block {
+    background: #03080f;
+    border: 1px solid #0a2518;
+    border-left: 3px solid var(--teal);
+    border-radius: 0 0 10px 10px;
+    margin-top: -10px;
+    padding: 16px 24px;
+    font-family: var(--ff-code);
+    font-size: 13px;
+    color: #56d364;
+    line-height: 1.7;
+  }
+  .out-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 28px 0;
+    font-size: 0.92rem;
+  }
+  .callout-info {
+    background: rgba(0,212,170,0.06);
+    border: 1px solid rgba(0,212,170,0.18);
+    border-left: 3px solid var(--teal);
+  }
+  .callout-warn {
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.18);
+    border-left: 3px solid var(--amber);
+  }
+  .callout-danger {
+    background: rgba(255,107,107,0.06);
+    border: 1px solid rgba(255,107,107,0.18);
+    border-left: 3px solid var(--coral);
+  }
+  .callout-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+  .callout-info .callout-title  { color: var(--teal); }
+  .callout-warn .callout-title  { color: var(--amber); }
+  .callout-danger .callout-title { color: var(--coral); }
+  .callout p { color: var(--muted); margin: 0; font-size: 0.9rem; }
+
+  /* ── COMPARISON TABLE ── */
+  .table-wrap { overflow-x: auto; margin: 24px 0; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    background: var(--navy3);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: var(--ff-code);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: #b8c8d8;
+    font-family: var(--ff-code);
+    font-size: 13px;
+  }
+  td:first-child { color: var(--teal); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 24px;
+    margin: 28px 0;
+    text-align: center;
+    font-family: var(--ff-code);
+    font-size: 13px;
+  }
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0; flex-wrap: wrap; }
+  .flow-box {
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .fb-start  { background: rgba(0,212,170,0.12); border: 1px solid rgba(0,212,170,0.3); color: var(--teal); border-radius: 100px; }
+  .fb-cond   { background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); color: var(--amber); }
+  .fb-yes    { background: rgba(86,211,100,0.12); border: 1px solid rgba(86,211,100,0.3); color: #56d364; }
+  .fb-no     { background: rgba(255,107,107,0.12); border: 1px solid rgba(255,107,107,0.3); color: var(--coral); }
+  .fb-end    { background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.2); color: var(--teal); border-radius: 100px; }
+  .flow-arrow { color: var(--muted); font-size: 1.1rem; }
+  .flow-lbl  { font-size: 10px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── CHALLENGE ── */
+  .challenge {
+    background: linear-gradient(135deg, rgba(0,212,170,0.05), rgba(245,166,35,0.04));
+    border: 1px solid rgba(0,212,170,0.15);
+    border-radius: 14px;
+    padding: 36px 40px;
+    margin: 60px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .challenge::before {
+    content: '{ }';
+    position: absolute;
+    right: 32px; top: 20px;
+    font-family: var(--ff-code);
+    font-size: 80px;
+    color: rgba(0,212,170,0.05);
+    font-weight: 900;
+    line-height: 1;
+  }
+  .challenge h3 {
+    font-family: var(--ff-head);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--teal);
+    margin: 0 0 6px;
+    font-style: normal;
+  }
+  .challenge .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .ch-list { list-style: none; }
+  .ch-list li {
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 0.93rem;
+    color: #b8c8d8;
+  }
+  .ch-list li:last-child { border-bottom: none; }
+  .ch-num {
+    font-family: var(--ff-code);
+    font-size: 11px;
+    color: var(--teal);
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .bonus .ch-num { color: var(--amber); background: rgba(245,166,35,0.1); border-color: rgba(245,166,35,0.2); }
+
+  /* ── RECAP GRID ── */
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .recap-item {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 0.88rem;
+    transition: border-color 0.2s;
+  }
+  .recap-item:hover { border-color: rgba(0,212,170,0.3); }
+  .recap-item .ri { font-size: 1.3rem; flex-shrink: 0; }
+  .recap-item strong { display: block; color: var(--text); font-family: var(--ff-code); font-size: 0.82rem; margin-bottom: 3px; }
+  .recap-item span { color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+
+  /* ── NEXT BLOG ── */
+  .next-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 36px;
+    margin-top: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    transition: border-color 0.3s;
+  }
+  .next-card:hover { border-color: rgba(0,212,170,0.3); }
+  .next-lbl { font-family: var(--ff-code); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .next-title { font-family: var(--ff-head); font-size: 1.6rem; font-weight: 700; color: var(--text); }
+  .next-desc { font-size: 0.88rem; color: var(--muted); margin-top: 8px; }
+  .next-btn {
+    background: var(--teal);
+    color: var(--navy);
+    font-weight: 700;
+    font-family: var(--ff-code);
+    font-size: 13px;
+    padding: 13px 26px;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── INTERVIEW BADGE ── */
+  .interview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--amber);
+    font-family: var(--ff-code);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 32px;
+    text-align: center;
+    font-family: var(--ff-code);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 640px) {
+    .concept-row { grid-template-columns: 1fr; }
+    .recap-grid { grid-template-columns: 1fr; }
+    .next-card { flex-direction: column; }
+    .hero { min-height: 70vh; }
+    .hero-num { font-size: 160px; top: 20px; right: -20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-num">3</div>
+
+  <div class="hero-content">
+    <div class="series-pill">Python for Data Science &amp; AI &nbsp;·&nbsp; Blog 03 of 20</div>
+    <h1>Control <em>Flow</em>:<br><span>if</span>, for &amp; while</h1>
+    <p class="hero-sub">Make your code think, decide, and repeat — the three pillars behind every intelligent program ever written.</p>
+    <div class="hero-meta">
+      <div class="meta-chip"><div class="dot"></div> 14 min read</div>
+      <div class="meta-chip"><div class="dot"></div> Beginner friendly</div>
+      <div class="meta-chip"><div class="dot"></div> FizzBuzz included</div>
+      <div class="meta-chip"><div class="dot"></div> Google Colab ready</div>
+    </div>
+  </div>
+  <div class="scroll-line"></div>
+</header>
+
+
+<!-- ═══════════════════════════════════════ CONTENT -->
+<main class="wrap content">
+
+
+  <!-- ─── INTRO ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">00 — intro</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">Why this matters</span>
+    </div>
+
+    <h2>Programs That Can <span class="hl">Think</span></h2>
+    <p>Every program you've written so far runs straight down — line 1, line 2, line 3, done. That's fine for a calculator. But a recommendation engine, a login page, a data pipeline? They need to <em>branch</em> and <em>repeat</em>.</p>
+    <p>Control flow is how you give your program a brain. After this blog, your code will be able to answer questions, loop through datasets, and respond differently based on conditions — that's the foundation of every real-world Python project.</p>
+
+    <div class="concept-row">
+      <div class="concept-item">
+        <div class="concept-icon">🤔</div>
+        <div class="concept-name">if / elif / else</div>
+        <div class="concept-desc">Make decisions. Run different code based on whether a condition is True or False.</div>
+      </div>
+      <div class="concept-item">
+        <div class="concept-icon">🔁</div>
+        <div class="concept-name">for loop</div>
+        <div class="concept-desc">Repeat for each item in a list, range, or sequence — the workhorse of data science.</div>
+      </div>
+      <div class="concept-item">
+        <div class="concept-icon">⏳</div>
+        <div class="concept-name">while loop</div>
+        <div class="concept-desc">Keep going until a condition changes. Used when you don't know the count upfront.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── SECTION 1: IF ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01 — conditional logic</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">if / elif / else</span>
+    </div>
+
+    <h2>Making <span class="hl">Decisions</span></h2>
+    <p>An <code style="color:var(--teal);font-family:var(--ff-code)">if</code> statement evaluates a condition. If it's <strong>True</strong>, the indented block runs. If it's <strong>False</strong>, Python skips it — or runs an <code style="color:var(--teal);font-family:var(--ff-code)">else</code> block instead.</p>
+
+    <div class="flow">
+      <div class="flow-row"><div class="flow-box fb-start">Program starts</div></div>
+      <div class="flow-row"><div class="flow-arrow">↓</div></div>
+      <div class="flow-row"><div class="flow-box fb-cond">condition True?</div></div>
+      <div class="flow-row" style="gap:56px; margin:12px 0;">
+        <div>
+          <div class="flow-lbl">YES</div>
+          <div class="flow-box fb-yes">run if block</div>
+        </div>
+        <div>
+          <div class="flow-lbl">NO</div>
+          <div class="flow-box fb-no">skip / elif / else</div>
+        </div>
+      </div>
+      <div class="flow-row"><div class="flow-arrow">↓</div></div>
+      <div class="flow-row"><div class="flow-box fb-end">Continue execution</div></div>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">⚠️ Indentation is not optional</div>
+      <p>Python uses 4 spaces to define what's <em>inside</em> an if block — there are no curly braces <code>{}</code> like Java or JavaScript. Get it wrong and you'll get an <code>IndentationError</code>.</p>
+    </div>
+
+    <h3>Practical: Grade Checker</h3>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">grade_checker.py</span>
+      </div>
+      <pre><span class="cm"># Grade checker using if / elif / else</span>
+<span class="vr">score</span> <span class="op">=</span> <span class="nu">78</span>
+
+<span class="kw">if</span> <span class="vr">score</span> <span class="op">&gt;=</span> <span class="nu">90</span>:
+    <span class="vr">grade</span> <span class="op">=</span> <span class="st">"A — Excellent! 🏆"</span>
+<span class="kw">elif</span> <span class="vr">score</span> <span class="op">&gt;=</span> <span class="nu">80</span>:
+    <span class="vr">grade</span> <span class="op">=</span> <span class="st">"B — Good job! ✅"</span>
+<span class="kw">elif</span> <span class="vr">score</span> <span class="op">&gt;=</span> <span class="nu">70</span>:
+    <span class="vr">grade</span> <span class="op">=</span> <span class="st">"C — Decent, keep going 💪"</span>
+<span class="kw">elif</span> <span class="vr">score</span> <span class="op">&gt;=</span> <span class="nu">60</span>:
+    <span class="vr">grade</span> <span class="op">=</span> <span class="st">"D — Needs improvement 📚"</span>
+<span class="kw">else</span>:
+    <span class="vr">grade</span> <span class="op">=</span> <span class="st">"F — Please revise and retry ❌"</span>
+
+<span class="fn">print</span>(<span class="st">f"Score: <span class="vr">{score}</span>"</span>)
+<span class="fn">print</span>(<span class="st">f"Grade: <span class="vr">{grade}</span>"</span>)
+
+<span class="cm"># Multiple conditions with 'and' / 'or'</span>
+<span class="kw">if</span> <span class="vr">score</span> <span class="op">&gt;=</span> <span class="nu">60</span> <span class="kw">and</span> <span class="vr">score</span> <span class="op">&lt;</span> <span class="nu">100</span>:
+    <span class="fn">print</span>(<span class="st">"Congratulations — you passed!"</span>)</pre>
+    </div>
+    <div class="out-block">
+      <div class="out-label">▶ Output</div>
+      Score: 78<br>
+      Grade: C — Decent, keep going 💪<br>
+      Congratulations — you passed!
+    </div>
+
+    <h3>Comparison Operators</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Operator</th><th>Meaning</th><th>Example</th><th>Result</th></tr>
+        <tr><td>==</td><td>Equal to</td><td>5 == 5</td><td>True</td></tr>
+        <tr><td>!=</td><td>Not equal to</td><td>5 != 3</td><td>True</td></tr>
+        <tr><td>&gt;</td><td>Greater than</td><td>7 &gt; 4</td><td>True</td></tr>
+        <tr><td>&lt;</td><td>Less than</td><td>3 &lt; 8</td><td>True</td></tr>
+        <tr><td>&gt;=</td><td>Greater or equal</td><td>5 &gt;= 5</td><td>True</td></tr>
+        <tr><td>&lt;=</td><td>Less or equal</td><td>4 &lt;= 3</td><td>False</td></tr>
+        <tr><td>and</td><td>Both must be True</td><td>x &gt; 0 and x &lt; 10</td><td>True if both</td></tr>
+        <tr><td>or</td><td>At least one True</td><td>x == 0 or x &gt; 5</td><td>True if either</td></tr>
+        <tr><td>not</td><td>Inverts condition</td><td>not True</td><td>False</td></tr>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ─── SECTION 2: FOR LOOP ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02 — iteration</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">for loop</span>
+    </div>
+
+    <h2>Repeating with <span class="hl">for</span></h2>
+    <p>A <code style="color:var(--teal);font-family:var(--ff-code)">for</code> loop iterates over every item in a sequence — a list, a range of numbers, a string — and runs a block of code for each one.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-title">💡 Mental model</div>
+      <p>"<em>For each item in this collection → do something with it.</em>" That's it. Hold that image and every for loop will make sense.</p>
+    </div>
+
+    <h3>Looping Through a List — Print Even Numbers</h3>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">even_numbers.py</span>
+      </div>
+      <pre><span class="cm"># Loop through a list and print only even numbers</span>
+<span class="vr">numbers</span> <span class="op">=</span> [<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>, <span class="nu">5</span>, <span class="nu">6</span>, <span class="nu">7</span>, <span class="nu">8</span>, <span class="nu">9</span>, <span class="nu">10</span>]
+
+<span class="fn">print</span>(<span class="st">"Even numbers in the list:"</span>)
+<span class="kw">for</span> <span class="vr">num</span> <span class="kw">in</span> <span class="vr">numbers</span>:
+    <span class="kw">if</span> <span class="vr">num</span> <span class="op">%</span> <span class="nu">2</span> <span class="op">==</span> <span class="nu">0</span>:   <span class="cm"># % is the modulus operator (remainder)</span>
+        <span class="fn">print</span>(<span class="st">f"  {num} is even ✓"</span>)
+
+<span class="cm"># Same result, using range() directly</span>
+<span class="fn">print</span>(<span class="st">"\nEven numbers from range:"</span>)
+<span class="kw">for</span> <span class="vr">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">2</span>, <span class="nu">11</span>, <span class="nu">2</span>):   <span class="cm"># start=2, stop=11, step=2</span>
+    <span class="fn">print</span>(<span class="st">f"  {i}"</span>, end=<span class="st">" "</span>)</pre>
+    </div>
+    <div class="out-block">
+      <div class="out-label">▶ Output</div>
+      Even numbers in the list:<br>
+      &nbsp;&nbsp;2 is even ✓<br>
+      &nbsp;&nbsp;4 is even ✓<br>
+      &nbsp;&nbsp;6 is even ✓<br>
+      &nbsp;&nbsp;8 is even ✓<br>
+      &nbsp;&nbsp;10 is even ✓<br><br>
+      Even numbers from range:<br>
+      &nbsp;&nbsp;2  4  6  8  10
+    </div>
+
+    <h3>The range() function — your best friend</h3>
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">range_guide.py</span>
+      </div>
+      <pre><span class="fn">range</span>(<span class="nu">5</span>)          <span class="cm"># → 0, 1, 2, 3, 4        (stop only)</span>
+<span class="fn">range</span>(<span class="nu">1</span>, <span class="nu">6</span>)       <span class="cm"># → 1, 2, 3, 4, 5        (start, stop)</span>
+<span class="fn">range</span>(<span class="nu">0</span>, <span class="nu">20</span>, <span class="nu">5</span>)   <span class="cm"># → 0, 5, 10, 15         (start, stop, step)</span>
+<span class="fn">range</span>(<span class="nu">10</span>, <span class="nu">0</span>, <span class="op">-</span><span class="nu">1</span>) <span class="cm"># → 10, 9, 8 ... 1       (count backwards!)</span></pre>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">🔵 Data Science connection</div>
+      <p>In data science you use <code>for</code> loops to process rows in a dataset, iterate over multiple CSV files, or try different model parameters. The logic you learn here is identical to what you'll write with Pandas in Blog 8.</p>
+    </div>
+  </section>
+
+
+  <!-- ─── SECTION 3: WHILE ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03 — conditional repetition</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">while loop</span>
+    </div>
+
+    <h2>Looping with <span class="hl">while</span></h2>
+    <p>A <code style="color:var(--teal);font-family:var(--ff-code)">while</code> loop keeps running as long as a condition is <strong>True</strong>. Unlike <code style="color:var(--teal);font-family:var(--ff-code)">for</code>, you don't need to know in advance how many times it will run — it stops when the condition changes.</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">🚨 Danger: Infinite loops</div>
+      <p>If your condition never becomes False, the loop runs forever. Always update something inside the loop that will eventually make the condition False. If you're stuck, press <code>Ctrl + C</code> in your terminal or the ■ stop button in Google Colab.</p>
+    </div>
+
+    <h3>Practical: Number Guessing Game</h3>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">guessing_game.py</span>
+      </div>
+      <pre><span class="cm"># Number guessing game — while loop in action</span>
+<span class="vr">secret_number</span> <span class="op">=</span> <span class="nu">42</span>
+<span class="vr">guess</span>         <span class="op">=</span> <span class="nu">0</span>
+<span class="vr">attempts</span>      <span class="op">=</span> <span class="nu">0</span>
+<span class="vr">max_tries</span>     <span class="op">=</span> <span class="nu">7</span>
+
+<span class="fn">print</span>(<span class="st">"🎮 Welcome to the guessing game!"</span>)
+<span class="fn">print</span>(<span class="st">f"Hint: The number is between 1 and 100. You have {max_tries} tries.\n"</span>)
+
+<span class="kw">while</span> <span class="vr">guess</span> <span class="op">!=</span> <span class="vr">secret_number</span> <span class="kw">and</span> <span class="vr">attempts</span> <span class="op">&lt;</span> <span class="vr">max_tries</span>:
+    <span class="vr">guess</span>    <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">f"Attempt {attempts + 1}/{max_tries} — Your guess: "</span>))
+    <span class="vr">attempts</span> <span class="op">+=</span> <span class="nu">1</span>   <span class="cm"># ← always update so the loop can end!</span>
+
+    <span class="kw">if</span> <span class="vr">guess</span> <span class="op">&lt;</span> <span class="vr">secret_number</span>:
+        <span class="fn">print</span>(<span class="st">"📈 Too low! Go higher.\n"</span>)
+    <span class="kw">elif</span> <span class="vr">guess</span> <span class="op">&gt;</span> <span class="vr">secret_number</span>:
+        <span class="fn">print</span>(<span class="st">"📉 Too high! Go lower.\n"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="st">f"🎉 Correct! You got it in {attempts} attempt(s)!"</span>)
+
+<span class="kw">if</span> <span class="vr">guess</span> <span class="op">!=</span> <span class="vr">secret_number</span>:
+    <span class="fn">print</span>(<span class="st">f"😔 Out of tries! The number was {secret_number}."</span>)</pre>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">💡 When to use for vs while?</div>
+      <p><strong>Use for</strong> when you know how many times to repeat (a list, a fixed count). <strong>Use while</strong> when the number of repetitions depends on user input or a condition that changes dynamically.</p>
+    </div>
+  </section>
+
+
+  <!-- ─── SECTION 4: BREAK & CONTINUE ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04 — loop control</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">break &amp; continue</span>
+    </div>
+
+    <h2>Fine-tuning Loops: <span class="hl">break</span> &amp; <span class="hl">continue</span></h2>
+    <p>Two keywords give you surgical control over loops mid-execution:</p>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th>Keyword</th><th>What it does</th><th>Analogy</th></tr>
+        <tr><td>break</td><td>Exits the loop immediately</td><td>Emergency exit door</td></tr>
+        <tr><td>continue</td><td>Skips this iteration, moves to next</td><td>Skip track on a playlist</td></tr>
+      </table>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">break_continue.py</span>
+      </div>
+      <pre><span class="cm"># break — exit as soon as we find what we need</span>
+<span class="vr">data</span> <span class="op">=</span> [<span class="nu">12</span>, <span class="nu">45</span>, <span class="nu">7</span>, <span class="nu">-3</span>, <span class="nu">89</span>, <span class="nu">22</span>]
+
+<span class="fn">print</span>(<span class="st">"Searching for first negative number..."</span>)
+<span class="kw">for</span> <span class="vr">num</span> <span class="kw">in</span> <span class="vr">data</span>:
+    <span class="kw">if</span> <span class="vr">num</span> <span class="op">&lt;</span> <span class="nu">0</span>:
+        <span class="fn">print</span>(<span class="st">f"Found it: {num} — stopping search."</span>)
+        <span class="kw">break</span>           <span class="cm"># ← exits the loop</span>
+    <span class="fn">print</span>(<span class="st">f"  {num} is positive, checking next..."</span>)
+
+<span class="fn">print</span>()
+
+<span class="cm"># continue — skip multiples of 3</span>
+<span class="fn">print</span>(<span class="st">"Numbers 1–15, skipping multiples of 3:"</span>)
+<span class="kw">for</span> <span class="vr">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">1</span>, <span class="nu">16</span>):
+    <span class="kw">if</span> <span class="vr">i</span> <span class="op">%</span> <span class="nu">3</span> <span class="op">==</span> <span class="nu">0</span>:
+        <span class="kw">continue</span>        <span class="cm"># ← skip this iteration</span>
+    <span class="fn">print</span>(<span class="vr">i</span>, end=<span class="st">" "</span>)</pre>
+    </div>
+    <div class="out-block">
+      <div class="out-label">▶ Output</div>
+      Searching for first negative number...<br>
+      &nbsp;&nbsp;12 is positive, checking next...<br>
+      &nbsp;&nbsp;45 is positive, checking next...<br>
+      &nbsp;&nbsp;7 is positive, checking next...<br>
+      Found it: -3 — stopping search.<br><br>
+      Numbers 1–15, skipping multiples of 3:<br>
+      1 2 4 5 7 8 10 11 13 14
+    </div>
+  </section>
+
+
+  <!-- ─── SECTION 5: FIZZBUZZ ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">05 — classic challenge</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">FizzBuzz</span>
+    </div>
+
+    <div class="interview-badge">🎯 Seen in real tech interviews</div>
+    <h2>The <span class="hl">FizzBuzz</span> Challenge</h2>
+    <p>FizzBuzz is the most famous beginner coding challenge in the world. Companies like Google, Amazon, and startups use it as a quick filter in interviews. The rules:</p>
+    <ul style="color:#b8c8d8; padding-left:24px; margin-bottom:24px; line-height:2;">
+      <li>Print numbers from <strong>1 to 100</strong></li>
+      <li>If the number is divisible by <strong>3</strong> → print <code style="color:var(--teal);font-family:var(--ff-code)">Fizz</code></li>
+      <li>If divisible by <strong>5</strong> → print <code style="color:var(--amber);font-family:var(--ff-code)">Buzz</code></li>
+      <li>If divisible by <strong>both 3 and 5</strong> → print <code style="color:var(--coral);font-family:var(--ff-code)">FizzBuzz</code></li>
+      <li>Otherwise → print the number itself</li>
+    </ul>
+
+    <p><strong style="color:var(--text)">The key trick:</strong> Check for divisibility by <em>both 3 and 5 first</em> — otherwise you'd never reach that branch.</p>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="code-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="code-fname">fizzbuzz.py</span>
+      </div>
+      <pre><span class="cm"># FizzBuzz — the classic interview challenge</span>
+<span class="cm"># ⚠ Check 15 (both) FIRST, then 3, then 5</span>
+
+<span class="kw">for</span> <span class="vr">n</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">1</span>, <span class="nu">101</span>):
+    <span class="kw">if</span> <span class="vr">n</span> <span class="op">%</span> <span class="nu">15</span> <span class="op">==</span> <span class="nu">0</span>:     <span class="cm"># divisible by both 3 AND 5</span>
+        <span class="fn">print</span>(<span class="st">"FizzBuzz"</span>)
+    <span class="kw">elif</span> <span class="vr">n</span> <span class="op">%</span> <span class="nu">3</span> <span class="op">==</span> <span class="nu">0</span>:     <span class="cm"># divisible by 3 only</span>
+        <span class="fn">print</span>(<span class="st">"Fizz"</span>)
+    <span class="kw">elif</span> <span class="vr">n</span> <span class="op">%</span> <span class="nu">5</span> <span class="op">==</span> <span class="nu">0</span>:     <span class="cm"># divisible by 5 only</span>
+        <span class="fn">print</span>(<span class="st">"Buzz"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="vr">n</span>)           <span class="cm"># none of the above — print the number</span></pre>
+    </div>
+    <div class="out-block">
+      <div class="out-label">▶ First 20 lines of output</div>
+      1 · 2 · Fizz · 4 · Buzz · Fizz · 7 · 8 · Fizz · Buzz<br>
+      11 · Fizz · 13 · 14 · <strong style="color:var(--coral)">FizzBuzz</strong> · 16 · 17 · Fizz · 19 · Buzz
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">💼 Why interviewers love FizzBuzz</div>
+      <p>It's not about FizzBuzz itself — it tests whether you understand conditionals, operator precedence (<code>%</code>), and logical order. If you can solve and <em>explain</em> FizzBuzz, you've proven you understand control flow. Including your solution in your blog makes your series stand out from every generic tutorial.</p>
+    </div>
+  </section>
+
+
+  <!-- ─── RECAP ─── -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">06 — summary</span>
+      <div class="sec-line"></div>
+      <span class="sec-tag">What you learned</span>
+    </div>
+
+    <h2>Today's <span class="hl">Recap</span></h2>
+    <div class="recap-grid">
+      <div class="recap-item">
+        <div class="ri">🤔</div>
+        <div><strong>if / elif / else</strong><span>Branch your program based on True/False conditions</span></div>
+      </div>
+      <div class="recap-item">
+        <div class="ri">🔁</div>
+        <div><strong>for loop</strong><span>Iterate over lists, ranges, strings, and more</span></div>
+      </div>
+      <div class="recap-item">
+        <div class="ri">⏳</div>
+        <div><strong>while loop</strong><span>Repeat until a condition becomes False</span></div>
+      </div>
+      <div class="recap-item">
+        <div class="ri">🛑</div>
+        <div><strong>break &amp; continue</strong><span>Surgically control loop execution mid-run</span></div>
+      </div>
+      <div class="recap-item">
+        <div class="ri">📐</div>
+        <div><strong>Indentation</strong><span>Python uses 4 spaces — not curly braces — to define blocks</span></div>
+      </div>
+      <div class="recap-item">
+        <div class="ri">🎯</div>
+        <div><strong>FizzBuzz</strong><span>Solved and understood — interview-ready!</span></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─── CHALLENGE ─── -->
+  <div class="challenge">
+    <h3>🎯 Your Challenge Today</h3>
+    <p class="sub">Open Google Colab and try all five — don't skip the bonus!</p>
+    <ul class="ch-list">
+      <li>
+        <span class="ch-num">01</span>
+        Write an <code style="color:var(--teal);font-family:var(--ff-code)">if / elif / else</code> block that classifies a temperature as <strong>Cold (&lt;15°C)</strong>, <strong>Warm (15–30°C)</strong>, or <strong>Hot (&gt;30°C)</strong>
+      </li>
+      <li>
+        <span class="ch-num">02</span>
+        Loop through a list of 10 random numbers and use an <code style="color:var(--teal);font-family:var(--ff-code)">if</code> inside your <code style="color:var(--teal);font-family:var(--ff-code)">for</code> loop to print only the even ones
+      </li>
+      <li>
+        <span class="ch-num">03</span>
+        Build the number guessing game from scratch — without copying. Then add a <code style="color:var(--teal);font-family:var(--ff-code)">max_tries</code> limit and a "you lose" message
+      </li>
+      <li>
+        <span class="ch-num">04</span>
+        Solve FizzBuzz. Then modify it to also print <strong>"Boom"</strong> for multiples of 7
+      </li>
+      <li class="bonus">
+        <span class="ch-num">★ Bonus</span>
+        Use a <code style="color:var(--teal);font-family:var(--ff-code)">while</code> loop to build a simple ATM: start with ₹5000 balance, let the user withdraw amounts, show balance after each withdrawal, and stop when balance hits ₹0
+      </li>
+    </ul>
+  </div>
+
+
+  <!-- ─── NEXT BLOG ─── -->
+  <div class="next-card">
+    <div>
+      <div class="next-lbl">▶ Coming up next — Blog 04 of 20</div>
+      <div class="next-title">Functions &amp; Scope</div>
+      <div class="next-desc">Write reusable code blocks, understand local vs global variables, and learn why functions are the backbone of every Python project.</div>
+    </div>
+    <div class="next-btn">Blog 4 →</div>
+  </div>
+
+</main>
+
+<footer>
+  Python for Data Science &amp; AI · Blog 3 of 20 · Built for beginners who mean business
+</footer>
+
+</body>
+</html>
