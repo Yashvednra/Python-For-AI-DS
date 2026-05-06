@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 4 — Functions & Modules | Python for Data Science & AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&family=JetBrains+Mono:wght@400;600;700&family=Epilogue:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:    #f7f3ec;
+    --cream2:   #efe9de;
+    --cream3:   #e6dfd2;
+    --ink:      #1a1410;
+    --ink2:     #2e2820;
+    --ink3:     #4a4035;
+    --muted:    #8a7d6e;
+    --indigo:   #4338ca;
+    --indigo2:  #6366f1;
+    --violet:   #7c3aed;
+    --teal:     #0d9488;
+    --amber:    #d97706;
+    --rose:     #e11d48;
+    --border:   #d9d0c2;
+    --border2:  #c9bfaf;
+    --code-bg:  #1a1410;
+    --ff-head:  'Playfair Display', Georgia, serif;
+    --ff-body:  'Epilogue', sans-serif;
+    --ff-code:  'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--ff-body);
+    font-size: 17px;
+    line-height: 1.85;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ─────────────────────────────── */
+  .hero {
+    background: var(--ink);
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* Geometric background pattern */
+  .hero-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(67,56,202,0.04) 40px,
+        rgba(67,56,202,0.04) 41px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(67,56,202,0.03) 40px,
+        rgba(67,56,202,0.03) 41px
+      );
+  }
+
+  /* Ink bleed effect */
+  .hero-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 80% 20%, rgba(99,102,241,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 10% 85%, rgba(13,148,136,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 30% 30% at 60% 90%, rgba(217,119,6,0.06) 0%, transparent 50%);
+  }
+
+  /* Giant decorative letter */
+  .hero-deco {
+    position: absolute;
+    top: -60px;
+    right: -30px;
+    font-family: var(--ff-head);
+    font-size: clamp(280px, 30vw, 420px);
+    font-weight: 900;
+    color: rgba(99,102,241,0.05);
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px;
+    width: 100%;
+  }
+
+  .series-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(99,102,241,0.3);
+    background: rgba(99,102,241,0.08);
+    color: var(--indigo2);
+    font-family: var(--ff-code);
+    font-size: 10.5px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border-radius: 3px;
+    margin-bottom: 40px;
+    animation: riseIn 0.7s ease both;
+  }
+
+  .hero h1 {
+    font-family: var(--ff-head);
+    font-size: clamp(3rem, 6.5vw, 5.8rem);
+    font-weight: 900;
+    line-height: 1.08;
+    color: var(--cream);
+    margin-bottom: 10px;
+    animation: riseIn 0.7s 0.1s ease both;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--indigo2);
+  }
+  .hero h1 .amp {
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: #8a8070;
+    max-width: 560px;
+    margin: 24px 0 44px;
+    animation: riseIn 0.7s 0.2s ease both;
+    line-height: 1.7;
+  }
+
+  .hero-chips {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: riseIn 0.7s 0.3s ease both;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--ff-code);
+    font-size: 11.5px;
+    color: #6b6055;
+    border: 1px solid #2e2820;
+    background: rgba(255,255,255,0.03);
+    padding: 6px 14px;
+    border-radius: 4px;
+  }
+  .chip .c-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--indigo2);
+  }
+
+  /* Bottom accent bar */
+  .hero-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--indigo), var(--violet), var(--teal), var(--amber));
+  }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LAYOUT ────────────────────────────── */
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 40px; }
+  .content { padding: 88px 0 80px; }
+  section { margin-bottom: 80px; }
+
+  /* ── SECTION HEADER ─── */
+  .sh {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  .sh-num {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    color: var(--indigo);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .sh-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+  .sh-pill {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    font-family: var(--ff-head);
+    font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 22px;
+  }
+  h2 .hl   { color: var(--indigo); }
+  h2 .hl-t { color: var(--teal); }
+  h2 .hl-a { color: var(--amber); }
+
+  h3 {
+    font-family: var(--ff-head);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ink2);
+    margin: 40px 0 14px;
+    font-style: italic;
+  }
+
+  p { color: var(--ink3); margin-bottom: 18px; }
+
+  /* ── BEFORE / AFTER COMPARISON ─── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: 36px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 4px 24px rgba(26,20,16,0.08);
+  }
+  .compare-col { display: flex; flex-direction: column; }
+  .compare-head {
+    padding: 14px 20px;
+    font-family: var(--ff-code);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ch-before {
+    background: #fff0f0;
+    color: var(--rose);
+    border-bottom: 2px solid #fecdd3;
+  }
+  .ch-after {
+    background: #f0fdf4;
+    color: var(--teal);
+    border-bottom: 2px solid #bbf7d0;
+    border-left: 1px solid var(--border2);
+  }
+  .compare-col pre {
+    background: var(--code-bg);
+    padding: 20px 22px;
+    font-family: var(--ff-code);
+    font-size: 12.5px;
+    line-height: 1.75;
+    flex: 1;
+    overflow-x: auto;
+    color: #cdd6e8;
+  }
+  .compare-col:last-child pre { border-left: 1px solid #2e2820; }
+  .compare-divider {
+    position: relative;
+  }
+  .compare-arrow {
+    position: absolute;
+    top: 50%; left: -18px;
+    transform: translateY(-50%);
+    width: 36px; height: 36px;
+    background: var(--indigo);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    z-index: 2;
+    box-shadow: 0 2px 12px rgba(67,56,202,0.4);
+  }
+
+  /* ── CODE BLOCK ─── */
+  .code-wrap {
+    margin: 28px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 4px 20px rgba(26,20,16,0.1);
+  }
+  .code-bar {
+    background: #211c17;
+    padding: 11px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #2e2820;
+  }
+  .cb-dots { display: flex; gap: 6px; }
+  .cd { width: 11px; height: 11px; border-radius: 50%; }
+  .cd-r { background: #ff5f56; }
+  .cd-y { background: #ffbd2e; }
+  .cd-g { background: #27c93f; }
+  .cb-name { font-family: var(--ff-code); font-size: 11px; color: #6b6055; }
+
+  .code-wrap pre {
+    background: var(--code-bg);
+    padding: 22px 26px;
+    font-family: var(--ff-code);
+    font-size: 13.5px;
+    line-height: 1.75;
+    overflow-x: auto;
+    color: #cdd6e8;
+    tab-size: 4;
+  }
+
+  /* Syntax */
+  .kw { color: #c792ea; }    /* def, return, import, from */
+  .fn { color: #82aaff; }    /* function names, print */
+  .st { color: #c3e88d; }    /* strings */
+  .nu { color: #f78c6c; }    /* numbers */
+  .cm { color: #546e7a; font-style: italic; }  /* comments */
+  .op { color: #89ddff; }    /* operators */
+  .bi { color: #80cbc4; }    /* builtins: print, range, input */
+  .vr { color: #eeffff; }    /* variables */
+  .dc { color: #7986cb; font-style: italic; } /* docstring */
+  .mo { color: #ffcb6b; }    /* module names */
+
+  /* Output */
+  .out {
+    background: #0d0a08;
+    border: 1px solid #1e1a14;
+    border-left: 3px solid var(--teal);
+    border-radius: 0 0 10px 10px;
+    margin-top: -10px;
+    padding: 16px 22px;
+    font-family: var(--ff-code);
+    font-size: 13px;
+    color: #80cbc4;
+    line-height: 1.75;
+  }
+  .out-lbl {
+    font-size: 9.5px;
+    color: #546e7a;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* ── CALLOUT ─── */
+  .callout {
+    border-radius: 8px;
+    padding: 20px 26px;
+    margin: 28px 0;
+    font-size: 0.92rem;
+  }
+  .c-info {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-left: 4px solid var(--indigo);
+  }
+  .c-tip {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-left: 4px solid var(--teal);
+  }
+  .c-warn {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-left: 4px solid var(--amber);
+  }
+  .c-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 6px;
+  }
+  .c-info .c-title  { color: var(--indigo); }
+  .c-tip  .c-title  { color: var(--teal); }
+  .c-warn .c-title  { color: var(--amber); }
+  .callout p { color: var(--ink3); font-size: 0.9rem; margin: 0; }
+
+  /* ── MODULE TABLE ─── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 28px 0;
+    border-radius: 10px;
+    border: 1px solid var(--border2);
+    box-shadow: 0 2px 12px rgba(26,20,16,0.06);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    background: var(--cream2);
+    padding: 13px 18px;
+    text-align: left;
+    font-family: var(--ff-code);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+  }
+  td {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink3);
+    font-size: 14px;
+    vertical-align: top;
+  }
+  td:first-child {
+    font-family: var(--ff-code);
+    font-size: 12.5px;
+    color: var(--indigo);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(67,56,202,0.02); }
+
+  /* ── ANATOMY DIAGRAM ─── */
+  .anatomy {
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 36px 32px;
+    margin: 32px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .anatomy::before {
+    content: 'def';
+    position: absolute;
+    right: 24px;
+    top: 16px;
+    font-family: var(--ff-head);
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(99,102,241,0.06);
+    font-style: italic;
+  }
+  .anatomy-title {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    color: #546e7a;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .anatomy pre {
+    font-family: var(--ff-code);
+    font-size: 14.5px;
+    line-height: 2;
+    position: relative;
+  }
+  .an-line {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+  .an-label {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--ff-code);
+    font-size: 11px;
+    color: #546e7a;
+    white-space: nowrap;
+  }
+  .an-label::before {
+    content: '←';
+    font-size: 10px;
+  }
+  .an-lbl-tag {
+    background: rgba(99,102,241,0.15);
+    color: var(--indigo2);
+    border: 1px solid rgba(99,102,241,0.25);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
+  /* ── CONCEPT CARDS ─── */
+  .module-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .mod-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    box-shadow: 0 2px 12px rgba(26,20,16,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mod-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,20,16,0.1); }
+  .mod-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .mod-card:nth-child(1)::after { background: var(--teal); }
+  .mod-card:nth-child(2)::after { background: var(--indigo); }
+  .mod-card:nth-child(3)::after { background: var(--amber); }
+  .mod-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .mod-title {
+    font-family: var(--ff-code);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .mod-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+  .mod-eg {
+    margin-top: 10px;
+    font-family: var(--ff-code);
+    font-size: 0.75rem;
+    color: var(--indigo);
+    background: #eef2ff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* ── RECAP GRID ─── */
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .recap-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 0.88rem;
+    box-shadow: 0 1px 8px rgba(26,20,16,0.04);
+    transition: border-color 0.2s;
+  }
+  .recap-item:hover { border-color: var(--indigo2); }
+  .ri-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .recap-item strong { display: block; color: var(--ink); font-family: var(--ff-code); font-size: 0.8rem; margin-bottom: 3px; }
+  .recap-item span { color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+
+  /* ── CHALLENGE ─── */
+  .challenge {
+    background: var(--ink);
+    border-radius: 14px;
+    padding: 40px 44px;
+    margin-top: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .challenge::before {
+    content: 'def';
+    position: absolute;
+    right: -10px; bottom: -20px;
+    font-family: var(--ff-head);
+    font-size: 140px;
+    font-weight: 900;
+    color: rgba(99,102,241,0.06);
+    font-style: italic;
+    line-height: 1;
+  }
+  .challenge-tag {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    color: var(--indigo2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .challenge h3 {
+    font-family: var(--ff-head);
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--cream);
+    margin: 0 0 8px;
+    font-style: normal;
+  }
+  .challenge .sub-text { color: #6b6055; font-size: 0.9rem; margin-bottom: 28px; }
+  .ch-list { list-style: none; }
+  .ch-list li {
+    padding: 13px 0;
+    border-bottom: 1px solid #2e2820;
+    display: flex;
+    gap: 14px;
+    color: #9e9080;
+    font-size: 0.93rem;
+    line-height: 1.6;
+  }
+  .ch-list li:last-child { border-bottom: none; }
+  .ch-badge {
+    font-family: var(--ff-code);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    height: fit-content;
+    white-space: nowrap;
+  }
+  .badge-idx { background: rgba(99,102,241,0.15); color: var(--indigo2); border: 1px solid rgba(99,102,241,0.2); }
+  .badge-bonus { background: rgba(217,119,6,0.12); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
+
+  /* ── NEXT BLOG ─── */
+  .next-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    margin-top: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    box-shadow: 0 4px 20px rgba(26,20,16,0.07);
+    transition: box-shadow 0.2s;
+  }
+  .next-card:hover { box-shadow: 0 8px 36px rgba(26,20,16,0.12); }
+  .n-lbl { font-family: var(--ff-code); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .n-title { font-family: var(--ff-head); font-size: 1.7rem; font-weight: 900; color: var(--ink); }
+  .n-desc { font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
+  .n-btn {
+    background: var(--indigo);
+    color: white;
+    font-weight: 700;
+    font-family: var(--ff-code);
+    font-size: 13px;
+    padding: 13px 26px;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ─── */
+  footer {
+    background: var(--ink);
+    padding: 36px 40px;
+    text-align: center;
+    font-family: var(--ff-code);
+    font-size: 12px;
+    color: #4a4035;
+  }
+
+  @media (max-width: 640px) {
+    .compare { grid-template-columns: 1fr; }
+    .module-types { grid-template-columns: 1fr; }
+    .recap-grid { grid-template-columns: 1fr; }
+    .next-card { flex-direction: column; }
+    .hero { min-height: 70vh; }
+    .hero-deco { font-size: 160px; }
+    .wrap { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO -->
+<header class="hero">
+  <div class="hero-pattern"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-deco">fn</div>
+
+  <div class="hero-inner">
+    <div class="series-tag">⬡ &nbsp;Python for Data Science &amp; AI &nbsp;·&nbsp; Blog 04 of 20</div>
+
+    <h1>Functions<br><span class="amp">&amp;</span> <em>Modules</em></h1>
+
+    <p class="hero-sub">Write code once. Use it everywhere. The two ideas that separate scripts that work from software that scales.</p>
+
+    <div class="hero-chips">
+      <div class="chip"><div class="c-dot"></div> 13 min read</div>
+      <div class="chip"><div class="c-dot"></div> def · return · import</div>
+      <div class="chip"><div class="c-dot"></div> BMI calculator inside</div>
+      <div class="chip"><div class="c-dot"></div> Dice roller project</div>
+    </div>
+  </div>
+  <div class="hero-bar"></div>
+</header>
+
+
+<!-- ═══════════════════ CONTENT -->
+<main class="wrap content">
+
+
+  <!-- ── INTRO ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">00 — why functions</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">The core idea</span>
+    </div>
+
+    <h2>Stop Repeating <span class="hl">Yourself</span></h2>
+
+    <p>Here's a pattern every beginner falls into: you write the same calculation in three places. Then the formula changes. Now you have to fix it in three places — and you forget one. This is how bugs are born.</p>
+    <p>Functions are Python's answer to this. You write the logic <strong>once</strong>, give it a name, and call it anywhere. And modules? They're collections of functions someone else already wrote — so you don't have to.</p>
+
+    <div class="callout c-info">
+      <div class="c-title">💡 The Golden Rule of Functions</div>
+      <p>If you write the same code more than once, it should be a function. If you write it more than never, it should probably be a function. Functions make code readable, testable, and reusable.</p>
+    </div>
+
+    <h3>Before vs After — See the Difference Instantly</h3>
+    <p>This is the exact "aha moment" the blog tip mentioned. Look at the same problem — with and without a function:</p>
+
+    <div class="compare">
+      <div class="compare-col">
+        <div class="compare-head ch-before">❌ &nbsp;Without a function</div>
+        <pre><span class="cm"># Calculate BMI for 3 people</span>
+<span class="cm"># (imagine doing this for 1000!)</span>
+
+<span class="vr">h1</span> <span class="op">=</span> <span class="nu">1.75</span>
+<span class="vr">w1</span> <span class="op">=</span> <span class="nu">70</span>
+<span class="vr">bmi1</span> <span class="op">=</span> <span class="vr">w1</span> <span class="op">/</span> (<span class="vr">h1</span> <span class="op">**</span> <span class="nu">2</span>)
+<span class="bi">print</span>(<span class="st">f"BMI: {bmi1:.2f}"</span>)
+
+<span class="vr">h2</span> <span class="op">=</span> <span class="nu">1.60</span>
+<span class="vr">w2</span> <span class="op">=</span> <span class="nu">55</span>
+<span class="vr">bmi2</span> <span class="op">=</span> <span class="vr">w2</span> <span class="op">/</span> (<span class="vr">h2</span> <span class="op">**</span> <span class="nu">2</span>)
+<span class="bi">print</span>(<span class="st">f"BMI: {bmi2:.2f}"</span>)
+
+<span class="vr">h3</span> <span class="op">=</span> <span class="nu">1.82</span>
+<span class="vr">w3</span> <span class="op">=</span> <span class="nu">90</span>
+<span class="vr">bmi3</span> <span class="op">=</span> <span class="vr">w3</span> <span class="op">/</span> (<span class="vr">h3</span> <span class="op">**</span> <span class="nu">2</span>)
+<span class="bi">print</span>(<span class="st">f"BMI: {bmi3:.2f}"</span>)
+
+<span class="cm"># 😩 Repeated 3 times already.</span>
+<span class="cm"># Change formula? Update 3 places.</span></pre>
+      </div>
+      <div class="compare-col compare-divider">
+        <div class="compare-head ch-after">✅ &nbsp;With a function</div>
+        <pre><span class="cm"># Define once.</span>
+<span class="kw">def</span> <span class="fn">calculate_bmi</span>(<span class="vr">weight</span>, <span class="vr">height</span>):
+    <span class="kw">return</span> <span class="vr">weight</span> <span class="op">/</span> (<span class="vr">height</span> <span class="op">**</span> <span class="nu">2</span>)
+
+<span class="cm"># Call it everywhere. Clean.</span>
+<span class="bi">print</span>(<span class="fn">calculate_bmi</span>(<span class="nu">70</span>, <span class="nu">1.75</span>))
+<span class="bi">print</span>(<span class="fn">calculate_bmi</span>(<span class="nu">55</span>, <span class="nu">1.60</span>))
+<span class="bi">print</span>(<span class="fn">calculate_bmi</span>(<span class="nu">90</span>, <span class="nu">1.82</span>))
+
+<span class="cm"># ✅ Formula changes? Fix ONE line.</span>
+<span class="cm"># ✅ Works for 1000 people too.</span>
+<span class="cm"># ✅ Name tells you what it does.</span>
+<span class="cm"># ✅ Easy to test in isolation.</span></pre>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 1: DEF ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">01 — defining functions</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">def · return</span>
+    </div>
+
+    <h2>The <span class="hl">def</span> Keyword</h2>
+
+    <p>Every function in Python starts with <code style="color:var(--indigo);font-family:var(--ff-code)">def</code> — short for <em>define</em>. Here's the complete anatomy of a function:</p>
+
+    <div class="anatomy">
+      <div class="anatomy-title">// anatomy of a Python function</div>
+      <pre><span class="kw">def</span> <span class="fn">greet</span>(<span class="vr">name</span>, <span class="vr">greeting</span><span class="op">=</span><span class="st">"Hello"</span>):
+    <span class="dc">"""Says hello to someone. (This is a docstring!)"""</span>
+    <span class="vr">message</span> <span class="op">=</span> <span class="st">f"</span><span class="vr">{greeting}</span><span class="st">, </span><span class="vr">{name}</span><span class="st">! 👋"</span>
+    <span class="kw">return</span> <span class="vr">message</span>
+</pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th>Part</th><th>What it is</th><th>In the example above</th></tr>
+        <tr><td>def</td><td>Keyword that starts every function</td><td><code>def</code></td></tr>
+        <tr><td>function name</td><td>What you call it — use snake_case</td><td><code>greet</code></td></tr>
+        <tr><td>parameters</td><td>Inputs inside the parentheses</td><td><code>name</code>, <code>greeting</code></td></tr>
+        <tr><td>default value</td><td>Used when argument isn't provided</td><td><code>greeting="Hello"</code></td></tr>
+        <tr><td>docstring</td><td>Description of what the function does</td><td><code>"""Says hello…"""</code></td></tr>
+        <tr><td>body</td><td>The indented logic block</td><td>The two lines inside</td></tr>
+        <tr><td>return</td><td>Sends a value back to the caller</td><td><code>return message</code></td></tr>
+      </table>
+    </div>
+
+    <h3>Practical: Full BMI Calculator</h3>
+    <p>Let's build a proper BMI calculator with a category label and default unit system:</p>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="cb-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="cb-name">bmi_calculator.py</span>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">calculate_bmi</span>(<span class="vr">weight</span>, <span class="vr">height</span>):
+    <span class="dc">"""
+    Calculate Body Mass Index (BMI).
+    weight: in kilograms
+    height: in meters
+    """</span>
+    <span class="vr">bmi</span> <span class="op">=</span> <span class="vr">weight</span> <span class="op">/</span> (<span class="vr">height</span> <span class="op">**</span> <span class="nu">2</span>)
+    <span class="kw">return</span> <span class="bi">round</span>(<span class="vr">bmi</span>, <span class="nu">2</span>)
+
+
+<span class="kw">def</span> <span class="fn">bmi_category</span>(<span class="vr">bmi</span>):
+    <span class="dc">"""Return the WHO BMI category label."""</span>
+    <span class="kw">if</span> <span class="vr">bmi</span> <span class="op">&lt;</span> <span class="nu">18.5</span>:
+        <span class="kw">return</span> <span class="st">"Underweight 🔵"</span>
+    <span class="kw">elif</span> <span class="vr">bmi</span> <span class="op">&lt;</span> <span class="nu">25.0</span>:
+        <span class="kw">return</span> <span class="st">"Normal weight ✅"</span>
+    <span class="kw">elif</span> <span class="vr">bmi</span> <span class="op">&lt;</span> <span class="nu">30.0</span>:
+        <span class="kw">return</span> <span class="st">"Overweight 🟡"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="st">"Obese 🔴"</span>
+
+
+<span class="kw">def</span> <span class="fn">bmi_report</span>(<span class="vr">name</span>, <span class="vr">weight</span>, <span class="vr">height</span>):
+    <span class="dc">"""Print a full BMI report for a person."""</span>
+    <span class="vr">bmi</span> <span class="op">=</span> <span class="fn">calculate_bmi</span>(<span class="vr">weight</span>, <span class="vr">height</span>)
+    <span class="vr">cat</span> <span class="op">=</span> <span class="fn">bmi_category</span>(<span class="vr">bmi</span>)
+    <span class="bi">print</span>(<span class="st">f"─────────────────────────"</span>)
+    <span class="bi">print</span>(<span class="st">f"  Name   : {name}"</span>)
+    <span class="bi">print</span>(<span class="st">f"  Weight : {weight} kg"</span>)
+    <span class="bi">print</span>(<span class="st">f"  Height : {height} m"</span>)
+    <span class="bi">print</span>(<span class="st">f"  BMI    : {bmi}"</span>)
+    <span class="bi">print</span>(<span class="st">f"  Status : {cat}"</span>)
+    <span class="bi">print</span>(<span class="st">f"─────────────────────────"</span>)
+
+
+<span class="cm"># Call the function for multiple people</span>
+<span class="fn">bmi_report</span>(<span class="st">"Arjun"</span>, <span class="nu">70</span>, <span class="nu">1.75</span>)
+<span class="fn">bmi_report</span>(<span class="st">"Priya"</span>, <span class="nu">55</span>, <span class="nu">1.60</span>)
+<span class="fn">bmi_report</span>(<span class="st">"Rahul"</span>, <span class="nu">95</span>, <span class="nu">1.72</span>)</pre>
+    </div>
+    <div class="out">
+      <div class="out-lbl">▶ Output</div>
+      ─────────────────────────<br>
+      &nbsp;&nbsp;Name   : Arjun<br>
+      &nbsp;&nbsp;Weight : 70 kg<br>
+      &nbsp;&nbsp;Height : 1.75 m<br>
+      &nbsp;&nbsp;BMI    : 22.86<br>
+      &nbsp;&nbsp;Status : Normal weight ✅<br>
+      ─────────────────────────<br>
+      &nbsp;&nbsp;Name   : Priya&nbsp;·&nbsp;BMI: 21.48&nbsp;·&nbsp;Normal weight ✅<br>
+      ─────────────────────────<br>
+      &nbsp;&nbsp;Name   : Rahul&nbsp;·&nbsp;BMI: 32.13&nbsp;·&nbsp;Obese 🔴
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 2: DEFAULT & KEYWORD ARGS ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">02 — arguments</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">default · keyword args</span>
+    </div>
+
+    <h2>Default <span class="hl">Arguments</span></h2>
+
+    <p>Default arguments let callers skip parameters they don't need to customize — the function uses a sensible fallback instead.</p>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="cb-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="cb-name">default_args.py</span>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">greet_user</span>(<span class="vr">name</span>, <span class="vr">greeting</span><span class="op">=</span><span class="st">"Hello"</span>, <span class="vr">punctuation</span><span class="op">=</span><span class="st">"!"</span>):
+    <span class="dc">"""Greet someone with a customizable message."""</span>
+    <span class="bi">print</span>(<span class="st">f"{greeting}, {name}{punctuation}"</span>)
+
+
+<span class="cm"># All 3 ways to call the same function:</span>
+<span class="fn">greet_user</span>(<span class="st">"Sneha"</span>)                          <span class="cm"># uses both defaults</span>
+<span class="fn">greet_user</span>(<span class="st">"Dev"</span>, <span class="st">"Good morning"</span>)            <span class="cm"># custom greeting</span>
+<span class="fn">greet_user</span>(<span class="st">"Ananya"</span>, <span class="st">"Namaste"</span>, <span class="st">"🙏"</span>)       <span class="cm"># all custom</span>
+
+<span class="cm"># Keyword arguments — order doesn't matter!</span>
+<span class="fn">greet_user</span>(<span class="vr">punctuation</span><span class="op">=</span><span class="st">"."</span>, <span class="vr">name</span><span class="op">=</span><span class="st">"Ravi"</span>, <span class="vr">greeting</span><span class="op">=</span><span class="st">"Hey"</span>)</pre>
+    </div>
+    <div class="out">
+      <div class="out-lbl">▶ Output</div>
+      Hello, Sneha!<br>
+      Good morning, Dev!<br>
+      Namaste, Ananya 🙏<br>
+      Hey, Ravi.
+    </div>
+
+    <div class="callout c-tip">
+      <div class="c-title">🔵 Keyword arguments = self-documenting code</div>
+      <p>When you write <code>greet_user(name="Ravi", greeting="Hey")</code>, the function call reads like English. This is especially valuable in data science where functions often have 10+ parameters.</p>
+    </div>
+
+    <div class="callout c-warn">
+      <div class="c-title">⚠️ Rule: defaults come last</div>
+      <p>Parameters with default values must always come <em>after</em> parameters without defaults. <code>def fn(name="A", age)</code> is illegal — Python won't know what to assign. Always: <code>def fn(required, optional="default")</code></p>
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 3: MODULES ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">03 — modules</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">import · standard library</span>
+    </div>
+
+    <h2>What Is a <span class="hl-t">Module</span>?</h2>
+
+    <p>A module is just a Python file containing functions, variables, and classes. Instead of writing every tool from scratch, you <code style="color:var(--indigo);font-family:var(--ff-code)">import</code> them. Python ships with hundreds of modules already installed — the <em>standard library</em>.</p>
+
+    <div class="module-types">
+      <div class="mod-card">
+        <div class="mod-icon">🔧</div>
+        <div class="mod-title">Built-in Functions</div>
+        <div class="mod-desc">Always available. No import needed. These are Python's core tools.</div>
+        <div class="mod-eg">print() · len() · range() · type()</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">📦</div>
+        <div class="mod-title">Standard Library</div>
+        <div class="mod-desc">Ships with Python. Import and use instantly. Hundreds of modules.</div>
+        <div class="mod-eg">math · random · os · datetime · json</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-icon">🌐</div>
+        <div class="mod-title">Third-Party</div>
+        <div class="mod-desc">Written by the community. Install via pip, then import.</div>
+        <div class="mod-eg">numpy · pandas · sklearn · tensorflow</div>
+      </div>
+    </div>
+
+    <h3>Practical: The math module</h3>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="cb-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="cb-name">using_math.py</span>
+      </div>
+      <pre><span class="kw">import</span> <span class="mo">math</span>
+
+<span class="cm"># Square roots — you'll use this constantly in ML!</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">sqrt</span>(<span class="nu">144</span>))       <span class="cm"># → 12.0</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">sqrt</span>(<span class="nu">2</span>))         <span class="cm"># → 1.4142135623...</span>
+
+<span class="cm"># Useful constants</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="vr">pi</span>)              <span class="cm"># → 3.141592653589793</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="vr">e</span>)               <span class="cm"># → 2.718281828459045</span>
+
+<span class="cm"># Rounding & ceiling</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">floor</span>(<span class="nu">4.9</span>))     <span class="cm"># → 4   (rounds down)</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">ceil</span>(<span class="nu">4.1</span>))      <span class="cm"># → 5   (rounds up)</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">pow</span>(<span class="nu">2</span>, <span class="nu">10</span>))     <span class="cm"># → 1024.0</span>
+<span class="bi">print</span>(<span class="mo">math</span>.<span class="fn">log</span>(<span class="mo">math</span>.<span class="vr">e</span>))    <span class="cm"># → 1.0  (natural log)</span>
+
+<span class="cm"># Real use: Euclidean distance formula</span>
+<span class="kw">def</span> <span class="fn">distance</span>(<span class="vr">x1</span>, <span class="vr">y1</span>, <span class="vr">x2</span>, <span class="vr">y2</span>):
+    <span class="kw">return</span> <span class="mo">math</span>.<span class="fn">sqrt</span>((<span class="vr">x2</span><span class="op">-</span><span class="vr">x1</span>)<span class="op">**</span><span class="nu">2</span> <span class="op">+</span> (<span class="vr">y2</span><span class="op">-</span><span class="vr">y1</span>)<span class="op">**</span><span class="nu">2</span>)
+
+<span class="bi">print</span>(<span class="fn">distance</span>(<span class="nu">0</span>, <span class="nu">0</span>, <span class="nu">3</span>, <span class="nu">4</span>))  <span class="cm"># → 5.0 (classic 3-4-5 triangle)</span></pre>
+    </div>
+    <div class="out">
+      <div class="out-lbl">▶ Output</div>
+      12.0<br>
+      1.4142135623730951<br>
+      3.141592653589793<br>
+      2.718281828459045<br>
+      4 · 5 · 1024.0 · 1.0<br>
+      5.0
+    </div>
+
+    <div class="callout c-info">
+      <div class="c-title">🔵 Data Science connection — math.sqrt everywhere</div>
+      <p>The <code>math.sqrt()</code> function appears inside distance metrics (KNN algorithm), standard deviation formulas, and loss functions. When you build ML models in Blog 13+, you'll recognise this exact pattern.</p>
+    </div>
+
+    <h3>Practical: The random module — Dice Roller</h3>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="cb-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="cb-name">dice_roller.py</span>
+      </div>
+      <pre><span class="kw">import</span> <span class="mo">random</span>
+
+<span class="kw">def</span> <span class="fn">roll_dice</span>(<span class="vr">sides</span><span class="op">=</span><span class="nu">6</span>, <span class="vr">num_dice</span><span class="op">=</span><span class="nu">1</span>):
+    <span class="dc">"""
+    Roll any number of dice with any number of sides.
+    Default: 1 standard six-sided die.
+    """</span>
+    <span class="vr">results</span> <span class="op">=</span> []
+    <span class="kw">for</span> <span class="vr">_</span> <span class="kw">in</span> <span class="bi">range</span>(<span class="vr">num_dice</span>):
+        <span class="vr">roll</span> <span class="op">=</span> <span class="mo">random</span>.<span class="fn">randint</span>(<span class="nu">1</span>, <span class="vr">sides</span>)
+        <span class="vr">results</span>.<span class="fn">append</span>(<span class="vr">roll</span>)
+    <span class="kw">return</span> <span class="vr">results</span>
+
+
+<span class="kw">def</span> <span class="fn">dice_game</span>():
+    <span class="dc">"""A simple two-player dice game."""</span>
+    <span class="bi">print</span>(<span class="st">"🎲 Welcome to the Dice Game!"</span>)
+    <span class="bi">print</span>(<span class="st">"─" * 30</span>)
+
+    <span class="vr">players</span> <span class="op">=</span> [<span class="st">"Player 1"</span>, <span class="st">"Player 2"</span>]
+    <span class="vr">scores</span>  <span class="op">=</span> {}
+
+    <span class="kw">for</span> <span class="vr">player</span> <span class="kw">in</span> <span class="vr">players</span>:
+        <span class="vr">roll</span>   <span class="op">=</span> <span class="fn">roll_dice</span>(<span class="vr">sides</span><span class="op">=</span><span class="nu">6</span>, <span class="vr">num_dice</span><span class="op">=</span><span class="nu">2</span>)  <span class="cm"># 2 dice each</span>
+        <span class="vr">total</span>  <span class="op">=</span> <span class="bi">sum</span>(<span class="vr">roll</span>)
+        <span class="vr">scores</span>[<span class="vr">player</span>] <span class="op">=</span> <span class="vr">total</span>
+        <span class="bi">print</span>(<span class="st">f"{player}: rolled {roll} → total = {total}"</span>)
+
+    <span class="bi">print</span>(<span class="st">"─" * 30</span>)
+    <span class="vr">winner</span> <span class="op">=</span> <span class="bi">max</span>(<span class="vr">scores</span>, <span class="vr">key</span><span class="op">=</span><span class="vr">scores</span>.<span class="fn">get</span>)
+
+    <span class="kw">if</span> <span class="vr">scores</span>[<span class="st">"Player 1"</span>] <span class="op">==</span> <span class="vr">scores</span>[<span class="st">"Player 2"</span>]:
+        <span class="bi">print</span>(<span class="st">"🤝 It's a tie!"</span>)
+    <span class="kw">else</span>:
+        <span class="bi">print</span>(<span class="st">f"🏆 {winner} wins!"</span>)
+
+
+<span class="cm"># --- Run the game ---</span>
+<span class="fn">dice_game</span>()
+
+<span class="cm"># --- Explore more random functions ---</span>
+<span class="bi">print</span>(<span class="mo">random</span>.<span class="fn">choice</span>([<span class="st">"rock"</span>, <span class="st">"paper"</span>, <span class="st">"scissors"</span>]))
+<span class="bi">print</span>(<span class="mo">random</span>.<span class="fn">random</span>())          <span class="cm"># float between 0.0 and 1.0</span>
+<span class="bi">print</span>(<span class="mo">random</span>.<span class="fn">randint</span>(<span class="nu">1</span>, <span class="nu">100</span>))  <span class="cm"># random integer in range</span></pre>
+    </div>
+    <div class="out">
+      <div class="out-lbl">▶ Sample output (random each run!)</div>
+      🎲 Welcome to the Dice Game!<br>
+      ──────────────────────────────<br>
+      Player 1: rolled [4, 6] → total = 10<br>
+      Player 2: rolled [3, 5] → total = 8<br>
+      ──────────────────────────────<br>
+      🏆 Player 1 wins!<br>
+      scissors<br>
+      0.7341829371...<br>
+      42
+    </div>
+
+    <div class="callout c-info">
+      <div class="c-title">🔵 random in Data Science</div>
+      <p><code>random.random()</code> and <code>random.seed()</code> are used constantly in ML — shuffling datasets, initializing neural network weights, train/test splitting. The <code>random</code> module is your gateway to understanding probability in Python.</p>
+    </div>
+  </section>
+
+
+  <!-- ── SECTION 4: IMPORT STYLES ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">04 — import styles</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">import · from · as</span>
+    </div>
+
+    <h2>Four Ways to <span class="hl-a">Import</span></h2>
+
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="cb-dots"><div class="cd cd-r"></div><div class="cd cd-y"></div><div class="cd cd-g"></div></div>
+        <span class="cb-name">import_styles.py</span>
+      </div>
+      <pre><span class="cm"># Style 1 — import the whole module</span>
+<span class="kw">import</span> <span class="mo">math</span>
+<span class="mo">math</span>.<span class="fn">sqrt</span>(<span class="nu">16</span>)          <span class="cm"># must prefix with module name</span>
+
+<span class="cm"># Style 2 — import specific function (no prefix needed)</span>
+<span class="kw">from</span> <span class="mo">math</span> <span class="kw">import</span> <span class="fn">sqrt</span>, <span class="fn">pi</span>
+<span class="fn">sqrt</span>(<span class="nu">16</span>)               <span class="cm"># ✓ cleaner!</span>
+<span class="bi">print</span>(<span class="vr">pi</span>)
+
+<span class="cm"># Style 3 — alias (very common in data science!)</span>
+<span class="kw">import</span> <span class="mo">numpy</span> <span class="kw">as</span> <span class="mo">np</span>     <span class="cm"># you'll write this in every DS notebook</span>
+<span class="kw">import</span> <span class="mo">pandas</span> <span class="kw">as</span> <span class="mo">pd</span>    <span class="cm"># industry standard aliases</span>
+<span class="kw">import</span> <span class="mo">random</span> <span class="kw">as</span> <span class="mo">rnd</span>
+
+<span class="cm"># Style 4 — import everything (⚠ use sparingly)</span>
+<span class="kw">from</span> <span class="mo">math</span> <span class="kw">import</span> <span class="op">*</span>     <span class="cm"># pollutes namespace — avoid in production</span></pre>
+    </div>
+
+    <div class="callout c-warn">
+      <div class="c-title">⚠️ Never use import * in real projects</div>
+      <p>When you do <code>from math import *</code>, you import everything — including names that might clash with your own variables. Stick to explicit imports. Your future self (and teammates) will thank you.</p>
+    </div>
+  </section>
+
+
+  <!-- ── RECAP ── -->
+  <section>
+    <div class="sh">
+      <span class="sh-num">05 — summary</span>
+      <div class="sh-rule"></div>
+      <span class="sh-pill">What you learned</span>
+    </div>
+
+    <h2>Today's <span class="hl">Recap</span></h2>
+    <div class="recap-grid">
+      <div class="recap-item"><div class="ri-icon">🔁</div><div><strong>Why functions</strong><span>Write once, reuse everywhere — no copy-paste bugs</span></div></div>
+      <div class="recap-item"><div class="ri-icon">⚙️</div><div><strong>def · return</strong><span>Define a function, run its logic, hand back a value</span></div></div>
+      <div class="recap-item"><div class="ri-icon">🎛️</div><div><strong>Default arguments</strong><span>Optional parameters with sensible fallback values</span></div></div>
+      <div class="recap-item"><div class="ri-icon">🏷️</div><div><strong>Keyword arguments</strong><span>Call by name — order doesn't matter, code reads clearly</span></div></div>
+      <div class="recap-item"><div class="ri-icon">📦</div><div><strong>Modules</strong><span>Built-in, standard library, and third-party packages</span></div></div>
+      <div class="recap-item"><div class="ri-icon">🎲</div><div><strong>math + random</strong><span>sqrt, pi, randint, choice — your first standard library tools</span></div></div>
+    </div>
+  </section>
+
+
+  <!-- ── CHALLENGE ── -->
+  <div class="challenge">
+    <div class="challenge-tag">▶ your challenge today</div>
+    <h3>Open Colab &amp; Build</h3>
+    <p class="sub-text">Five exercises — do them in order, don't skip the bonus.</p>
+    <ul class="ch-list">
+      <li>
+        <span class="ch-badge badge-idx">01</span>
+        Write a function <code style="color:var(--indigo2);font-family:var(--ff-code)">celsius_to_fahrenheit(c)</code> and a reverse <code style="color:var(--indigo2);font-family:var(--ff-code)">fahrenheit_to_celsius(f)</code>. Test with 0°C, 100°C, and 37°C.
+      </li>
+      <li>
+        <span class="ch-badge badge-idx">02</span>
+        Add a <code style="color:var(--indigo2);font-family:var(--ff-code)">unit</code> default parameter to your BMI function so it also works with pounds and inches (imperial system).
+      </li>
+      <li>
+        <span class="ch-badge badge-idx">03</span>
+        Use <code style="color:var(--indigo2);font-family:var(--ff-code)">math</code> module to write a function that calculates the hypotenuse of a right triangle given two sides.
+      </li>
+      <li>
+        <span class="ch-badge badge-idx">04</span>
+        Extend the dice roller: let the user choose how many rounds to play and track the winner across all rounds.
+      </li>
+      <li>
+        <span class="ch-badge badge-bonus">★ Bonus</span>
+        Write a function <code style="color:var(--indigo2);font-family:var(--ff-code)">random_password(length=12)</code> that generates a random password using <code style="color:var(--indigo2);font-family:var(--ff-code)">random.choice()</code> from a string of letters, digits, and symbols.
+      </li>
+    </ul>
+  </div>
+
+
+  <!-- ── NEXT BLOG ── -->
+  <div class="next-card">
+    <div>
+      <div class="n-lbl">▶ Coming up next — Blog 05 of 20</div>
+      <div class="n-title">Lists, Tuples, Dicts &amp; Sets</div>
+      <div class="n-desc">Master Python's four core data structures — the building blocks every data scientist uses daily to store, access, and transform information.</div>
+    </div>
+    <div class="n-btn">Blog 5 →</div>
+  </div>
+
+</main>
+
+<footer>
+  Python for Data Science &amp; AI &nbsp;·&nbsp; Blog 4 of 20 &nbsp;·&nbsp; Functions &amp; Modules
+</footer>
+
+</body>
+</html>
