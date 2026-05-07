@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 6 — NumPy for Beginners</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#030d1a;
+  --navy:#061828;
+  --panel:#071e30;
+  --panel2:#0a2540;
+  --grid-line:rgba(0,200,220,0.08);
+  --border:rgba(0,180,200,0.18);
+  --border2:rgba(0,180,200,0.35);
+  --cyan:#00d4e8;
+  --cyan-dim:#007a8a;
+  --cyan-glow:rgba(0,212,232,0.12);
+  --cyan-glow2:rgba(0,212,232,0.05);
+  --teal:#00f0c0;
+  --teal-dim:#006050;
+  --amber:#f5a623;
+  --red:#ff4e4e;
+  --purple:#b88cff;
+  --text:#a8ccd8;
+  --bright:#e0f4f8;
+  --muted:#3a6070;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Crimson Pro',serif;
+  font-size:18px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+/* Blueprint grid bg */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  border-bottom:1px solid var(--border2);
+  overflow:hidden;
+}
+
+/* scanning line animation */
+@keyframes scanLine{
+  0%{transform:translateY(-100%)}
+  100%{transform:translateY(100vh)}
+}
+.hero-scan{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(transparent, var(--cyan), transparent);
+  animation:scanLine 6s linear infinite;
+  opacity:0.3;
+  pointer-events:none;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glowPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.hero-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.25rem 3rem;
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:2;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.1s;
+}
+
+.hero-topbar-left{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--cyan-dim);letter-spacing:0.2em;text-transform:uppercase;
+}
+.hero-topbar-left span{color:var(--cyan)}
+
+.hero-topbar-right{
+  display:flex;gap:1.5rem;
+  font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;
+}
+
+.hero-body{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  position:relative;z-index:2;
+}
+
+.hero-left{
+  padding:4rem 3rem;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:center;
+}
+
+.blog-id{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--cyan);letter-spacing:0.25em;
+  text-transform:uppercase;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:10px;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.2s;
+}
+.blog-id::before{content:'▶';font-size:8px;animation:blink 2s step-end infinite}
+
+.hero-num{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(6rem,11vw,10rem);
+  font-weight:700;
+  line-height:0.85;
+  color:rgba(0,212,232,0.06);
+  letter-spacing:-0.02em;
+  margin-bottom:0.25rem;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.25s;
+  user-select:none;
+}
+
+.hero-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(2.8rem,5.5vw,5rem);
+  font-weight:700;
+  line-height:0.9;
+  letter-spacing:0.02em;
+  color:var(--bright);
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.35s;
+}
+.hero-title .accent{
+  color:var(--cyan);
+  text-shadow:0 0 30px rgba(0,212,232,0.5);
+}
+.hero-title .sub{
+  font-weight:300;color:var(--muted);display:block;font-size:0.6em;letter-spacing:0.08em;margin-top:0.4rem;
+}
+
+.hero-desc{
+  font-family:'Crimson Pro',serif;
+  font-size:16px;font-style:italic;
+  color:var(--muted);margin-top:1.5rem;max-width:400px;line-height:1.7;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.5s;
+}
+
+.hero-tags{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:2rem;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.65s;
+}
+.htag{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  padding:4px 12px;border:1px solid var(--border2);
+  color:var(--cyan-dim);letter-spacing:0.1em;text-transform:uppercase;
+}
+.htag.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,212,232,0.15)}
+
+/* Right side — animated array visualization */
+.hero-right{
+  padding:3rem 2.5rem;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  opacity:0;animation:fadeUp 0.7s ease forwards 0.6s;
+}
+
+.array-vis{
+  width:100%;max-width:420px;
+}
+
+.av-label{
+  font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan-dim);
+  letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;
+}
+
+.av-row{
+  display:flex;gap:3px;margin-bottom:3px;
+}
+
+.av-cell{
+  flex:1;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  color:var(--text);
+  transition:all 0.3s;
+  position:relative;
+}
+.av-cell:hover{
+  border-color:var(--cyan);
+  background:var(--cyan-glow);
+  color:var(--cyan);
+  box-shadow:0 0 12px rgba(0,212,232,0.2);
+}
+
+.av-cell.hi{border-color:var(--cyan);background:var(--cyan-glow2);color:var(--cyan)}
+.av-cell.hi2{border-color:var(--teal);background:rgba(0,240,192,0.05);color:var(--teal)}
+.av-cell.dim{opacity:0.3}
+
+.av-index{
+  position:absolute;top:2px;left:4px;
+  font-size:8px;color:var(--muted);font-family:'Share Tech Mono',monospace;
+}
+
+.av-spacer{height:16px}
+
+.av-shape{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--muted);margin-top:6px;
+  display:flex;align-items:center;gap:8px;
+}
+.av-shape span{color:var(--cyan)}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:5rem 2.5rem 8rem;position:relative;z-index:1}
+
+.sec{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--cyan-dim);letter-spacing:0.22em;text-transform:uppercase;
+  margin:5rem 0 1.5rem;
+  display:flex;align-items:center;gap:12px;
+}
+.sec::before{content:'//';color:var(--cyan)}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec:first-child{margin-top:0}
+
+h2{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:600;line-height:1.05;letter-spacing:0.03em;
+  color:var(--bright);margin-bottom:1.25rem;
+}
+
+h3{
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.3rem;font-weight:600;
+  color:var(--cyan);margin:3rem 0 0.75rem;letter-spacing:0.05em;
+}
+
+p{margin-bottom:1.25rem;color:var(--text);line-height:1.8}
+strong{color:var(--bright);font-weight:500}
+em{font-style:italic;color:var(--amber)}
+
+code{
+  font-family:'Share Tech Mono',monospace;font-size:12.5px;
+  background:var(--panel2);border:1px solid var(--border);
+  padding:2px 8px;color:var(--cyan);
+}
+
+hr{border:none;border-top:1px solid var(--border);margin:4.5rem 0}
+
+/* OPENER */
+.opener{
+  border-left:3px solid var(--cyan);
+  padding:1rem 1.75rem;
+  background:var(--cyan-glow2);
+  margin-bottom:3rem;
+  font-style:italic;
+  font-size:1.1rem;
+  color:var(--text);
+  line-height:1.7;
+}
+
+/* SPEED DEMO — key visual */
+.speed-demo{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);
+  margin:2.5rem 0;border:1px solid var(--border2);
+}
+
+.speed-panel{
+  background:var(--panel);
+  padding:1.75rem;
+}
+
+.speed-label{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:0.18em;text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.speed-label.slow{color:#f5a623}
+.speed-label.fast{color:var(--teal)}
+
+.speed-bar-wrap{margin:1rem 0}
+.speed-bar-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px}
+.speed-bar{height:20px;border-radius:0;position:relative;overflow:hidden}
+.speed-bar-fill{height:100%;display:flex;align-items:center;padding-left:8px;font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:600}
+.bar-slow{background:rgba(245,166,35,0.2);border-left:2px solid var(--amber)}
+.bar-slow .speed-bar-fill{width:92%;background:rgba(245,166,35,0.15);color:var(--amber)}
+.bar-fast{background:rgba(0,240,192,0.08);border-left:2px solid var(--teal)}
+.bar-fast .speed-bar-fill{width:8%;background:rgba(0,240,192,0.15);color:var(--teal);white-space:nowrap}
+
+/* CODE BLOCK */
+.code-block{
+  background:#010b14;
+  border:1px solid var(--border2);
+  margin:2rem 0;overflow:hidden;
+  position:relative;
+}
+.code-block::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:0.4;
+}
+
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:#010810;border-bottom:1px solid var(--border);
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:9px;height:9px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.15em;margin-left:6px}
+.copy-btn{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);background:none;border:1px solid var(--border);padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.08em}
+.copy-btn:hover{color:var(--cyan);border-color:var(--cyan)}
+
+pre{padding:1.5rem;font-family:'Share Tech Mono',monospace;font-size:12.5px;line-height:1.9;overflow-x:auto;color:#7aa8b8}
+
+.kw{color:#b88cff}
+.fn{color:#5eb8d4}
+.st{color:#7ecf9a}
+.nm{color:#f5a623}
+.cm{color:#1e4a5a;font-style:italic}
+.op{color:#f07070}
+.wh{color:#a8ccd8}
+.out{color:#00f0c0}
+.atr{color:#5eb8d4}
+
+.output-box{
+  border:1px solid var(--border);border-top:none;
+  padding:1rem 1.5rem;
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  background:#010b14;color:var(--teal);
+  margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-size:9px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:3px solid var(--cyan);
+  background:var(--cyan-glow2);font-size:15px;line-height:1.7;color:var(--text);
+}
+.callout.amber{border-color:var(--amber);background:rgba(245,166,35,0.04);color:#c8a870}
+.callout.teal{border-color:var(--teal);background:rgba(0,240,192,0.04);color:#70c8b8}
+.callout.red{border-color:var(--red);background:rgba(255,78,78,0.04);color:#c87070}
+.callout.purple{border-color:var(--purple);background:rgba(184,140,255,0.04);color:#a88ccc}
+
+.ct{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:0.5rem}
+.callout.amber .ct{color:var(--amber)}.callout.teal .ct{color:var(--teal)}.callout.red .ct{color:var(--red)}.callout.purple .ct{color:var(--purple)}
+
+/* NDIM VISUAL */
+.ndim-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  margin:2rem 0;background:var(--border);
+}
+.ndim-cell{
+  background:var(--panel);padding:1.5rem;
+  display:flex;flex-direction:column;gap:0.75rem;
+}
+.ndim-label{
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;
+  text-transform:uppercase;
+}
+.nd1{color:var(--amber)}.nd2{color:var(--cyan)}.nd3{color:var(--purple)}
+
+.ndim-title{font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:600;color:var(--bright)}
+.ndim-code{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);line-height:1.7}
+.ndim-use{font-size:13px;color:var(--muted);font-style:italic;margin-top:0.25rem}
+
+/* OPERATIONS TABLE */
+.op-table{width:100%;border-collapse:collapse;font-size:14px;margin:2rem 0}
+.op-table th{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;background:var(--panel)}
+.op-table td{padding:12px 14px;border-bottom:1px solid rgba(0,180,200,0.07);vertical-align:top}
+.op-table tr:last-child td{border-bottom:none}
+.op-table tr:hover td{background:var(--cyan-glow2)}
+.op-table td:first-child{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan)}
+.op-table td:nth-child(2){color:var(--muted);font-size:13px}
+.op-table td:last-child{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--teal)}
+
+/* CHALLENGE */
+.challenge{
+  border:1px solid var(--cyan);
+  padding:2.5rem;margin:3rem 0;
+  background:var(--cyan-glow2);
+  box-shadow:0 0 40px rgba(0,212,232,0.05);
+  position:relative;
+}
+.challenge::before{
+  content:'EXERCISE_06.py';
+  position:absolute;top:-1px;left:2rem;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--cyan);background:var(--bg);padding:0 8px;letter-spacing:0.1em;
+}
+.chal-title{font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:600;color:var(--bright);margin-bottom:1rem;letter-spacing:0.03em}
+.clist{list-style:none}
+.clist li{font-family:'Share Tech Mono',monospace;font-size:11.5px;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;line-height:1.6}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'[ ]';color:var(--border2);flex-shrink:0;margin-top:1px}
+
+/* RECAP */
+.recap-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:2px;
+  background:var(--border);margin:2rem 0;
+}
+.recap-cell{
+  background:var(--panel);padding:1.25rem 1.5rem;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.recap-icon{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--cyan);background:var(--panel2);
+  border:1px solid var(--border2);
+  padding:4px 8px;white-space:nowrap;flex-shrink:0;margin-top:2px;
+}
+.recap-text strong{display:block;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;color:var(--bright);letter-spacing:0.03em;margin-bottom:2px}
+.recap-text span{font-size:13px;color:var(--muted)}
+
+/* FOOTER */
+.post-footer{border-top:1px solid var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;line-height:1.9}
+.foot-item strong{display:block;font-family:'Rajdhani',sans-serif;font-size:1.1rem;color:var(--bright);text-transform:none;letter-spacing:0.02em;margin-top:4px;font-weight:600}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-scan"></div>
+
+  <div class="hero-topbar">
+    <div class="hero-topbar-left">
+      <span>NUMPY</span>_LAB.ipynb &nbsp;·&nbsp; Python for Data Science Series
+    </div>
+    <div class="hero-topbar-right">
+      <span>Blog 06/20</span>
+      <span>12 min read</span>
+      <span>Beginner → Intermediate</span>
+    </div>
+  </div>
+
+  <div class="hero-body">
+    <div class="hero-left">
+      <div class="blog-id">MODULE_06 &nbsp;·&nbsp; NUMERICAL PYTHON</div>
+      <div class="hero-num">06</div>
+      <h1 class="hero-title">
+        <span class="accent">NumPy</span><br>
+        for Beginners
+        <span class="sub">Arrays · Math · Broadcasting · Speed</span>
+      </h1>
+      <p class="hero-desc">The engine under every data science library. Before Pandas, before TensorFlow — there is NumPy.</p>
+      <div class="hero-tags">
+        <span class="htag on">ndarray</span>
+        <span class="htag on">shape &amp; reshape</span>
+        <span class="htag on">broadcasting</span>
+        <span class="htag on">vectorization</span>
+        <span class="htag">indexing</span>
+        <span class="htag">math ops</span>
+      </div>
+    </div>
+
+    <!-- Array visualization -->
+    <div class="hero-right">
+      <div class="array-vis">
+
+        <div class="av-label">1D Array — np.array([...])</div>
+        <div class="av-row">
+          <div class="av-cell hi"><div class="av-index">0</div>12</div>
+          <div class="av-cell hi"><div class="av-index">1</div>45</div>
+          <div class="av-cell hi"><div class="av-index">2</div>7</div>
+          <div class="av-cell hi"><div class="av-index">3</div>89</div>
+          <div class="av-cell hi"><div class="av-index">4</div>23</div>
+          <div class="av-cell hi"><div class="av-index">5</div>61</div>
+        </div>
+        <div class="av-shape">shape: <span>(6,)</span> &nbsp;·&nbsp; dtype: <span>int64</span></div>
+
+        <div class="av-spacer"></div>
+
+        <div class="av-label">2D Array — Matrix (3×4)</div>
+        <div class="av-row">
+          <div class="av-cell hi2"><div class="av-index">0,0</div>1</div>
+          <div class="av-cell hi2"><div class="av-index">0,1</div>2</div>
+          <div class="av-cell hi2"><div class="av-index">0,2</div>3</div>
+          <div class="av-cell hi2"><div class="av-index">0,3</div>4</div>
+        </div>
+        <div class="av-row">
+          <div class="av-cell"><div class="av-index">1,0</div>5</div>
+          <div class="av-cell"><div class="av-index">1,1</div>6</div>
+          <div class="av-cell"><div class="av-index">1,2</div>7</div>
+          <div class="av-cell"><div class="av-index">1,3</div>8</div>
+        </div>
+        <div class="av-row">
+          <div class="av-cell dim"><div class="av-index">2,0</div>9</div>
+          <div class="av-cell dim"><div class="av-index">2,1</div>10</div>
+          <div class="av-cell dim"><div class="av-index">2,2</div>11</div>
+          <div class="av-cell dim"><div class="av-index">2,3</div>12</div>
+        </div>
+        <div class="av-shape">shape: <span>(3, 4)</span> &nbsp;·&nbsp; dtype: <span>int64</span></div>
+
+        <div class="av-spacer"></div>
+
+        <div class="av-label">Broadcasting — array + scalar</div>
+        <div class="av-row">
+          <div class="av-cell"><div class="av-index">0</div>1</div>
+          <div class="av-cell"><div class="av-index">1</div>2</div>
+          <div class="av-cell"><div class="av-index">2</div>3</div>
+          <div class="av-cell" style="border-color:var(--amber);color:var(--amber);background:rgba(245,166,35,0.05)"><div class="av-index" style="color:var(--amber)">+</div>10</div>
+        </div>
+        <div class="av-row">
+          <div class="av-cell hi"><div class="av-index">0</div>11</div>
+          <div class="av-cell hi"><div class="av-index">1</div>12</div>
+          <div class="av-cell hi"><div class="av-index">2</div>13</div>
+          <div class="av-cell hi" style="background:rgba(245,166,35,0.08);border-color:var(--amber);color:var(--amber)"><div class="av-index" style="color:var(--amber)">=</div>?</div>
+        </div>
+        <div class="av-shape">10 added to <span>every element</span> — no loop needed</div>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    If Python is the language of data science, NumPy is its foundation. Every library you'll use — Pandas, Matplotlib, scikit-learn, TensorFlow — is built on top of NumPy. Understanding it makes everything else click.
+  </div>
+
+  <!-- WHY NUMPY -->
+  <div class="sec">01 — why numpy</div>
+  <h2>Why NumPy? What's Wrong with Python Lists?</h2>
+
+  <p>Python lists can store numbers just fine. So why does every data scientist immediately reach for NumPy? Two reasons: <em>speed</em> and <em>mathematical expressiveness</em>.</p>
+
+  <div class="speed-demo">
+    <div class="speed-panel">
+      <div class="speed-label slow">⚠ Python List — Slow</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:1rem">To multiply a million numbers by 2, you need a loop. Python processes each element one by one in interpreted Python code.</p>
+      <div class="speed-bar-wrap">
+        <div class="speed-bar-label">Time: ~180ms for 1M elements</div>
+        <div class="speed-bar bar-slow"><div class="speed-bar-fill">●●●●●●●●●●●●●● 180ms</div></div>
+      </div>
+    </div>
+    <div class="speed-panel">
+      <div class="speed-label fast">✓ NumPy Array — Fast</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:1rem">NumPy calls pre-compiled C code. The entire operation happens in one vectorized call — no Python loop in sight.</p>
+      <div class="speed-bar-wrap">
+        <div class="speed-bar-label">Time: ~1.5ms for 1M elements</div>
+        <div class="speed-bar bar-fast"><div class="speed-bar-fill">● 1.5ms</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p>That's roughly <strong>120× faster</strong>. When your dataset has millions of rows, this gap is the difference between a model that trains in 2 minutes and one that takes 4 hours.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+<span class="kw">import</span> <span class="wh">time</span>
+
+<span class="cm"># Python list approach</span>
+<span class="wh">py_list</span> <span class="op">=</span> <span class="fn">list</span><span class="wh">(</span><span class="fn">range</span><span class="wh">(</span><span class="nm">1_000_000</span><span class="wh">))</span>
+
+<span class="wh">start</span> <span class="op">=</span> <span class="wh">time</span><span class="op">.</span><span class="fn">time</span><span class="wh">()</span>
+<span class="wh">result</span> <span class="op">=</span> <span class="wh">[x</span> <span class="op">*</span> <span class="nm">2</span> <span class="kw">for</span> <span class="wh">x</span> <span class="kw">in</span> <span class="wh">py_list]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Python list: </span><span class="op">{</span><span class="wh">(time</span><span class="op">.</span><span class="fn">time</span><span class="wh">()</span><span class="op">-</span><span class="wh">start)</span><span class="op">*1000:.1f</span><span class="op">}</span><span class="st">ms"</span><span class="wh">)</span>
+
+<span class="cm"># NumPy approach</span>
+<span class="wh">np_arr</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">arange</span><span class="wh">(</span><span class="nm">1_000_000</span><span class="wh">)</span>
+
+<span class="wh">start</span> <span class="op">=</span> <span class="wh">time</span><span class="op">.</span><span class="fn">time</span><span class="wh">()</span>
+<span class="wh">result</span> <span class="op">=</span> <span class="wh">np_arr</span> <span class="op">*</span> <span class="nm">2</span>              <span class="cm"># no loop — one expression!</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"NumPy array: </span><span class="op">{</span><span class="wh">(time</span><span class="op">.</span><span class="fn">time</span><span class="wh">()</span><span class="op">-</span><span class="wh">start)</span><span class="op">*1000:.1f</span><span class="op">}</span><span class="st">ms"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Python list: 178.3ms<br>
+    NumPy array: 1.4ms
+  </div>
+
+  <div class="callout teal">
+    <div class="ct">The convention — always import as np</div>
+    Every data scientist writes <code>import numpy as np</code> — it's a universal convention. You'll see it in every notebook, tutorial, and production ML codebase on the planet. Always use <code>np</code> as the alias.
+  </div>
+
+  <hr>
+
+  <!-- CREATING ARRAYS -->
+  <div class="sec">02 — creating arrays</div>
+  <h2>Creating NumPy Arrays</h2>
+
+  <p>The core object in NumPy is the <strong>ndarray</strong> (n-dimensional array). Think of it as a supercharged Python list that supports fast math. Here are all the ways to create one:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+
+<span class="cm"># ── From a Python list ────────────────────────</span>
+<span class="wh">a</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">20</span><span class="wh">,</span> <span class="nm">30</span><span class="wh">,</span> <span class="nm">40</span><span class="wh">,</span> <span class="nm">50</span><span class="wh">])</span>
+<span class="fn">print</span><span class="wh">(a)</span>                   <span class="cm"># [10 20 30 40 50]</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="atr">dtype</span><span class="wh">)</span>             <span class="cm"># int64</span>
+
+<span class="cm"># ── Zeros and Ones ────────────────────────────</span>
+<span class="wh">zeros</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">zeros</span><span class="wh">(</span><span class="nm">5</span><span class="wh">)</span>         <span class="cm"># [0. 0. 0. 0. 0.]</span>
+<span class="wh">ones</span>  <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">ones</span><span class="wh">(</span><span class="nm">5</span><span class="wh">)</span>          <span class="cm"># [1. 1. 1. 1. 1.]</span>
+<span class="wh">full</span>  <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">full</span><span class="wh">(</span><span class="nm">5</span><span class="wh">,</span> <span class="nm">7</span><span class="wh">)</span>       <span class="cm"># [7 7 7 7 7]</span>
+
+<span class="cm"># ── Ranges ────────────────────────────────────</span>
+<span class="wh">r1</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">arange</span><span class="wh">(</span><span class="nm">0</span><span class="wh">,</span> <span class="nm">10</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">)</span>    <span class="cm"># [0 2 4 6 8]  (like range)</span>
+<span class="wh">r2</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">linspace</span><span class="wh">(</span><span class="nm">0</span><span class="wh">,</span> <span class="nm">1</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">)</span>   <span class="cm"># [0. 0.25 0.5 0.75 1.]</span>
+
+<span class="cm"># ── Random arrays ─────────────────────────────</span>
+<span class="wh">rnd</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="wh">random</span><span class="op">.</span><span class="fn">rand</span><span class="wh">(</span><span class="nm">3</span><span class="wh">,</span> <span class="nm">4</span><span class="wh">)</span>  <span class="cm"># 3x4 matrix, values 0-1</span>
+<span class="wh">rni</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="wh">random</span><span class="op">.</span><span class="fn">randint</span><span class="wh">(</span><span class="nm">0</span><span class="wh">,</span><span class="nm">100</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">)</span>  <span class="cm"># 6 ints from 0–99</span>
+
+<span class="cm"># ── Identity matrix ───────────────────────────</span>
+<span class="wh">eye</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">eye</span><span class="wh">(</span><span class="nm">3</span><span class="wh">)</span>               <span class="cm"># 3x3 identity matrix</span>
+<span class="fn">print</span><span class="wh">(eye)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output (eye)</div>
+    [[1. 0. 0.]<br>
+    &nbsp;[0. 1. 0.]<br>
+    &nbsp;[0. 0. 1.]]
+  </div>
+
+  <div class="callout amber">
+    <div class="ct">arange vs linspace</div>
+    <code>np.arange(0, 1, 0.1)</code> gives you values from 0 to 1 in steps of 0.1. <code>np.linspace(0, 1, 10)</code> gives you exactly 10 evenly-spaced values from 0 to 1 inclusive. Use <strong>arange</strong> when you know the step size. Use <strong>linspace</strong> when you know how many points you want — common for plotting graphs and ML training curves.
+  </div>
+
+  <hr>
+
+  <!-- SHAPE & DIMENSIONS -->
+  <div class="sec">03 — shape &amp; dimensions</div>
+  <h2>Shape, Dimensions &amp; Reshape</h2>
+
+  <p>NumPy arrays can have any number of dimensions. The <code>shape</code> attribute tells you the size of each dimension. Understanding shape is critical — shape errors are among the most common bugs in data science and deep learning.</p>
+
+  <div class="ndim-grid">
+    <div class="ndim-cell">
+      <div class="ndim-label nd1">1D — Vector</div>
+      <div class="ndim-title">1-Dimensional</div>
+      <div class="ndim-code">np.array([1, 2, 3, 4, 5])<br>shape: (5,)<br>ndim: 1</div>
+      <div class="ndim-use">A single row of data — one feature, one sample list, a time series</div>
+    </div>
+    <div class="ndim-cell">
+      <div class="ndim-label nd2">2D — Matrix</div>
+      <div class="ndim-title">2-Dimensional</div>
+      <div class="ndim-code">np.array([[1,2,3],[4,5,6]])<br>shape: (2, 3)<br>ndim: 2</div>
+      <div class="ndim-use">A dataset table — rows are samples, columns are features</div>
+    </div>
+    <div class="ndim-cell">
+      <div class="ndim-label nd3">3D — Tensor</div>
+      <div class="ndim-title">3-Dimensional</div>
+      <div class="ndim-code">np.zeros((3, 28, 28))<br>shape: (3, 28, 28)<br>ndim: 3</div>
+      <div class="ndim-use">Images — 3 colour channels, 28×28 pixels each (like MNIST)</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">a</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">arange</span><span class="wh">(</span><span class="nm">12</span><span class="wh">)</span>           <span class="cm"># [0,1,2,...,11]  shape:(12,)</span>
+
+<span class="cm"># Key array attributes</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="atr">shape</span><span class="wh">)</span>              <span class="cm"># (12,)</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="atr">ndim</span><span class="wh">)</span>               <span class="cm"># 1</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="atr">size</span><span class="wh">)</span>               <span class="cm"># 12  (total elements)</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="atr">dtype</span><span class="wh">)</span>              <span class="cm"># int64</span>
+
+<span class="cm"># Reshape — change structure, keep data</span>
+<span class="wh">matrix</span> <span class="op">=</span> <span class="wh">a</span><span class="op">.</span><span class="fn">reshape</span><span class="wh">(</span><span class="nm">3</span><span class="wh">,</span> <span class="nm">4</span><span class="wh">)</span>    <span class="cm"># 3 rows, 4 cols</span>
+<span class="fn">print</span><span class="wh">(matrix)</span>
+<span class="fn">print</span><span class="wh">(matrix</span><span class="op">.</span><span class="atr">shape</span><span class="wh">)</span>         <span class="cm"># (3, 4)</span>
+
+<span class="cm"># -1 means "figure it out"</span>
+<span class="wh">col</span> <span class="op">=</span> <span class="wh">a</span><span class="op">.</span><span class="fn">reshape</span><span class="wh">(</span><span class="op">-</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">1</span><span class="wh">)</span>     <span class="cm"># 12 rows, 1 col — column vector</span>
+<span class="wh">row</span> <span class="op">=</span> <span class="wh">a</span><span class="op">.</span><span class="fn">reshape</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="op">-</span><span class="nm">1</span><span class="wh">)</span>     <span class="cm"># 1 row, 12 cols — row vector</span>
+<span class="fn">print</span><span class="wh">(col</span><span class="op">.</span><span class="atr">shape</span><span class="wh">)</span>             <span class="cm"># (12, 1)</span>
+<span class="fn">print</span><span class="wh">(row</span><span class="op">.</span><span class="atr">shape</span><span class="wh">)</span>             <span class="cm"># (1, 12)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output (matrix)</div>
+    [[ 0&nbsp;&nbsp;1&nbsp;&nbsp;2&nbsp;&nbsp;3]<br>
+    &nbsp;[ 4&nbsp;&nbsp;5&nbsp;&nbsp;6&nbsp;&nbsp;7]<br>
+    &nbsp;[ 8&nbsp;&nbsp;9 10 11]]<br>
+    (3, 4)
+  </div>
+
+  <div class="callout purple">
+    <div class="ct">The -1 trick in reshape</div>
+    <code>reshape(-1, 1)</code> is one of the most-used NumPy patterns in machine learning. Scikit-learn often requires features as column vectors (shape <code>(n, 1)</code>) rather than flat arrays (shape <code>(n,)</code>). The <code>-1</code> tells NumPy to calculate that dimension automatically — you'll use this every day in ML.
+  </div>
+
+  <hr>
+
+  <!-- INDEXING & SLICING -->
+  <div class="sec">04 — indexing &amp; slicing</div>
+  <h2>Indexing &amp; Slicing</h2>
+
+  <p>NumPy indexing is like Python list slicing — but supercharged for multiple dimensions and with powerful Boolean filtering.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">scores</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">45</span><span class="wh">,</span> <span class="nm">72</span><span class="wh">,</span> <span class="nm">88</span><span class="wh">,</span> <span class="nm">91</span><span class="wh">,</span> <span class="nm">60</span><span class="wh">,</span> <span class="nm">77</span><span class="wh">,</span> <span class="nm">95</span><span class="wh">,</span> <span class="nm">55</span><span class="wh">])</span>
+
+<span class="cm"># Basic indexing (same as Python lists)</span>
+<span class="fn">print</span><span class="wh">(scores[</span><span class="nm">0</span><span class="wh">])</span>           <span class="cm"># 45</span>
+<span class="fn">print</span><span class="wh">(scores[-</span><span class="nm">1</span><span class="wh">])</span>          <span class="cm"># 55</span>
+<span class="fn">print</span><span class="wh">(scores[</span><span class="nm">2</span><span class="wh">:</span><span class="nm">5</span><span class="wh">])</span>         <span class="cm"># [88 91 60]</span>
+
+<span class="cm"># ── Boolean indexing ──────────────── BIG DEAL!</span>
+<span class="wh">mask</span> <span class="op">=</span> <span class="wh">scores</span> <span class="op">>=</span> <span class="nm">80</span>         <span class="cm"># [F,F,T,T,F,F,T,F]</span>
+<span class="fn">print</span><span class="wh">(scores[mask])</span>          <span class="cm"># [88 91 95]</span>
+
+<span class="cm"># One-liner filter</span>
+<span class="fn">print</span><span class="wh">(scores[scores</span> <span class="op">>=</span> <span class="nm">80</span><span class="wh">])</span> <span class="cm"># [88 91 95]</span>
+
+<span class="cm"># ── 2D indexing ──────────────────────────────</span>
+<span class="wh">m</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([[</span><span class="nm">1</span><span class="wh">,</span><span class="nm">2</span><span class="wh">,</span><span class="nm">3</span><span class="wh">],</span>
+              <span class="wh">[</span><span class="nm">4</span><span class="wh">,</span><span class="nm">5</span><span class="wh">,</span><span class="nm">6</span><span class="wh">],</span>
+              <span class="wh">[</span><span class="nm">7</span><span class="wh">,</span><span class="nm">8</span><span class="wh">,</span><span class="nm">9</span><span class="wh">]])</span>
+
+<span class="fn">print</span><span class="wh">(m[</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">])</span>              <span class="cm"># 6  (row 1, col 2)</span>
+<span class="fn">print</span><span class="wh">(m[</span><span class="nm">0</span><span class="wh">, :])</span>             <span class="cm"># [1 2 3]  (entire row 0)</span>
+<span class="fn">print</span><span class="wh">(m[:, </span><span class="nm">1</span><span class="wh">])</span>             <span class="cm"># [2 5 8]  (entire col 1)</span>
+<span class="fn">print</span><span class="wh">(m[</span><span class="nm">0</span><span class="wh">:</span><span class="nm">2</span><span class="wh">, </span><span class="nm">1</span><span class="wh">:</span><span class="nm">3</span><span class="wh">])</span>        <span class="cm"># submatrix rows 0-1, cols 1-2</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    45 &nbsp;·&nbsp; 55 &nbsp;·&nbsp; [88 91 60]<br>
+    [88 91 95]<br>
+    6 &nbsp;·&nbsp; [1 2 3] &nbsp;·&nbsp; [2 5 8]<br>
+    [[2 3] [5 6]]
+  </div>
+
+  <div class="callout">
+    <div class="ct">Boolean indexing — the killer feature</div>
+    <code>scores[scores &gt;= 80]</code> is one line of NumPy. The equivalent in a Python list is a list comprehension: <code>[s for s in scores if s &gt;= 80]</code> — and the NumPy version is <strong>much faster</strong> and more readable. In Pandas, filtering rows with <code>df[df["score"] &gt;= 80]</code> uses this exact same mechanism under the hood.
+  </div>
+
+  <hr>
+
+  <!-- MATH OPERATIONS -->
+  <div class="sec">05 — math &amp; vectorization</div>
+  <h2>Math Operations &amp; Vectorization</h2>
+
+  <p>This is where NumPy truly shines. All arithmetic operators work <em>element-wise</em> — no loops needed. This is called <strong>vectorization</strong>.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">a</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">20</span><span class="wh">,</span> <span class="nm">30</span><span class="wh">,</span> <span class="nm">40</span><span class="wh">])</span>
+<span class="wh">b</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">1</span><span class="wh">,</span>  <span class="nm">2</span><span class="wh">,</span>  <span class="nm">3</span><span class="wh">,</span>  <span class="nm">4</span><span class="wh">])</span>
+
+<span class="cm"># Element-wise operations — no loop needed</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">+</span> <span class="wh">b)</span>               <span class="cm"># [11 22 33 44]</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">-</span> <span class="wh">b)</span>               <span class="cm"># [ 9 18 27 36]</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">*</span> <span class="wh">b)</span>               <span class="cm"># [10 40 90 160]</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">/</span> <span class="wh">b)</span>               <span class="cm"># [10. 10. 10. 10.]</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">**</span> <span class="nm">2</span><span class="wh">)</span>              <span class="cm"># [ 100  400  900 1600]</span>
+
+<span class="cm"># Universal functions (ufuncs)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">np</span><span class="op">.</span><span class="fn">sqrt</span><span class="wh">(a))</span>          <span class="cm"># [3.16 4.47 5.48 6.32]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">np</span><span class="op">.</span><span class="fn">log</span><span class="wh">(a))</span>           <span class="cm"># [2.30 2.99 3.40 3.69]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">np</span><span class="op">.</span><span class="fn">exp</span><span class="wh">(</span><span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">0</span><span class="wh">,</span><span class="nm">1</span><span class="wh">,</span><span class="nm">2</span><span class="wh">])))</span>   <span class="cm"># [1. 2.72 7.39]</span>
+
+<span class="cm"># Aggregate functions</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>              <span class="cm"># 100</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>             <span class="cm"># 25.0</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="fn">std</span><span class="wh">())</span>              <span class="cm"># 11.18</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="fn">min</span><span class="wh">(),</span> <span class="wh">a</span><span class="op">.</span><span class="fn">max</span><span class="wh">())</span>    <span class="cm"># 10  40</span>
+<span class="fn">print</span><span class="wh">(a</span><span class="op">.</span><span class="fn">argmin</span><span class="wh">(),</span> <span class="wh">a</span><span class="op">.</span><span class="fn">argmax</span><span class="wh">())</span>  <span class="cm"># 0  3  (indices!)</span></pre>
+  </div>
+
+  <h3>Aggregation on 2D Arrays — Axis matters</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Student exam scores — 4 students × 3 subjects</span>
+<span class="wh">data</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span>
+    <span class="wh">[</span><span class="nm">78</span><span class="wh">,</span> <span class="nm">85</span><span class="wh">,</span> <span class="nm">90</span><span class="wh">],</span>   <span class="cm"># Arjun</span>
+    <span class="wh">[</span><span class="nm">92</span><span class="wh">,</span> <span class="nm">76</span><span class="wh">,</span> <span class="nm">88</span><span class="wh">],</span>   <span class="cm"># Priya</span>
+    <span class="wh">[</span><span class="nm">65</span><span class="wh">,</span> <span class="nm">70</span><span class="wh">,</span> <span class="nm">80</span><span class="wh">],</span>   <span class="cm"># Rohan</span>
+    <span class="wh">[</span><span class="nm">95</span><span class="wh">,</span> <span class="nm">91</span><span class="wh">,</span> <span class="nm">89</span><span class="wh">]</span>    <span class="cm"># Sneha</span>
+<span class="wh">])</span>                  <span class="cm"># shape: (4, 3)</span>
+
+<span class="cm"># axis=1 → operate across columns → one value per row</span>
+<span class="wh">student_avg</span> <span class="op">=</span> <span class="wh">data</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">1</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Student averages:"</span><span class="wh">, student_avg)</span>
+
+<span class="cm"># axis=0 → operate across rows → one value per column</span>
+<span class="wh">subject_avg</span> <span class="op">=</span> <span class="wh">data</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">0</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Subject averages :"</span><span class="wh">, subject_avg)</span>
+
+<span class="cm"># Highest scorer per subject</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Best per subject :"</span><span class="wh">, data</span><span class="op">.</span><span class="fn">max</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">0</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Student averages: [84.33 85.33 71.67 91.67]<br>
+    Subject averages : [82.5  80.5  86.75]<br>
+    Best per subject : [95 91 90]
+  </div>
+
+  <div class="callout red">
+    <div class="ct">The axis concept — memorize this</div>
+    <code>axis=0</code> collapses <strong>rows</strong> → gives one value per column. <code>axis=1</code> collapses <strong>columns</strong> → gives one value per row. Think of it as "which dimension disappears." This trips up almost every beginner — and intermediate — data scientist. Draw it on paper once and it will click forever.
+  </div>
+
+  <hr>
+
+  <!-- BROADCASTING -->
+  <div class="sec">06 — broadcasting</div>
+  <h2>Broadcasting — NumPy's Superpower</h2>
+
+  <p><strong>Broadcasting</strong> is the set of rules NumPy uses to apply operations between arrays of different shapes. When shapes are compatible, NumPy "stretches" the smaller array to match the larger one — without actually copying data.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Scalar broadcasting — most common case</span>
+<span class="wh">a</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">,</span> <span class="nm">3</span><span class="wh">,</span> <span class="nm">4</span><span class="wh">])</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">+</span> <span class="nm">10</span><span class="wh">)</span>               <span class="cm"># [11 12 13 14]</span>
+<span class="fn">print</span><span class="wh">(a</span> <span class="op">*</span> <span class="nm">3</span><span class="wh">)</span>                <span class="cm"># [ 3  6  9 12]</span>
+
+<span class="cm"># Real-world: normalize exam scores to 0–1</span>
+<span class="wh">scores</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span><span class="nm">45</span><span class="wh">,</span> <span class="nm">72</span><span class="wh">,</span> <span class="nm">88</span><span class="wh">,</span> <span class="nm">91</span><span class="wh">,</span> <span class="nm">60</span><span class="wh">])</span>
+<span class="wh">normalized</span> <span class="op">=</span> <span class="wh">(scores</span> <span class="op">-</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">min</span><span class="wh">())</span> <span class="op">/</span> <span class="wh">(scores</span><span class="op">.</span><span class="fn">max</span><span class="wh">()</span> <span class="op">-</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">min</span><span class="wh">())</span>
+<span class="fn">print</span><span class="wh">(normalized</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">2</span><span class="wh">))</span> <span class="cm"># [0.   0.59 0.93 1.   0.33]</span>
+
+<span class="cm"># 2D broadcasting — subtract column mean</span>
+<span class="wh">matrix</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([[</span><span class="nm">1</span><span class="wh">,</span><span class="nm">2</span><span class="wh">,</span><span class="nm">3</span><span class="wh">],</span>
+                    <span class="wh">[</span><span class="nm">4</span><span class="wh">,</span><span class="nm">5</span><span class="wh">,</span><span class="nm">6</span><span class="wh">],</span>
+                    <span class="wh">[</span><span class="nm">7</span><span class="wh">,</span><span class="nm">8</span><span class="wh">,</span><span class="nm">9</span><span class="wh">]])</span>
+
+<span class="wh">col_means</span> <span class="op">=</span> <span class="wh">matrix</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">0</span><span class="wh">)</span>     <span class="cm"># [4. 5. 6.]</span>
+<span class="wh">centered</span> <span class="op">=</span> <span class="wh">matrix</span> <span class="op">-</span> <span class="wh">col_means</span>       <span class="cm"># broadcast!</span>
+<span class="fn">print</span><span class="wh">(centered)</span>
+<span class="cm"># [[-3. -3. -3.]</span>
+<span class="cm">#  [ 0.  0.  0.]</span>
+<span class="cm">#  [ 3.  3.  3.]]</span></pre>
+  </div>
+
+  <div class="callout teal">
+    <div class="ct">Why broadcasting matters for ML</div>
+    The normalization formula <code>(x - x.min()) / (x.max() - x.min())</code> is called <strong>Min-Max scaling</strong> — one of the most common data preprocessing steps before training a machine learning model. You just wrote it in one NumPy line. Broadcasting makes this kind of whole-dataset transformation trivially easy.
+  </div>
+
+  <hr>
+
+  <!-- PRACTICAL PROJECT -->
+  <div class="sec">07 — practical project</div>
+  <h2>Project: Student Score Analysis System</h2>
+
+  <p>Let's combine everything — array creation, indexing, math operations, broadcasting, and aggregation — into one practical data analysis program. This is the kind of thing you'd write in a real data science notebook.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+
+<span class="cm"># ── Dataset: 6 students × 4 subjects ─────────────────</span>
+<span class="wh">students</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Arjun"</span><span class="wh">,</span> <span class="st">"Priya"</span><span class="wh">,</span> <span class="st">"Rohan"</span><span class="wh">,</span>
+            <span class="st">"Sneha"</span><span class="wh">,</span> <span class="st">"Dev"</span><span class="wh">,</span>   <span class="st">"Ananya"</span><span class="wh">]</span>
+<span class="wh">subjects</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Maths"</span><span class="wh">,</span> <span class="st">"Physics"</span><span class="wh">,</span> <span class="st">"Python"</span><span class="wh">,</span> <span class="st">"Stats"</span><span class="wh">]</span>
+
+<span class="wh">scores</span> <span class="op">=</span> <span class="fn">np</span><span class="op">.</span><span class="fn">array</span><span class="wh">([</span>
+    <span class="wh">[</span><span class="nm">78</span><span class="wh">,</span> <span class="nm">85</span><span class="wh">,</span> <span class="nm">92</span><span class="wh">,</span> <span class="nm">88</span><span class="wh">],</span>   <span class="cm"># Arjun</span>
+    <span class="wh">[</span><span class="nm">91</span><span class="wh">,</span> <span class="nm">76</span><span class="wh">,</span> <span class="nm">88</span><span class="wh">,</span> <span class="nm">94</span><span class="wh">],</span>   <span class="cm"># Priya</span>
+    <span class="wh">[</span><span class="nm">65</span><span class="wh">,</span> <span class="nm">70</span><span class="wh">,</span> <span class="nm">75</span><span class="wh">,</span> <span class="nm">60</span><span class="wh">],</span>   <span class="cm"># Rohan</span>
+    <span class="wh">[</span><span class="nm">95</span><span class="wh">,</span> <span class="nm">91</span><span class="wh">,</span> <span class="nm">89</span><span class="wh">,</span> <span class="nm">97</span><span class="wh">],</span>   <span class="cm"># Sneha</span>
+    <span class="wh">[</span><span class="nm">72</span><span class="wh">,</span> <span class="nm">68</span><span class="wh">,</span> <span class="nm">80</span><span class="wh">,</span> <span class="nm">74</span><span class="wh">],</span>   <span class="cm"># Dev</span>
+    <span class="wh">[</span><span class="nm">88</span><span class="wh">,</span> <span class="nm">82</span><span class="wh">,</span> <span class="nm">90</span><span class="wh">,</span> <span class="nm">85</span><span class="wh">]</span>    <span class="cm"># Ananya</span>
+<span class="wh">])</span>  <span class="cm"># shape: (6, 4)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Dataset shape: </span><span class="op">{</span><span class="wh">scores</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st"> (students × subjects)\n"</span><span class="wh">)</span>
+
+<span class="cm"># ── Per-student analysis ──────────────────────────────</span>
+<span class="wh">student_avg</span>   <span class="op">=</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">1</span><span class="wh">)</span>
+<span class="wh">student_total</span> <span class="op">=</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">sum</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">1</span><span class="wh">)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">"── Student Report ──────────────────"</span><span class="wh">)</span>
+<span class="kw">for</span> <span class="wh">i, name</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="wh">(students):</span>
+    <span class="wh">grade</span> <span class="op">=</span> <span class="st">"A"</span> <span class="kw">if</span> <span class="wh">student_avg[i]</span> <span class="op">>=</span> <span class="nm">85</span> <span class="kw">else</span> <span class="st">"B"</span> <span class="kw">if</span> <span class="wh">student_avg[i]</span> <span class="op">>=</span> <span class="nm">70</span> <span class="kw">else</span> <span class="st">"C"</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"  </span><span class="op">{</span><span class="wh">name</span><span class="op">:&lt;8</span><span class="op">}</span><span class="st">  Avg: </span><span class="op">{</span><span class="wh">student_avg[i]</span><span class="op">:.1f</span><span class="op">}</span><span class="st">  Total: </span><span class="op">{</span><span class="wh">student_total[i]</span><span class="op">}</span><span class="st">  Grade: </span><span class="op">{</span><span class="wh">grade</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># ── Subject analysis ──────────────────────────────────</span>
+<span class="wh">subject_avg</span> <span class="op">=</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">0</span><span class="wh">)</span>
+<span class="wh">hardest_sub</span> <span class="op">=</span> <span class="wh">subjects[subject_avg</span><span class="op">.</span><span class="fn">argmin</span><span class="wh">()]</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">"\n── Subject Averages ────────────────"</span><span class="wh">)</span>
+<span class="kw">for</span> <span class="wh">subj, avg</span> <span class="kw">in</span> <span class="fn">zip</span><span class="wh">(subjects, subject_avg):</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"  </span><span class="op">{</span><span class="wh">subj</span><span class="op">:&lt;10</span><span class="op">}</span><span class="st">: </span><span class="op">{</span><span class="wh">avg</span><span class="op">:.1f</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"\nHardest subject: </span><span class="op">{</span><span class="wh">hardest_sub</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># ── Top performers (Boolean indexing) ────────────────</span>
+<span class="wh">top_mask</span>  <span class="op">=</span> <span class="wh">student_avg</span> <span class="op">>=</span> <span class="nm">85</span>
+<span class="wh">top_names</span> <span class="op">=</span> <span class="wh">[n</span> <span class="kw">for</span> <span class="wh">n, m</span> <span class="kw">in</span> <span class="fn">zip</span><span class="wh">(students, top_mask)</span> <span class="kw">if</span> <span class="wh">m]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Top performers  : </span><span class="op">{</span><span class="wh">top_names</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># ── Normalize scores to 0–100 scale (Min-Max) ────────</span>
+<span class="wh">norm</span> <span class="op">=</span> <span class="wh">(scores</span> <span class="op">-</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">min</span><span class="wh">())</span> <span class="op">/</span> <span class="wh">(scores</span><span class="op">.</span><span class="fn">max</span><span class="wh">()</span> <span class="op">-</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">min</span><span class="wh">())</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"\nNormalized Arjun's scores: </span><span class="op">{</span><span class="wh">norm[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">2</span><span class="wh">)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Dataset shape: (6, 4) (students × subjects)<br><br>
+    ── Student Report ──────────────────<br>
+    &nbsp;&nbsp;Arjun&nbsp;&nbsp;&nbsp;&nbsp; Avg: 85.8&nbsp; Total: 343&nbsp; Grade: A<br>
+    &nbsp;&nbsp;Priya&nbsp;&nbsp;&nbsp;&nbsp; Avg: 87.3&nbsp; Total: 349&nbsp; Grade: A<br>
+    &nbsp;&nbsp;Rohan&nbsp;&nbsp;&nbsp;&nbsp; Avg: 67.5&nbsp; Total: 270&nbsp; Grade: C<br>
+    &nbsp;&nbsp;Sneha&nbsp;&nbsp;&nbsp;&nbsp; Avg: 93.0&nbsp; Total: 372&nbsp; Grade: A<br>
+    &nbsp;&nbsp;Dev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Avg: 73.5&nbsp; Total: 294&nbsp; Grade: B<br>
+    &nbsp;&nbsp;Ananya&nbsp;&nbsp;&nbsp; Avg: 86.3&nbsp; Total: 345&nbsp; Grade: A<br><br>
+    ── Subject Averages ────────────────<br>
+    &nbsp;&nbsp;Maths&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 81.5<br>
+    &nbsp;&nbsp;Physics&nbsp;&nbsp;&nbsp;: 78.7<br>
+    &nbsp;&nbsp;Python&nbsp;&nbsp;&nbsp;&nbsp;: 85.7<br>
+    &nbsp;&nbsp;Stats&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 83.0<br><br>
+    Hardest subject: Physics<br>
+    Top performers  : ['Arjun', 'Priya', 'Sneha', 'Ananya']<br>
+    Normalized Arjun's scores: [0.39 0.63 0.84 0.74]
+  </div>
+
+  <hr>
+
+  <!-- QUICK REFERENCE -->
+  <div class="sec">08 — quick reference</div>
+  <h2>NumPy Cheat Sheet</h2>
+
+  <table class="op-table">
+    <thead><tr><th>Function</th><th>What it does</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>np.array()</td><td>Create array from list</td><td>np.array([1,2,3])</td></tr>
+      <tr><td>np.zeros(n)</td><td>Array of n zeros</td><td>np.zeros(5)</td></tr>
+      <tr><td>np.ones(n)</td><td>Array of n ones</td><td>np.ones((3,4))</td></tr>
+      <tr><td>np.arange()</td><td>Range of values</td><td>np.arange(0,10,2)</td></tr>
+      <tr><td>np.linspace()</td><td>Evenly spaced values</td><td>np.linspace(0,1,5)</td></tr>
+      <tr><td>np.random.rand()</td><td>Random floats 0-1</td><td>np.random.rand(3,4)</td></tr>
+      <tr><td>.shape</td><td>Dimensions of array</td><td>a.shape → (3,4)</td></tr>
+      <tr><td>.reshape()</td><td>Change shape, keep data</td><td>a.reshape(2,-1)</td></tr>
+      <tr><td>.mean(axis=)</td><td>Average along axis</td><td>a.mean(axis=0)</td></tr>
+      <tr><td>.sum() / .std()</td><td>Sum / Standard deviation</td><td>a.sum(axis=1)</td></tr>
+      <tr><td>.argmax()</td><td>Index of maximum value</td><td>a.argmax()</td></tr>
+      <tr><td>Boolean index</td><td>Filter by condition</td><td>a[a > 5]</td></tr>
+      <tr><td>np.sqrt() / np.log()</td><td>Math on every element</td><td>np.sqrt(a)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- RECAP -->
+  <div class="recap-grid">
+    <div class="recap-cell"><div class="recap-icon">ndarray</div><div class="recap-text"><strong>The Core Object</strong><span>N-dimensional array with shape, dtype, and fast math built in</span></div></div>
+    <div class="recap-cell"><div class="recap-icon">shape</div><div class="recap-text"><strong>Always Check Shape</strong><span>shape errors are the #1 bug in ML — .shape is your best friend</span></div></div>
+    <div class="recap-cell"><div class="recap-icon">vectorize</div><div class="recap-text"><strong>No Loops Needed</strong><span>Arithmetic on arrays is element-wise and 100× faster than Python loops</span></div></div>
+    <div class="recap-cell"><div class="recap-icon">axis=</div><div class="recap-text"><strong>Axis Controls Direction</strong><span>axis=0 → across rows. axis=1 → across columns. Draw it once.</span></div></div>
+    <div class="recap-cell"><div class="recap-icon">bool idx</div><div class="recap-text"><strong>Boolean Indexing</strong><span>Filter arrays with conditions: arr[arr > 0] — same mechanism as Pandas</span></div></div>
+    <div class="recap-cell"><div class="recap-icon">broadcast</div><div class="recap-text"><strong>Broadcasting</strong><span>Add a scalar or smaller array to a larger one — NumPy handles the math</span></div></div>
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:0.2em;margin-bottom:0.75rem;">CHALLENGE_06</div>
+    <div class="chal-title">Build a Marks Analysis System</div>
+    <ul class="clist">
+      <li>Create a NumPy array of your own exam scores (5 subjects × 3 tests each) — shape (5, 3)</li>
+      <li>Print the shape, ndim, size, and dtype of your array</li>
+      <li>Calculate your average per subject (axis=1) and average per test (axis=0)</li>
+      <li>Find which subject you performed worst in using argmin()</li>
+      <li>Use Boolean indexing to find all individual scores above 80</li>
+      <li>Normalize all your scores to a 0–1 scale using Min-Max formula</li>
+      <li>Bonus: Reshape your scores array into a 1D array using reshape(-1) and then back to (5,3)</li>
+      <li>Bonus 2: Generate a random (10, 4) array representing 10 students and 4 subjects. Find the top student using argmax() on row means.</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 5 — Lists, Tuples, Dicts &amp; Sets</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 7 — Pandas: Load &amp; Explore Data</strong></div>
+  </div>
+
+</main>
+</body>
+</html> 

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 5 — Lists, Tuples, Dicts & Sets</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#faf6ee;
+  --ink:#18130a;
+  --red:#d63a1a;
+  --blue:#1a4fd6;
+  --yellow:#e8b800;
+  --green:#1a8a3a;
+  --border:#c8c0b0;
+  --mid:#7a7060;
+  --light:#ede8de;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:'Instrument Sans',sans-serif;font-size:17px;line-height:1.8;overflow-x:hidden}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  border-bottom:3px solid var(--ink);
+  position:relative;
+  overflow:hidden;
+}
+
+/* big geometric quadrant background */
+.hero-bg{
+  position:absolute;inset:0;pointer-events:none;
+}
+.hero-bg-q{
+  position:absolute;
+  width:50%;height:50%;
+}
+.hero-bg-q.tl{top:0;left:0;background:var(--red);opacity:0.07}
+.hero-bg-q.tr{top:0;right:0;background:var(--blue);opacity:0.05}
+.hero-bg-q.bl{bottom:0;left:0;background:var(--yellow);opacity:0.08}
+.hero-bg-q.br{bottom:0;right:0;background:var(--green);opacity:0.06}
+
+.hero-top{
+  padding:2rem 3rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1.5px solid var(--border);
+  position:relative;z-index:1;
+}
+
+.hero-series{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--mid);
+}
+
+.hero-meta-right{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:var(--mid);
+  letter-spacing:0.1em;
+  display:flex;gap:2rem;
+}
+
+.hero-main{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  position:relative;
+  z-index:1;
+}
+
+.hero-left{
+  padding:4rem 3rem;
+  border-right:1.5px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+@keyframes slideRight{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.blog-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(6rem,12vw,11rem);
+  line-height:0.85;
+  color:var(--light);
+  letter-spacing:0.02em;
+  margin-bottom:0.5rem;
+  opacity:0;animation:slideRight 0.6s ease forwards 0.1s;
+  user-select:none;
+}
+
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.8rem,5vw,5rem);
+  line-height:0.92;
+  letter-spacing:0.04em;
+  color:var(--ink);
+  opacity:0;animation:slideRight 0.6s ease forwards 0.25s;
+}
+.hero-title .accent-r{color:var(--red)}
+.hero-title .accent-b{color:var(--blue)}
+.hero-title .accent-y{color:var(--yellow)}
+.hero-title .accent-g{color:var(--green)}
+
+.hero-desc{
+  font-size:15px;
+  color:var(--mid);
+  margin-top:1.5rem;
+  max-width:380px;
+  line-height:1.65;
+  opacity:0;animation:slideUp 0.6s ease forwards 0.4s;
+  font-style:italic;
+}
+
+.hero-tags{
+  display:flex;flex-wrap:wrap;gap:8px;
+  margin-top:2rem;
+  opacity:0;animation:slideUp 0.6s ease forwards 0.55s;
+}
+
+.htag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;padding:4px 12px;
+  border:1.5px solid var(--border);
+  color:var(--mid);letter-spacing:0.08em;text-transform:uppercase;
+}
+.htag.r{border-color:var(--red);color:var(--red)}
+.htag.b{border-color:var(--blue);color:var(--blue)}
+.htag.y{border-color:var(--yellow);color:var(--yellow)}
+.htag.g{border-color:var(--green);color:var(--green)}
+
+/* 4-box structure preview on the right */
+.hero-right{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  opacity:0;animation:fadeIn 0.8s ease forwards 0.6s;
+}
+
+.struct-box{
+  padding:2rem 1.75rem;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  border-left:none;
+  position:relative;
+  overflow:hidden;
+}
+.struct-box:nth-child(1){background:rgba(214,58,26,0.06);border-bottom:1.5px solid var(--border);border-right:1px solid var(--border)}
+.struct-box:nth-child(2){background:rgba(26,79,214,0.05);border-bottom:1.5px solid var(--border)}
+.struct-box:nth-child(3){background:rgba(232,184,0,0.07);border-right:1px solid var(--border)}
+.struct-box:nth-child(4){background:rgba(26,138,58,0.05)}
+
+.struct-type{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.2rem;
+  letter-spacing:0.05em;
+  line-height:1;
+}
+.struct-box:nth-child(1) .struct-type{color:var(--red)}
+.struct-box:nth-child(2) .struct-type{color:var(--blue)}
+.struct-box:nth-child(3) .struct-type{color:var(--yellow)}
+.struct-box:nth-child(4) .struct-type{color:var(--green)}
+
+.struct-ex{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--mid);
+  margin-top:0.5rem;
+  line-height:1.8;
+}
+
+.struct-props{
+  display:flex;flex-direction:column;gap:4px;margin-top:0.75rem;
+}
+.prop{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;
+  letter-spacing:0.06em;
+  display:flex;align-items:center;gap:6px;
+  color:var(--mid);
+}
+.prop-dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.struct-box:nth-child(1) .prop-dot{background:var(--red)}
+.struct-box:nth-child(2) .prop-dot{background:var(--blue)}
+.struct-box:nth-child(3) .prop-dot{background:var(--yellow)}
+.struct-box:nth-child(4) .prop-dot{background:var(--green)}
+
+.hero-bottom{
+  padding:1.25rem 3rem;
+  border-top:1.5px solid var(--border);
+  display:flex;align-items:center;gap:1.5rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;color:var(--mid);letter-spacing:0.1em;
+  position:relative;z-index:1;
+}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:5rem 2.5rem 8rem}
+
+.sec-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--mid);
+  margin:5rem 0 1.5rem;
+  display:flex;align-items:center;gap:12px;
+}
+.sec-label::before{
+  content:'';width:28px;height:2px;
+  flex-shrink:0;
+}
+.sec-label.r::before{background:var(--red)}
+.sec-label.b::before{background:var(--blue)}
+.sec-label.y::before{background:var(--yellow)}
+.sec-label.g::before{background:var(--green)}
+.sec-label.ink::before{background:var(--ink)}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-label:first-child{margin-top:0}
+
+h2{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:400;line-height:1.1;
+  color:var(--ink);margin-bottom:1.25rem;
+}
+
+h3{
+  font-family:'DM Serif Display',serif;
+  font-size:1.35rem;font-weight:400;
+  color:var(--ink);margin:2.75rem 0 0.75rem;
+}
+
+p{margin-bottom:1.25rem;color:#3a3020}
+strong{color:var(--ink);font-weight:600}
+em{font-style:italic;color:var(--red)}
+
+code{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  background:var(--light);
+  border:1px solid var(--border);
+  padding:2px 7px;
+  color:var(--blue);
+}
+
+hr{border:none;border-top:2px solid var(--border);margin:4rem 0}
+
+/* OPENER */
+.opener{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(1.05rem,2vw,1.4rem);
+  font-style:italic;
+  color:var(--ink);
+  line-height:1.65;
+  border-left:4px solid var(--ink);
+  padding:1rem 1.75rem;
+  margin-bottom:3rem;
+}
+
+/* BIG COMPARISON TABLE */
+.big-table{
+  width:100%;border-collapse:collapse;margin:2.5rem 0;
+  font-size:14px;
+}
+.big-table th{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--cream);padding:12px 16px;text-align:left;
+}
+.big-table thead tr{background:var(--ink)}
+.big-table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.big-table tbody tr:last-child td{border-bottom:none}
+.big-table tbody tr:hover td{background:var(--light)}
+
+.type-label{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.4rem;letter-spacing:0.05em;
+}
+.tl-r{color:var(--red)}.tl-b{color:var(--blue)}.tl-y{color:var(--yellow)}.tl-g{color:var(--green)}
+
+.yes{color:var(--green);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.no{color:var(--red);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.partial{color:var(--yellow);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12px}
+
+.big-table td:not(:first-child){font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mid)}
+
+/* STRUCTURE DETAIL CARDS */
+.struct-detail{
+  border:2px solid var(--ink);
+  margin:2.5rem 0;
+  overflow:hidden;
+}
+.struct-detail-hdr{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem 1.5rem;
+  border-bottom:2px solid var(--ink);
+}
+.struct-detail-hdr .type-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.8rem;letter-spacing:0.06em;
+}
+.struct-detail-hdr .bracket{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:1.5rem;color:var(--mid);
+}
+.struct-detail-body{
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.detail-theory{
+  padding:1.5rem;
+  border-right:2px solid var(--ink);
+}
+.detail-code{
+  padding:0;
+  background:#18130a;
+}
+
+.detail-theory p{font-size:14px;color:#3a3020;margin-bottom:0.75rem;line-height:1.6}
+.detail-theory p:last-child{margin-bottom:0}
+
+.prop-list{list-style:none;margin:0.75rem 0}
+.prop-list li{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;color:var(--mid);
+  padding:4px 0;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);
+}
+.prop-list li:last-child{border-bottom:none}
+.prop-list li::before{content:'—';color:var(--border)}
+
+/* CODE inside struct detail */
+.mini-code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;background:#0f0c06;
+  border-bottom:1px solid #2a2010;
+}
+.mini-dots{display:flex;gap:6px}
+.mini-dot{width:9px;height:9px;border-radius:50%}
+.mini-dot.r{background:#ff5f57}.mini-dot.y{background:#febc2e}.mini-dot.g{background:#28c840}
+.mini-lang{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4a4030;letter-spacing:0.1em}
+
+pre{
+  padding:1.25rem;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;line-height:1.85;overflow-x:auto;
+  color:#c8b890;
+}
+.kw{color:#ce93d8}.fn{color:#82aaff}.st{color:#a5d6a7}.nm{color:#f0c96b}.cm{color:#3d3020;font-style:italic}.op{color:#ff8a65}.wh{color:#c8b890}.out-c{color:#c3e88d}
+
+/* full-width code block */
+.code-block{
+  background:#18130a;
+  border:2px solid var(--ink);
+  margin:2rem 0;overflow:hidden;
+}
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;background:#0f0c06;border-bottom:1px solid #2a2010;
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:10px;height:10px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4a4030;letter-spacing:0.12em;margin-left:5px}
+.copy-btn{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4a4030;background:none;border:1px solid #2a2010;padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.06em}
+.copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+
+.output-box{
+  border:2px solid var(--ink);border-top:none;
+  padding:1rem 1.5rem;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;
+  background:var(--light);color:#2a6a2a;
+  margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:7px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:4px solid var(--ink);
+  background:var(--light);font-size:15px;line-height:1.65;color:#3a3020;
+}
+.callout.r{border-color:var(--red);background:rgba(214,58,26,0.05)}
+.callout.b{border-color:var(--blue);background:rgba(26,79,214,0.05)}
+.callout.y{border-color:var(--yellow);background:rgba(232,184,0,0.07)}
+.callout.g{border-color:var(--green);background:rgba(26,138,58,0.05)}
+
+.ct{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.4rem;color:var(--mid)}
+.callout.r .ct{color:var(--red)}.callout.b .ct{color:var(--blue)}.callout.y .ct{color:var(--yellow)}.callout.g .ct{color:var(--green)}
+
+/* WHEN TO USE SECTION */
+.use-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:2px;background:var(--ink);
+  margin:2rem 0;
+}
+.use-cell{
+  background:var(--cream);padding:1.75rem;
+}
+.use-label{
+  font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.05em;margin-bottom:0.75rem;
+}
+.use-cell:nth-child(1) .use-label{color:var(--red)}
+.use-cell:nth-child(2) .use-label{color:var(--blue)}
+.use-cell:nth-child(3) .use-label{color:var(--yellow)}
+.use-cell:nth-child(4) .use-label{color:var(--green)}
+
+.use-cell ul{list-style:none;padding:0}
+.use-cell ul li{
+  font-size:13.5px;color:#3a3020;
+  padding:5px 0;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  font-family:'Instrument Sans',sans-serif;
+}
+.use-cell ul li:last-child{border-bottom:none}
+.use-cell ul li::before{content:'→';font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--border)}
+
+/* CHALLENGE */
+.challenge{
+  background:var(--ink);color:var(--cream);
+  padding:2.5rem;margin:3rem 0;
+}
+.chal-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--yellow);margin-bottom:0.75rem}
+.challenge h3{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.04em;font-weight:400;color:var(--cream);margin:0 0 1rem}
+.clist{list-style:none}
+.clist li{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#7a6a50;padding:8px 0;border-bottom:1px solid #2a2010;display:flex;align-items:center;gap:10px;line-height:1.55}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'[ ]';color:#3a2a10;flex-shrink:0}
+
+/* FOOTER */
+.post-footer{border-top:2px solid var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mid);letter-spacing:0.1em;text-transform:uppercase}
+.foot-item strong{display:block;font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:4px;font-weight:400}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--cream)}
+::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-bg">
+    <div class="hero-bg-q tl"></div>
+    <div class="hero-bg-q tr"></div>
+    <div class="hero-bg-q bl"></div>
+    <div class="hero-bg-q br"></div>
+  </div>
+
+  <div class="hero-top">
+    <span class="hero-series">Python for Data Science &amp; AI &nbsp;·&nbsp; Blog Series</span>
+    <div class="hero-meta-right">
+      <span>Blog 05 / 20</span>
+      <span>12 min read</span>
+      <span>Beginner</span>
+    </div>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-left">
+      <div class="blog-num">05</div>
+      <h1 class="hero-title">
+        <span class="accent-r">Lists,</span><br>
+        <span class="accent-b">Tuples,</span><br>
+        <span class="accent-y">Dicts</span><br>
+        <span class="accent-g">&amp; Sets</span>
+      </h1>
+      <p class="hero-desc">Python's four core data structures — each with a distinct personality, superpower, and the right time to use it.</p>
+      <div class="hero-tags">
+        <span class="htag r">list [ ]</span>
+        <span class="htag b">tuple ( )</span>
+        <span class="htag y">dict { : }</span>
+        <span class="htag g">set { }</span>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <!-- List box -->
+      <div class="struct-box">
+        <div>
+          <div class="struct-type">List</div>
+          <div class="struct-ex">["Arjun", "Priya",<br>"Rohan"]</div>
+        </div>
+        <div class="struct-props">
+          <span class="prop"><span class="prop-dot"></span>ordered</span>
+          <span class="prop"><span class="prop-dot"></span>mutable</span>
+          <span class="prop"><span class="prop-dot"></span>duplicates ok</span>
+        </div>
+      </div>
+      <!-- Tuple box -->
+      <div class="struct-box">
+        <div>
+          <div class="struct-type">Tuple</div>
+          <div class="struct-ex">(28.6, 77.2)<br># lat, lon</div>
+        </div>
+        <div class="struct-props">
+          <span class="prop"><span class="prop-dot"></span>ordered</span>
+          <span class="prop"><span class="prop-dot"></span>immutable</span>
+          <span class="prop"><span class="prop-dot"></span>fixed data</span>
+        </div>
+      </div>
+      <!-- Dict box -->
+      <div class="struct-box">
+        <div>
+          <div class="struct-type">Dict</div>
+          <div class="struct-ex">{"Arjun": 92,<br>"Priya": 87}</div>
+        </div>
+        <div class="struct-props">
+          <span class="prop"><span class="prop-dot"></span>key → value</span>
+          <span class="prop"><span class="prop-dot"></span>fast lookup</span>
+          <span class="prop"><span class="prop-dot"></span>unique keys</span>
+        </div>
+      </div>
+      <!-- Set box -->
+      <div class="struct-box">
+        <div>
+          <div class="struct-type">Set</div>
+          <div class="struct-ex">{"Delhi", "Mumbai",<br>"Chennai"}</div>
+        </div>
+        <div class="struct-props">
+          <span class="prop"><span class="prop-dot"></span>unordered</span>
+          <span class="prop"><span class="prop-dot"></span>no duplicates</span>
+          <span class="prop"><span class="prop-dot"></span>unique values</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-bottom">
+    <span>Theory + Practical</span>
+    <span>·</span>
+    <span>4 data structures</span>
+    <span>·</span>
+    <span>Comparison table</span>
+    <span>·</span>
+    <span>Real code examples</span>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    Variables hold one value. But what if you need to store a hundred student names? Or look up someone's score by their name? Or find all unique visitors to your website? Python gives you four powerful data structures for exactly these jobs.
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="sec-label ink">00 — the big picture</div>
+  <h2>All Four Structures at a Glance</h2>
+  <p>Before we dive in, here's the comparison table you'll want to bookmark. Understanding <em>when to use which</em> is more important than memorising syntax.</p>
+
+  <table class="big-table">
+    <thead>
+      <tr>
+        <th>Structure</th>
+        <th>Syntax</th>
+        <th>Ordered?</th>
+        <th>Mutable?</th>
+        <th>Duplicates?</th>
+        <th>Best for</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="type-label tl-r">List</span></td>
+        <td><code style="background:rgba(214,58,26,0.08);border-color:rgba(214,58,26,0.3);color:var(--red)">[ ]</code></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td>Ordered collections you'll change</td>
+      </tr>
+      <tr>
+        <td><span class="type-label tl-b">Tuple</span></td>
+        <td><code style="background:rgba(26,79,214,0.08);border-color:rgba(26,79,214,0.3);color:var(--blue)">( )</code></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td><span class="no">✗ No</span></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td>Fixed data — coordinates, RGB, config</td>
+      </tr>
+      <tr>
+        <td><span class="type-label tl-y">Dict</span></td>
+        <td><code style="background:rgba(232,184,0,0.1);border-color:rgba(232,184,0,0.4);color:var(--yellow)">{ : }</code></td>
+        <td><span class="yes">✓ Yes*</span></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td><span class="partial">Keys: No</span></td>
+        <td>Label → value lookups, mappings</td>
+      </tr>
+      <tr>
+        <td><span class="type-label tl-g">Set</span></td>
+        <td><code style="background:rgba(26,138,58,0.07);border-color:rgba(26,138,58,0.3);color:var(--green)">{ }</code></td>
+        <td><span class="no">✗ No</span></td>
+        <td><span class="yes">✓ Yes</span></td>
+        <td><span class="no">✗ No</span></td>
+        <td>Unique values, membership testing</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:13px;color:var(--mid);font-family:'IBM Plex Mono',monospace;">* Dicts preserve insertion order in Python 3.7+</p>
+
+  <hr>
+
+  <!-- LIST -->
+  <div class="sec-label r">01 — list</div>
+  <h2>List — Your Swiss Army Knife</h2>
+
+  <p>A <strong>list</strong> is an ordered, mutable sequence. You can add, remove, sort, and slice it freely. It's the most commonly used data structure in Python, and in data science you'll use lists constantly — to store feature names, rows of data, model predictions, and more.</p>
+
+  <div class="struct-detail">
+    <div class="struct-detail-hdr" style="background:rgba(214,58,26,0.05);border-color:var(--red)">
+      <span class="type-name" style="color:var(--red)">List</span>
+      <span class="bracket">[ &nbsp; ]</span>
+      <ul class="prop-list" style="flex-direction:row;gap:1.5rem;list-style:none;margin:0">
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">ordered</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--red)">mutable</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">allows duplicates</li>
+      </ul>
+    </div>
+    <div class="struct-detail-body">
+      <div class="detail-theory">
+        <p><strong>Ordered</strong> means items have a position (index), starting from 0. <code>names[0]</code> gives you the first item.</p>
+        <p><strong>Mutable</strong> means you can change, add, or remove items after the list is created.</p>
+        <p><strong>Allows duplicates</strong> — the same value can appear multiple times.</p>
+        <ul class="prop-list">
+          <li>Access items by index: <code>lst[0]</code>, <code>lst[-1]</code></li>
+          <li>Slice: <code>lst[1:4]</code>, <code>lst[:3]</code></li>
+          <li>Add: <code>.append()</code>, <code>.insert()</code></li>
+          <li>Remove: <code>.remove()</code>, <code>.pop()</code></li>
+          <li>Sort: <code>.sort()</code>, <code>sorted(lst)</code></li>
+          <li>Length: <code>len(lst)</code></li>
+        </ul>
+      </div>
+      <div class="detail-code">
+        <div class="mini-code-hdr">
+          <div class="mini-dots"><div class="mini-dot r"></div><div class="mini-dot y"></div><div class="mini-dot g"></div></div>
+          <span class="mini-lang">list_basics.py</span>
+        </div>
+        <pre><span class="cm"># Create a list</span>
+<span class="wh">names</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Arjun"</span><span class="wh">,</span> <span class="st">"Priya"</span><span class="wh">,</span>
+         <span class="st">"Rohan"</span><span class="wh">,</span> <span class="st">"Sneha"</span><span class="wh">]</span>
+
+<span class="cm"># Access by index</span>
+<span class="fn">print</span><span class="wh">(names[</span><span class="nm">0</span><span class="wh">])</span>     <span class="cm"># Arjun</span>
+<span class="fn">print</span><span class="wh">(names[-</span><span class="nm">1</span><span class="wh">])</span>    <span class="cm"># Sneha</span>
+
+<span class="cm"># Slice [start:stop]</span>
+<span class="fn">print</span><span class="wh">(names[</span><span class="nm">1</span><span class="wh">:</span><span class="nm">3</span><span class="wh">])</span>   <span class="cm"># ['Priya','Rohan']</span>
+
+<span class="cm"># Add / remove</span>
+<span class="wh">names</span><span class="op">.</span><span class="fn">append</span><span class="wh">(</span><span class="st">"Dev"</span><span class="wh">)</span>
+<span class="wh">names</span><span class="op">.</span><span class="fn">remove</span><span class="wh">(</span><span class="st">"Rohan"</span><span class="wh">)</span>
+
+<span class="cm"># Sort</span>
+<span class="wh">names</span><span class="op">.</span><span class="fn">sort</span><span class="wh">()</span>
+<span class="fn">print</span><span class="wh">(names)</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Practical — Student names: sort and slice</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Classroom student list</span>
+<span class="wh">students</span> <span class="op">=</span> <span class="wh">[</span>
+    <span class="st">"Priya"</span><span class="wh">,</span> <span class="st">"Arjun"</span><span class="wh">,</span> <span class="st">"Sneha"</span><span class="wh">,</span>
+    <span class="st">"Rohan"</span><span class="wh">,</span> <span class="st">"Dev"</span><span class="wh">,</span>   <span class="st">"Ananya"</span>
+<span class="wh">]</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Total students: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(students)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Sort alphabetically</span>
+<span class="wh">students</span><span class="op">.</span><span class="fn">sort</span><span class="wh">()</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Sorted:"</span><span class="wh">, students)</span>
+
+<span class="cm"># Slice — first 3 students</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Top 3:"</span><span class="wh">, students[:</span><span class="nm">3</span><span class="wh">])</span>
+
+<span class="cm"># Slice — last 2 students</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Last 2:"</span><span class="wh">, students[-</span><span class="nm">2</span><span class="wh">:])</span>
+
+<span class="cm"># Add a new student</span>
+<span class="wh">students</span><span class="op">.</span><span class="fn">append</span><span class="wh">(</span><span class="st">"Vikram"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"After adding:"</span><span class="wh">, students)</span>
+
+<span class="cm"># Check membership</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Arjun in list:"</span><span class="wh">,</span> <span class="st">"Arjun"</span> <span class="kw">in</span> <span class="wh">students)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Total students: 6<br>
+    Sorted: ['Ananya', 'Arjun', 'Dev', 'Priya', 'Rohan', 'Sneha']<br>
+    Top 3: ['Ananya', 'Arjun', 'Dev']<br>
+    Last 2: ['Rohan', 'Sneha']<br>
+    After adding: ['Ananya', 'Arjun', 'Dev', 'Priya', 'Rohan', 'Sneha', 'Vikram']<br>
+    Arjun in list: True
+  </div>
+
+  <div class="callout r">
+    <div class="ct">Indexing tip</div>
+    Python lists use <strong>zero-based indexing</strong> — the first item is at index <code>0</code>, not <code>1</code>. Negative indices count from the end: <code>list[-1]</code> is always the last item. In data science you'll use <code>df.iloc[0]</code> and similar — same concept.
+  </div>
+
+  <hr>
+
+  <!-- TUPLE -->
+  <div class="sec-label b">02 — tuple</div>
+  <h2>Tuple — The Immutable Guardian</h2>
+
+  <p>A <strong>tuple</strong> is exactly like a list — ordered, allows duplicates — except it is <em>immutable</em>: once created, it cannot be changed. You can't add, remove, or modify items.</p>
+
+  <div class="struct-detail">
+    <div class="struct-detail-hdr" style="background:rgba(26,79,214,0.05);border-color:var(--blue)">
+      <span class="type-name" style="color:var(--blue)">Tuple</span>
+      <span class="bracket">( &nbsp; )</span>
+      <ul class="prop-list" style="flex-direction:row;gap:1.5rem;list-style:none;margin:0">
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">ordered</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--blue)">immutable</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">allows duplicates</li>
+      </ul>
+    </div>
+    <div class="struct-detail-body">
+      <div class="detail-theory">
+        <p><strong>Immutable</strong> means the data is locked after creation. Trying to change a tuple raises a <code>TypeError</code>.</p>
+        <p><strong>When to use tuples:</strong> whenever your data should not change — GPS coordinates, RGB colours, dates, configuration values, function return values with multiple outputs.</p>
+        <ul class="prop-list">
+          <li>Access by index just like a list</li>
+          <li>Faster than lists (less overhead)</li>
+          <li>Can be used as dict keys (lists cannot)</li>
+          <li>Unpack easily: <code>x, y = (1, 2)</code></li>
+          <li>Count occurrences: <code>.count()</code></li>
+          <li>Find index: <code>.index()</code></li>
+        </ul>
+      </div>
+      <div class="detail-code">
+        <div class="mini-code-hdr">
+          <div class="mini-dots"><div class="mini-dot r"></div><div class="mini-dot y"></div><div class="mini-dot g"></div></div>
+          <span class="mini-lang">tuple_basics.py</span>
+        </div>
+        <pre><span class="cm"># GPS coordinates — never change</span>
+<span class="wh">delhi</span>  <span class="op">=</span> <span class="wh">(</span><span class="nm">28.6139</span><span class="wh">,</span> <span class="nm">77.2090</span><span class="wh">)</span>
+<span class="wh">mumbai</span> <span class="op">=</span> <span class="wh">(</span><span class="nm">19.0760</span><span class="wh">,</span> <span class="nm">72.8777</span><span class="wh">)</span>
+
+<span class="cm"># Unpack into variables</span>
+<span class="wh">lat</span><span class="wh">,</span> <span class="wh">lon</span> <span class="op">=</span> <span class="wh">delhi</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Lat: </span><span class="op">{</span><span class="wh">lat</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># RGB colour — fixed</span>
+<span class="wh">saffron</span> <span class="op">=</span> <span class="wh">(</span><span class="nm">255</span><span class="wh">,</span> <span class="nm">153</span><span class="wh">,</span> <span class="nm">51</span><span class="wh">)</span>
+
+<span class="cm"># This would cause a TypeError:</span>
+<span class="cm"># delhi[0] = 30  ← cannot modify!</span>
+
+<span class="cm"># But you CAN read it</span>
+<span class="fn">print</span><span class="wh">(delhi[</span><span class="nm">0</span><span class="wh">])</span>   <span class="cm"># 28.6139</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout b">
+    <div class="ct">List vs Tuple — the mental model</div>
+    Use a <strong>list</strong> for a shopping cart — items come and go. Use a <strong>tuple</strong> for a date of birth — it never changes. In data science, tuples are commonly used for <code>shape</code> (e.g., a dataset has shape <code>(1000, 12)</code> — 1000 rows, 12 columns). You'll see this in NumPy and Pandas constantly.
+  </div>
+
+  <hr>
+
+  <!-- DICT -->
+  <div class="sec-label y">03 — dictionary</div>
+  <h2>Dictionary — The Fast Lookup Table</h2>
+
+  <p>A <strong>dictionary</strong> stores data as <em>key-value pairs</em>. Instead of accessing items by position (index), you access them by a meaningful key — like looking up a word in a real dictionary.</p>
+
+  <div class="struct-detail">
+    <div class="struct-detail-hdr" style="background:rgba(232,184,0,0.07);border-color:var(--yellow)">
+      <span class="type-name" style="color:var(--yellow)">Dict</span>
+      <span class="bracket">{ key : value }</span>
+      <ul class="prop-list" style="flex-direction:row;gap:1.5rem;list-style:none;margin:0">
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">key→value</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--yellow)">fast lookup</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">unique keys</li>
+      </ul>
+    </div>
+    <div class="struct-detail-body">
+      <div class="detail-theory">
+        <p><strong>Keys</strong> must be unique and immutable (strings, numbers, tuples). <strong>Values</strong> can be anything — numbers, strings, lists, even other dicts.</p>
+        <p>Lookup is extremely fast — Python uses a hash table internally. Looking up a key in a dict with 1 million entries is just as fast as looking it up in a 10-entry dict.</p>
+        <ul class="prop-list">
+          <li>Access: <code>d["key"]</code> or <code>d.get("key")</code></li>
+          <li>Add/update: <code>d["key"] = value</code></li>
+          <li>Delete: <code>del d["key"]</code></li>
+          <li>All keys: <code>d.keys()</code></li>
+          <li>All values: <code>d.values()</code></li>
+          <li>Both: <code>d.items()</code></li>
+        </ul>
+      </div>
+      <div class="detail-code">
+        <div class="mini-code-hdr">
+          <div class="mini-dots"><div class="mini-dot r"></div><div class="mini-dot y"></div><div class="mini-dot g"></div></div>
+          <span class="mini-lang">dict_basics.py</span>
+        </div>
+        <pre><span class="cm"># Student scores</span>
+<span class="wh">scores</span> <span class="op">=</span> <span class="wh">{</span>
+    <span class="st">"Arjun"</span><span class="wh">:</span>  <span class="nm">92</span><span class="wh">,</span>
+    <span class="st">"Priya"</span><span class="wh">:</span>  <span class="nm">87</span><span class="wh">,</span>
+    <span class="st">"Sneha"</span><span class="wh">:</span>  <span class="nm">95</span>
+<span class="wh">}</span>
+
+<span class="cm"># Access by key</span>
+<span class="fn">print</span><span class="wh">(scores[</span><span class="st">"Priya"</span><span class="wh">])</span>  <span class="cm"># 87</span>
+
+<span class="cm"># Safe access with .get()</span>
+<span class="fn">print</span><span class="wh">(scores</span><span class="op">.</span><span class="fn">get</span><span class="wh">(</span><span class="st">"Dev"</span><span class="wh">,</span> <span class="nm">0</span><span class="wh">))</span>  <span class="cm"># 0</span>
+
+<span class="cm"># Add new student</span>
+<span class="wh">scores</span><span class="wh">[</span><span class="st">"Rohan"</span><span class="wh">]</span> <span class="op">=</span> <span class="nm">78</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Practical — Student scores + looping with .items()</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Dictionary of student scores</span>
+<span class="wh">scores</span> <span class="op">=</span> <span class="wh">{</span>
+    <span class="st">"Arjun"</span><span class="wh">:</span>  <span class="nm">92</span><span class="wh">,</span>
+    <span class="st">"Priya"</span><span class="wh">:</span>  <span class="nm">87</span><span class="wh">,</span>
+    <span class="st">"Sneha"</span><span class="wh">:</span>  <span class="nm">95</span><span class="wh">,</span>
+    <span class="st">"Rohan"</span><span class="wh">:</span>  <span class="nm">78</span><span class="wh">,</span>
+    <span class="st">"Dev"</span><span class="wh">:</span>    <span class="nm">83</span>
+<span class="wh">}</span>
+
+<span class="cm"># Loop through key-value pairs</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Score Report:"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"-"</span> <span class="op">*</span> <span class="nm">25</span><span class="wh">)</span>
+<span class="kw">for</span> <span class="wh">name, score</span> <span class="kw">in</span> <span class="wh">scores</span><span class="op">.</span><span class="fn">items</span><span class="wh">():</span>
+    <span class="wh">grade</span> <span class="op">=</span> <span class="st">"A"</span> <span class="kw">if</span> <span class="wh">score</span> <span class="op">>=</span> <span class="nm">90</span> <span class="kw">else</span> <span class="st">"B"</span> <span class="kw">if</span> <span class="wh">score</span> <span class="op">>=</span> <span class="nm">80</span> <span class="kw">else</span> <span class="st">"C"</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"  </span><span class="op">{</span><span class="wh">name</span><span class="op">:&lt;8</span><span class="op">}</span><span class="st">: </span><span class="op">{</span><span class="wh">score</span><span class="op">}</span><span class="st"> → </span><span class="op">{</span><span class="wh">grade</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Summary stats</span>
+<span class="wh">all_scores</span> <span class="op">=</span> <span class="fn">list</span><span class="wh">(scores</span><span class="op">.</span><span class="fn">values</span><span class="wh">())</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"\nHighest : </span><span class="op">{</span><span class="fn">max</span><span class="wh">(all_scores)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Average : </span><span class="op">{</span><span class="fn">sum</span><span class="wh">(all_scores)</span><span class="op">/</span><span class="fn">len</span><span class="wh">(all_scores)</span><span class="op">:.1f</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Score Report:<br>
+    -------------------------<br>
+    &nbsp;&nbsp;Arjun&nbsp;&nbsp;&nbsp;: 92 → A<br>
+    &nbsp;&nbsp;Priya&nbsp;&nbsp;&nbsp;: 87 → B<br>
+    &nbsp;&nbsp;Sneha&nbsp;&nbsp;&nbsp;: 95 → A<br>
+    &nbsp;&nbsp;Rohan&nbsp;&nbsp;&nbsp;: 78 → C<br>
+    &nbsp;&nbsp;Dev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 83 → B<br>
+    <br>
+    Highest : 95<br>
+    Average : 87.0
+  </div>
+
+  <div class="callout y">
+    <div class="ct">Data Science connection</div>
+    In data science, dictionaries are everywhere. A Pandas DataFrame column is essentially a dict under the hood. When you do <code>df["name"]</code> to select a column — that's dict-style access. Model hyperparameters are stored as dicts: <code>{"n_estimators": 100, "max_depth": 5}</code>. Master dicts and you'll understand a lot of ML library syntax naturally.
+  </div>
+
+  <hr>
+
+  <!-- SET -->
+  <div class="sec-label g">04 — set</div>
+  <h2>Set — The Duplicate Destroyer</h2>
+
+  <p>A <strong>set</strong> is an unordered collection with <em>no duplicates</em>. If you try to add the same value twice, a set simply ignores the second one. This makes sets perfect for finding unique values, deduplication, and fast membership testing.</p>
+
+  <div class="struct-detail">
+    <div class="struct-detail-hdr" style="background:rgba(26,138,58,0.05);border-color:var(--green)">
+      <span class="type-name" style="color:var(--green)">Set</span>
+      <span class="bracket">{ &nbsp; }</span>
+      <ul class="prop-list" style="flex-direction:row;gap:1.5rem;list-style:none;margin:0">
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">unordered</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--green)">no duplicates</li>
+        <li style="border:none;padding:0;font-size:11px;color:var(--mid)">mutable</li>
+      </ul>
+    </div>
+    <div class="struct-detail-body">
+      <div class="detail-theory">
+        <p><strong>Unordered</strong> means there's no index. You can't do <code>my_set[0]</code>. Sets are not for accessing individual items — they're for operations on the whole collection.</p>
+        <p><strong>No duplicates</strong> is the key feature. Pass any list with repeats into <code>set()</code> and you instantly get back only unique values.</p>
+        <ul class="prop-list">
+          <li>Add: <code>.add()</code></li>
+          <li>Remove: <code>.remove()</code>, <code>.discard()</code></li>
+          <li>Union: <code>a | b</code> or <code>a.union(b)</code></li>
+          <li>Intersection: <code>a &amp; b</code></li>
+          <li>Difference: <code>a - b</code></li>
+          <li>Membership: <code>"x" in my_set</code> (very fast)</li>
+        </ul>
+      </div>
+      <div class="detail-code">
+        <div class="mini-code-hdr">
+          <div class="mini-dots"><div class="mini-dot r"></div><div class="mini-dot y"></div><div class="mini-dot g"></div></div>
+          <span class="mini-lang">set_basics.py</span>
+        </div>
+        <pre><span class="cm"># Duplicates are ignored</span>
+<span class="wh">cities</span> <span class="op">=</span> <span class="wh">{</span><span class="st">"Delhi"</span><span class="wh">,</span> <span class="st">"Mumbai"</span><span class="wh">,</span>
+          <span class="st">"Delhi"</span><span class="wh">,</span> <span class="st">"Chennai"</span><span class="wh">}</span>
+<span class="fn">print</span><span class="wh">(cities)</span>
+<span class="cm"># {'Mumbai','Delhi','Chennai'}</span>
+
+<span class="cm"># Convert list → set to deduplicate</span>
+<span class="wh">tags</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"python"</span><span class="wh">,</span><span class="st">"data"</span><span class="wh">,</span><span class="st">"python"</span><span class="wh">]</span>
+<span class="wh">unique</span> <span class="op">=</span> <span class="fn">set</span><span class="wh">(tags)</span>
+<span class="cm"># {'python', 'data'}</span>
+
+<span class="cm"># Fast membership test</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Delhi"</span> <span class="kw">in</span> <span class="wh">cities)</span>  <span class="cm"># True</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Practical — Find unique visitors from a log</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Website visitor log — many repeat visits</span>
+<span class="wh">visitor_log</span> <span class="op">=</span> <span class="wh">[</span>
+    <span class="st">"arjun"</span><span class="wh">,</span> <span class="st">"priya"</span><span class="wh">,</span> <span class="st">"arjun"</span><span class="wh">,</span>
+    <span class="st">"dev"</span><span class="wh">,</span>   <span class="st">"sneha"</span><span class="wh">,</span> <span class="st">"priya"</span><span class="wh">,</span>
+    <span class="st">"arjun"</span><span class="wh">,</span> <span class="st">"rohan"</span><span class="wh">,</span> <span class="st">"sneha"</span>
+<span class="wh">]</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Total visits : </span><span class="op">{</span><span class="fn">len</span><span class="wh">(visitor_log)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Unique visitors — one line!</span>
+<span class="wh">unique_visitors</span> <span class="op">=</span> <span class="fn">set</span><span class="wh">(visitor_log)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Unique visitors: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(unique_visitors)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(unique_visitors)</span>
+
+<span class="cm"># Set operations — practical examples</span>
+<span class="wh">monday</span>    <span class="op">=</span> <span class="wh">{</span><span class="st">"arjun"</span><span class="wh">,</span> <span class="st">"priya"</span><span class="wh">,</span> <span class="st">"sneha"</span><span class="wh">}</span>
+<span class="wh">tuesday</span>   <span class="op">=</span> <span class="wh">{</span><span class="st">"priya"</span><span class="wh">,</span> <span class="st">"dev"</span><span class="wh">,</span>   <span class="st">"rohan"</span><span class="wh">}</span>
+
+<span class="cm"># Who visited BOTH days?</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Both days:"</span><span class="wh">, monday</span> <span class="op">&amp;</span> <span class="wh">tuesday)</span>
+
+<span class="cm"># Who visited on Monday but NOT Tuesday?</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Mon only :"</span><span class="wh">, monday</span> <span class="op">-</span> <span class="wh">tuesday)</span>
+
+<span class="cm"># All unique visitors across both days?</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"All unique:"</span><span class="wh">, monday</span> <span class="op">|</span> <span class="wh">tuesday)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Total visits : 9<br>
+    Unique visitors: 5<br>
+    {'arjun', 'dev', 'priya', 'rohan', 'sneha'}<br>
+    Both days: {'priya'}<br>
+    Mon only : {'arjun', 'sneha'}<br>
+    All unique: {'arjun', 'dev', 'priya', 'rohan', 'sneha'}
+  </div>
+
+  <div class="callout g">
+    <div class="ct">When sets shine in data science</div>
+    Sets are used constantly in data cleaning. Removing duplicate rows, finding which categories appear in column A but not column B, or checking if two feature sets overlap — all set operations. <code>set(df["city"].unique())</code> is a pattern you'll write dozens of times.
+  </div>
+
+  <hr>
+
+  <!-- WHEN TO USE WHICH -->
+  <div class="sec-label ink">05 — decision guide</div>
+  <h2>When to Use Which?</h2>
+  <p>The hard part isn't the syntax — it's choosing the right structure. Here's a practical guide:</p>
+
+  <div class="use-grid">
+    <div class="use-cell">
+      <div class="use-label">List</div>
+      <ul>
+        <li>Storing a sequence of items in order</li>
+        <li>Items you'll add, remove, or change</li>
+        <li>Collecting results in a loop</li>
+        <li>Feature names in a ML model</li>
+        <li>Rows of CSV data before processing</li>
+      </ul>
+    </div>
+    <div class="use-cell">
+      <div class="use-label">Tuple</div>
+      <ul>
+        <li>Data that should never change</li>
+        <li>GPS coordinates, RGB colours, dates</li>
+        <li>Returning multiple values from a function</li>
+        <li>Dataset shape: <code>(1000, 12)</code></li>
+        <li>As dictionary keys (lists can't be keys)</li>
+      </ul>
+    </div>
+    <div class="use-cell">
+      <div class="use-label">Dict</div>
+      <ul>
+        <li>Mapping names → scores, IDs → records</li>
+        <li>Counting frequencies of items</li>
+        <li>Model hyperparameter configs</li>
+        <li>JSON-like structured data</li>
+        <li>Any time you look up by a label</li>
+      </ul>
+    </div>
+    <div class="use-cell">
+      <div class="use-label">Set</div>
+      <ul>
+        <li>Finding unique values in a column</li>
+        <li>Removing duplicates from a list</li>
+        <li>Checking if value exists (very fast)</li>
+        <li>Finding common elements between two lists</li>
+        <li>Data validation — allowed values</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-tag">Your challenge for today</div>
+    <h3>Build the Student Analytics System</h3>
+    <ul class="clist">
+      <li>Create a list of 6 student names, sort it, slice the top 3, and add a new student</li>
+      <li>Store a student's personal details as a tuple (name, age, city) and unpack it into variables</li>
+      <li>Create a dict of student scores, loop with .items(), and print each name with grade A/B/C</li>
+      <li>Take the visitor_log example, convert to a set, and find how many unique visitors there are</li>
+      <li>Bonus: Create two sets — students who passed Maths and students who passed Science — and find who passed both using set intersection (&amp;)</li>
+      <li>Bonus 2: Use a dict to count how many times each city appears in a list of cities</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 4 — Functions &amp; Modules</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 6 — NumPy for Beginners</strong></div>
+  </div>
+
+</main>
+</body>
+</html>
