@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 7 — Pandas: Load & Explore Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#f5ede0;
+  --paper2:#ede0cc;
+  --paper3:#e0cdb5;
+  --ink:#1c1208;
+  --ink2:#3a2a14;
+  --mid:#7a6040;
+  --muted:#b09070;
+  --border:#c8a878;
+  --border2:#8a6840;
+  --red:#b52a14;
+  --blue:#14408a;
+  --green:#1a6040;
+  --amber:#c87a14;
+  --teal:#148a6a;
+  --surface:#ede0cc;
+  --surface2:#e0cfb5;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Spectral',serif;
+  font-size:18px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+/* Paper texture overlay */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:999;
+}
+
+/* ── HERO ── */
+.hero{
+  border-bottom:3px double var(--border2);
+  position:relative;
+  overflow:hidden;
+}
+
+/* newspaper column lines bg */
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background-image:repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent calc(20% - 1px),
+    rgba(140,104,64,0.08) calc(20% - 1px),
+    rgba(140,104,64,0.08) 20%
+  );
+  pointer-events:none;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.hero-dateline{
+  text-align:center;
+  padding:0.75rem 2rem;
+  border-bottom:1px solid var(--border);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--mid);
+  display:flex;align-items:center;justify-content:center;gap:2rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.05s;
+}
+
+.hero-dateline span{display:flex;align-items:center;gap:8px}
+.hero-dateline span::before,.hero-dateline span::after{content:'◆';font-size:6px;color:var(--muted)}
+
+.hero-masthead{
+  text-align:center;
+  padding:2.5rem 2rem 1.5rem;
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:1;
+}
+
+.masthead-kicker{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--mid);margin-bottom:0.75rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.1s;
+}
+
+.masthead-rule{
+  display:flex;align-items:center;justify-content:center;gap:1rem;
+  margin-bottom:1rem;
+}
+.masthead-rule-line{flex:1;max-width:120px;height:1px;background:var(--border2)}
+.masthead-rule-num{
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+  color:var(--muted);letter-spacing:0.15em;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.15s;
+}
+
+.hero-headline{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(3rem,7vw,7rem);
+  font-weight:900;
+  line-height:0.88;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+  margin-bottom:1rem;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.2s;
+}
+.hero-headline em{font-style:italic;color:var(--red)}
+.hero-headline .sub-word{display:block;font-size:0.55em;font-weight:400;font-style:italic;color:var(--mid);letter-spacing:0.02em;margin-top:0.2rem}
+
+.hero-deck{
+  font-family:'Spectral',serif;font-size:1.15rem;font-style:italic;
+  color:var(--ink2);max-width:680px;margin:0 auto 1.5rem;
+  line-height:1.6;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.35s;
+}
+
+.hero-byline{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--muted);
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.45s;
+  display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;
+}
+
+/* 3-column newspaper layout for tags */
+.hero-tag-row{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  flex-wrap:wrap;padding:1rem 2rem;
+  border-top:1px solid var(--border);
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.55s;
+}
+.htag{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;
+  padding:3px 10px;border:1px solid var(--border2);
+  color:var(--mid);letter-spacing:0.1em;text-transform:uppercase;
+}
+.htag.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ── HERO TABLE PREVIEW ── */
+.hero-table-section{
+  display:grid;grid-template-columns:3fr 2fr;
+  border-top:1px solid var(--border);
+  position:relative;z-index:1;
+}
+
+.hero-table-left{
+  padding:2rem 2.5rem;
+  border-right:1px solid var(--border);
+  opacity:0;animation:fadeIn 0.7s ease forwards 0.6s;
+}
+
+.df-label{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);
+  margin-bottom:0.75rem;display:flex;align-items:center;gap:8px;
+}
+.df-label::before{content:'';width:20px;height:2px;background:var(--red);flex-shrink:0}
+
+/* DataFrame table */
+.df-table{
+  width:100%;border-collapse:collapse;font-family:'Source Code Pro',monospace;font-size:12px;
+}
+.df-table th{
+  background:var(--ink);color:var(--paper);
+  padding:7px 12px;text-align:left;font-weight:500;
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  white-space:nowrap;
+}
+.df-table th.idx{background:var(--ink2);color:var(--muted);font-size:10px}
+.df-table td{
+  padding:6px 12px;border-bottom:1px solid var(--border);
+  color:var(--ink2);white-space:nowrap;
+}
+.df-table td.idx{background:var(--surface2);color:var(--muted);font-size:11px;font-weight:600;border-right:2px solid var(--border2)}
+.df-table tr:hover td{background:rgba(200,120,20,0.06)}
+.df-table tr:last-child td{border-bottom:2px solid var(--border2)}
+
+.cell-int{color:var(--blue)}
+.cell-float{color:var(--green)}
+.cell-str{color:var(--ink)}
+.cell-nan{color:var(--muted);font-style:italic}
+
+.hero-table-right{
+  padding:2rem;
+  opacity:0;animation:fadeIn 0.7s ease forwards 0.75s;
+}
+
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  padding:1rem 1.25rem;margin-bottom:0.75rem;
+}
+.stat-card-label{
+  font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;
+}
+.stat-card-value{
+  font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;
+  color:var(--ink);line-height:1;
+}
+.stat-card-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:4rem 2.5rem 8rem}
+
+.sec{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--muted);margin:5rem 0 1.5rem;
+  display:flex;align-items:center;gap:14px;
+}
+.sec::before{content:'§';color:var(--red);font-size:14px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec:first-child{margin-top:0}
+
+h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:700;line-height:1.1;
+  color:var(--ink);margin-bottom:1.25rem;
+}
+h2 em{font-style:italic;color:var(--red)}
+
+h3{
+  font-family:'Playfair Display',serif;
+  font-size:1.35rem;font-weight:700;font-style:italic;
+  color:var(--ink);margin:2.75rem 0 0.75rem;
+}
+
+p{margin-bottom:1.25rem;color:var(--ink2);line-height:1.85}
+strong{color:var(--ink);font-weight:600}
+em{font-style:italic;color:var(--red)}
+
+code{
+  font-family:'Source Code Pro',monospace;font-size:12.5px;
+  background:var(--surface);border:1px solid var(--border);
+  padding:2px 7px;color:var(--blue);
+}
+
+hr{border:none;border-top:2px double var(--border);margin:4.5rem 0}
+
+/* OPENER */
+.opener{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(1.1rem,2.2vw,1.45rem);
+  color:var(--ink);border-left:5px solid var(--ink);
+  padding:1rem 1.75rem;margin-bottom:3rem;line-height:1.65;
+}
+
+/* CODE BLOCK */
+.code-block{
+  background:var(--ink);
+  border:1px solid var(--border2);margin:2rem 0;overflow:hidden;
+  position:relative;
+}
+.code-block::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--red);
+}
+
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px 8px 20px;
+  background:rgba(0,0,0,0.3);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:9px;height:9px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'Barlow Condensed',monospace;font-size:10px;color:#5a4030;letter-spacing:0.15em;margin-left:6px;text-transform:uppercase}
+.copy-btn{font-family:'Source Code Pro',monospace;font-size:9px;color:#5a4030;background:none;border:1px solid #3a2a14;padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em}
+.copy-btn:hover{color:var(--amber);border-color:var(--amber)}
+
+pre{padding:1.5rem 1.5rem 1.5rem 1.75rem;font-family:'Source Code Pro',monospace;font-size:12.5px;line-height:1.9;overflow-x:auto;color:#c8a878}
+
+.kw{color:#e8a0c0}.fn{color:#80b8e8}.st{color:#90c890}.nm{color:#e8c080}.cm{color:#4a3020;font-style:italic}.op{color:#e88060}.wh{color:#c8a878}.out{color:#80c8a0}.atr{color:#80b8e8}
+
+.output-box{
+  background:var(--surface2);
+  border:1px solid var(--border2);border-top:none;
+  padding:1rem 1.5rem;
+  font-family:'Source Code Pro',monospace;font-size:12px;
+  color:var(--green);margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-family:'Barlow Condensed',monospace;font-size:9px;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:7px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:5px solid var(--ink);
+  background:var(--surface);font-size:15px;line-height:1.7;color:var(--ink2);
+}
+.callout.red{border-color:var(--red);background:rgba(181,42,20,0.05)}
+.callout.blue{border-color:var(--blue);background:rgba(20,64,138,0.05)}
+.callout.green{border-color:var(--green);background:rgba(26,96,64,0.05)}
+.callout.amber{border-color:var(--amber);background:rgba(200,122,20,0.06)}
+.callout.teal{border-color:var(--teal);background:rgba(20,138,106,0.05)}
+
+.ct{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);margin-bottom:0.4rem}
+.callout.red .ct{color:var(--red)}.callout.blue .ct{color:var(--blue)}.callout.green .ct{color:var(--green)}.callout.amber .ct{color:var(--amber)}.callout.teal .ct{color:var(--teal)}
+
+/* DATAFRAME INLINE */
+.df-inline{
+  width:100%;overflow-x:auto;margin:2rem 0;
+  border:2px solid var(--border2);
+}
+.df-inline table{
+  width:100%;border-collapse:collapse;
+  font-family:'Source Code Pro',monospace;font-size:12px;
+}
+.df-inline th{
+  background:var(--ink);color:var(--paper);
+  padding:8px 14px;text-align:left;white-space:nowrap;
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+}
+.df-inline th.idx-h{background:var(--ink2);color:var(--muted)}
+.df-inline td{
+  padding:7px 14px;border-bottom:1px solid var(--border);
+  color:var(--ink2);white-space:nowrap;
+}
+.df-inline td.idx-c{background:var(--surface2);color:var(--muted);font-weight:600;border-right:2px solid var(--border)}
+.df-inline tr:hover td{background:rgba(200,168,120,0.12)}
+.df-inline tr:last-child td{border-bottom:none}
+.df-int{color:var(--blue)}.df-flt{color:var(--green)}.df-str{color:var(--ink)}.df-nan{color:var(--muted);font-style:italic}
+
+/* METHOD GRID */
+.method-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:2px;
+  background:var(--border2);margin:2rem 0;
+}
+.method-cell{
+  background:var(--paper);padding:1.25rem 1.5rem;
+}
+.method-name{
+  font-family:'Source Code Pro',monospace;font-size:13px;font-weight:600;
+  color:var(--blue);margin-bottom:0.5rem;display:block;
+}
+.method-desc{font-size:14px;color:var(--ink2);line-height:1.55;margin-bottom:0.5rem}
+.method-tip{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase}
+
+/* COLUMN DTYPE TABLE */
+.dtype-table{width:100%;border-collapse:collapse;font-size:13.5px;margin:2rem 0}
+.dtype-table th{
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:0.15em;text-transform:uppercase;color:var(--paper);
+  background:var(--ink);padding:9px 14px;text-align:left;
+}
+.dtype-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--ink2)}
+.dtype-table tr:last-child td{border-bottom:none}
+.dtype-table tr:hover td{background:var(--surface)}
+.dtype-table td:first-child{font-family:'Source Code Pro',monospace;font-size:12px;color:var(--blue)}
+.dtype-table td:nth-child(2){font-family:'Source Code Pro',monospace;font-size:12px;color:var(--green)}
+.dtype-table td:last-child{font-size:13px;color:var(--mid)}
+
+/* CHALLENGE */
+.challenge{
+  background:var(--ink);color:var(--paper);
+  padding:2.5rem;margin:3rem 0;
+  border:3px double var(--border2);
+  position:relative;
+}
+.challenge::before{
+  content:'EXERCISE';position:absolute;
+  top:-1px;left:2rem;
+  font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:0.2em;
+  color:var(--red);background:var(--ink);padding:0 8px;
+  border-top:3px double var(--border2);margin-top:-3px;
+}
+.chal-h3{
+  font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;font-style:italic;
+  color:var(--paper);margin-bottom:1rem;
+}
+.clist{list-style:none}
+.clist li{
+  font-family:'Source Code Pro',monospace;font-size:11.5px;
+  color:#7a6040;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6;
+}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'//';color:#3a2a14;flex-shrink:0;margin-top:1px}
+
+/* FOOTER */
+.post-footer{border-top:2px double var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;line-height:1.9}
+.foot-item strong{display:block;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:4px;font-weight:700;font-style:italic}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--paper)}
+::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+
+  <div class="hero-dateline">
+    <span>Python for Data Science &amp; AI</span>
+    <span>Blog 07 of 20</span>
+    <span>Beginner · 14 min read</span>
+  </div>
+
+  <div class="hero-masthead">
+    <div class="masthead-kicker">The Data Science Dispatch — Module 07</div>
+    <div class="masthead-rule">
+      <div class="masthead-rule-line"></div>
+      <div class="masthead-rule-num">◆ &nbsp; 07 &nbsp; ◆</div>
+      <div class="masthead-rule-line"></div>
+    </div>
+
+    <h1 class="hero-headline">
+      <em>Pandas:</em> Load
+      <span class="sub-word">& Explore Your Data</span>
+    </h1>
+
+    <p class="hero-deck">
+      DataFrames, CSV files, head(), describe(), and the first five methods every data scientist runs the moment they open a new dataset.
+    </p>
+
+    <div class="hero-byline">
+      <span>Theory + Practical</span>
+      <span>◆</span>
+      <span>DataFrame · Series · CSV · JSON</span>
+      <span>◆</span>
+      <span>Titanic Dataset</span>
+    </div>
+  </div>
+
+  <div class="hero-tag-row">
+    <span class="htag on">pd.read_csv()</span>
+    <span class="htag on">DataFrame</span>
+    <span class="htag on">.head()</span>
+    <span class="htag on">.info()</span>
+    <span class="htag on">.describe()</span>
+    <span class="htag">.shape</span>
+    <span class="htag">.dtypes</span>
+    <span class="htag">Series</span>
+  </div>
+
+  <!-- DataFrame preview in hero -->
+  <div class="hero-table-section">
+    <div class="hero-table-left">
+      <div class="df-label">Titanic Dataset Preview — df.head()</div>
+      <div style="overflow-x:auto">
+        <table class="df-table">
+          <thead>
+            <tr>
+              <th class="idx">&nbsp;</th>
+              <th>PassengerId</th>
+              <th>Survived</th>
+              <th>Pclass</th>
+              <th>Name</th>
+              <th>Sex</th>
+              <th>Age</th>
+              <th>Fare</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="idx">0</td><td class="cell-int">1</td><td class="cell-int">0</td><td class="cell-int">3</td><td class="cell-str">Braund, Mr. Owen</td><td class="cell-str">male</td><td class="cell-float">22.0</td><td class="cell-float">7.25</td></tr>
+            <tr><td class="idx">1</td><td class="cell-int">2</td><td class="cell-int">1</td><td class="cell-int">1</td><td class="cell-str">Cumings, Mrs. John</td><td class="cell-str">female</td><td class="cell-float">38.0</td><td class="cell-float">71.28</td></tr>
+            <tr><td class="idx">2</td><td class="cell-int">3</td><td class="cell-int">1</td><td class="cell-int">3</td><td class="cell-str">Heikkinen, Miss.</td><td class="cell-str">female</td><td class="cell-float">26.0</td><td class="cell-float">7.93</td></tr>
+            <tr><td class="idx">3</td><td class="cell-int">4</td><td class="cell-int">1</td><td class="cell-int">1</td><td class="cell-str">Futrelle, Mrs. Jacques</td><td class="cell-str">female</td><td class="cell-float">35.0</td><td class="cell-float">53.10</td></tr>
+            <tr><td class="idx">4</td><td class="cell-int">5</td><td class="cell-int">0</td><td class="cell-int">3</td><td class="cell-str">Allen, Mr. William</td><td class="cell-str">male</td><td class="cell-float">35.0</td><td class="cell-float">8.05</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="hero-table-right">
+      <div class="stat-card">
+        <div class="stat-card-label">Rows × Columns</div>
+        <div class="stat-card-value">891 × 12</div>
+        <div class="stat-card-sub">df.shape</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Missing Values</div>
+        <div class="stat-card-value" style="color:var(--red)">263</div>
+        <div class="stat-card-sub">df.isnull().sum().sum()</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Survival Rate</div>
+        <div class="stat-card-value" style="color:var(--green)">38.4%</div>
+        <div class="stat-card-sub">df["Survived"].mean()</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    NumPy gave us the engine. Now Pandas gives us the cockpit. It's the library that turns raw data files — CSV spreadsheets, JSON exports, database dumps — into something you can inspect, interrogate, and understand in minutes.
+  </div>
+
+  <!-- WHAT IS PANDAS -->
+  <div class="sec">01 — foundations</div>
+  <h2>What is <em>Pandas</em>?</h2>
+
+  <p>Pandas is a Python library for data manipulation and analysis. Its name comes from <strong>Panel Data</strong> — a term for multi-dimensional data sets used in statistics and econometrics.</p>
+
+  <p>The two core objects in Pandas are:</p>
+
+  <div class="method-grid">
+    <div class="method-cell">
+      <span class="method-name">pd.DataFrame</span>
+      <div class="method-desc">A 2-dimensional table — rows and columns — like an Excel spreadsheet or a SQL table. This is what you'll work with 95% of the time. Each column is a Series.</div>
+      <div class="method-tip">Think: entire spreadsheet</div>
+    </div>
+    <div class="method-cell">
+      <span class="method-name">pd.Series</span>
+      <div class="method-desc">A 1-dimensional labelled array — a single column or row of a DataFrame. It's like a NumPy array with an index attached to each value.</div>
+      <div class="method-tip">Think: one column of a spreadsheet</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+
+<span class="cm"># Create a DataFrame from a dictionary</span>
+<span class="wh">data</span> <span class="op">=</span> <span class="wh">{</span>
+    <span class="st">"name"</span><span class="wh">:</span>   <span class="wh">[</span><span class="st">"Arjun"</span><span class="wh">,</span>  <span class="st">"Priya"</span><span class="wh">,</span>  <span class="st">"Rohan"</span><span class="wh">,</span>  <span class="st">"Sneha"</span><span class="wh">],</span>
+    <span class="st">"age"</span><span class="wh">:</span>    <span class="wh">[</span><span class="nm">22</span><span class="wh">,</span>       <span class="nm">24</span><span class="wh">,</span>       <span class="nm">21</span><span class="wh">,</span>       <span class="nm">23</span><span class="wh">],</span>
+    <span class="st">"score"</span><span class="wh">:</span>  <span class="wh">[</span><span class="nm">88.5</span><span class="wh">,</span>     <span class="nm">92.0</span><span class="wh">,</span>     <span class="nm">75.5</span><span class="wh">,</span>     <span class="nm">95.0</span><span class="wh">],</span>
+    <span class="st">"passed"</span><span class="wh">:</span> <span class="wh">[</span><span class="kw">True</span><span class="wh">,</span>     <span class="kw">True</span><span class="wh">,</span>     <span class="kw">True</span><span class="wh">,</span>     <span class="kw">True</span><span class="wh">]</span>
+<span class="wh">}</span>
+
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">DataFrame</span><span class="wh">(data)</span>
+<span class="fn">print</span><span class="wh">(df)</span>
+
+<span class="cm"># A Series is just one column</span>
+<span class="wh">names</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">Series</span><span class="wh">([</span><span class="st">"Arjun"</span><span class="wh">,</span> <span class="st">"Priya"</span><span class="wh">,</span> <span class="st">"Rohan"</span><span class="wh">])</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(df[</span><span class="st">"name"</span><span class="wh">]))</span>    <span class="cm"># &lt;class 'pandas.core.series.Series'&gt;</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    &nbsp;&nbsp;&nbsp;&nbsp;name  age  score  passed<br>
+    0&nbsp;&nbsp;Arjun&nbsp;&nbsp; 22&nbsp;&nbsp; 88.5&nbsp;&nbsp;&nbsp;&nbsp;True<br>
+    1&nbsp;&nbsp;Priya&nbsp;&nbsp; 24&nbsp;&nbsp; 92.0&nbsp;&nbsp;&nbsp;&nbsp;True<br>
+    2&nbsp;&nbsp;Rohan&nbsp;&nbsp; 21&nbsp;&nbsp; 75.5&nbsp;&nbsp;&nbsp;&nbsp;True<br>
+    3&nbsp;&nbsp;Sneha&nbsp;&nbsp; 23&nbsp;&nbsp; 95.0&nbsp;&nbsp;&nbsp;&nbsp;True
+  </div>
+
+  <div class="callout">
+    <div class="ct">The Universal Convention</div>
+    Every data scientist writes <code>import pandas as pd</code> — it's as universal as <code>import numpy as np</code>. You'll see it in every notebook on the internet. Always use <code>pd</code> as the alias.
+  </div>
+
+  <hr>
+
+  <!-- LOADING DATA -->
+  <div class="sec">02 — loading data</div>
+  <h2>Loading Data into a DataFrame</h2>
+
+  <p>Pandas can read almost any data format. The most common by far is CSV, but you'll regularly encounter Excel files, JSON APIs, and SQL databases too.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Reading Files ─────────────────────────────────────</span>
+
+<span class="cm"># CSV — most common</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(</span><span class="st">"titanic.csv"</span><span class="wh">)</span>
+
+<span class="cm"># Excel</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_excel</span><span class="wh">(</span><span class="st">"sales_data.xlsx"</span><span class="wh">, sheet_name</span><span class="op">=</span><span class="st">"Q3"</span><span class="wh">)</span>
+
+<span class="cm"># JSON</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_json</span><span class="wh">(</span><span class="st">"users.json"</span><span class="wh">)</span>
+
+<span class="cm"># From a URL (direct download!)</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+
+<span class="cm"># Useful read_csv options</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(</span>
+    <span class="st">"data.csv"</span><span class="wh">,</span>
+    <span class="wh">sep</span><span class="op">=</span><span class="st">";"</span><span class="wh">,</span>            <span class="cm"># custom separator (semicolons)</span>
+    <span class="wh">header</span><span class="op">=</span><span class="nm">0</span><span class="wh">,</span>           <span class="cm"># row 0 is the header</span>
+    <span class="wh">usecols</span><span class="op">=</span><span class="wh">[</span><span class="st">"name"</span><span class="wh">,</span> <span class="st">"age"</span><span class="wh">],</span>   <span class="cm"># only load these columns</span>
+    <span class="wh">nrows</span><span class="op">=</span><span class="nm">1000</span><span class="wh">,</span>          <span class="cm"># only first 1000 rows</span>
+    <span class="wh">na_values</span><span class="op">=</span><span class="wh">[</span><span class="st">"N/A"</span><span class="wh">,</span> <span class="st">"?"</span><span class="wh">,</span> <span class="st">""</span><span class="wh">]</span>  <span class="cm"># treat these as NaN</span>
+<span class="wh">)</span></pre>
+  </div>
+
+  <div class="callout teal">
+    <div class="ct">Load Titanic right now</div>
+    In your Google Colab notebook, run this one line to load the famous Titanic dataset directly from the internet — no file upload needed:<br><br>
+    <code>df = pd.read_csv("https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv")</code><br><br>
+    Every practical example in this blog uses this dataset. It's the most famous beginner dataset in data science for a reason — it's real, it's messy, and it tells a story.
+  </div>
+
+  <hr>
+
+  <!-- FIRST LOOK -->
+  <div class="sec">03 — first look methods</div>
+  <h2>The Five First-Look Methods</h2>
+
+  <p>The moment you load a new dataset, there are five methods you run — in this exact order, every single time. They give you the full picture of what you're working with before writing a single line of analysis.</p>
+
+  <h3>1. df.head() and df.tail()</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># First 5 rows (default)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">head</span><span class="wh">())</span>
+
+<span class="cm"># First 10 rows</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">head</span><span class="wh">(</span><span class="nm">10</span><span class="wh">))</span>
+
+<span class="cm"># Last 5 rows — check the end of your data</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">tail</span><span class="wh">())</span></pre>
+  </div>
+
+  <div class="df-inline">
+    <table>
+      <thead>
+        <tr>
+          <th class="idx-h">&nbsp;</th>
+          <th>PassengerId</th><th>Survived</th><th>Pclass</th>
+          <th>Name</th><th>Sex</th><th>Age</th><th>Fare</th><th>Embarked</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="idx-c">0</td><td class="df-int">1</td><td class="df-int">0</td><td class="df-int">3</td><td class="df-str">Braund, Mr. Owen</td><td class="df-str">male</td><td class="df-flt">22.0</td><td class="df-flt">7.25</td><td class="df-str">S</td></tr>
+        <tr><td class="idx-c">1</td><td class="df-int">2</td><td class="df-int">1</td><td class="df-int">1</td><td class="df-str">Cumings, Mrs. John</td><td class="df-str">female</td><td class="df-flt">38.0</td><td class="df-flt">71.28</td><td class="df-str">C</td></tr>
+        <tr><td class="idx-c">2</td><td class="df-int">3</td><td class="df-int">1</td><td class="df-int">3</td><td class="df-str">Heikkinen, Miss.</td><td class="df-str">female</td><td class="df-flt">26.0</td><td class="df-flt">7.93</td><td class="df-str">S</td></tr>
+        <tr><td class="idx-c">3</td><td class="df-int">4</td><td class="df-int">1</td><td class="df-int">1</td><td class="df-str">Futrelle, Mrs. Jacques</td><td class="df-str">female</td><td class="df-flt">35.0</td><td class="df-flt">53.10</td><td class="df-str">S</td></tr>
+        <tr><td class="idx-c">4</td><td class="df-int">5</td><td class="df-int">0</td><td class="df-int">3</td><td class="df-str">Allen, Mr. William</td><td class="df-str">male</td><td class="df-flt">35.0</td><td class="df-flt">8.05</td><td class="df-str">S</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2. df.shape</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="atr">shape</span><span class="wh">)</span>         <span class="cm"># (891, 12) — 891 rows, 12 columns</span>
+
+<span class="wh">rows</span><span class="wh">,</span> <span class="wh">cols</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="atr">shape</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Dataset has </span><span class="op">{</span><span class="wh">rows</span><span class="op">}</span><span class="st"> passengers and </span><span class="op">{</span><span class="wh">cols</span><span class="op">}</span><span class="st"> features"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    (891, 12)<br>
+    Dataset has 891 passengers and 12 features
+  </div>
+
+  <h3>3. df.info() — The Most Useful Method</h3>
+
+  <p><code>df.info()</code> is arguably the single most important method when you first open a dataset. In one output, it shows you: column names, data types, non-null count (so you instantly see missing values), and memory usage.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">df</span><span class="op">.</span><span class="fn">info</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    &lt;class 'pandas.core.frame.DataFrame'&gt;<br>
+    RangeIndex: 891 entries, 0 to 890<br>
+    Data columns (total 12 columns):<br>
+    &nbsp;#&nbsp;&nbsp; Column&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Non-Null Count&nbsp; Dtype<br>
+    ---&nbsp; ------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --------------&nbsp; -----<br>
+    &nbsp;0&nbsp;&nbsp; PassengerId&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; int64<br>
+    &nbsp;1&nbsp;&nbsp; Survived&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; int64<br>
+    &nbsp;2&nbsp;&nbsp; Pclass&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; int64<br>
+    &nbsp;3&nbsp;&nbsp; Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; object<br>
+    &nbsp;4&nbsp;&nbsp; Sex&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; object<br>
+    &nbsp;5&nbsp;&nbsp; Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong style="color:#b52a14">714 non-null</strong>&nbsp;&nbsp;&nbsp; float64&nbsp;&nbsp;<span style="color:#b52a14">← 177 missing!</span><br>
+    &nbsp;6&nbsp;&nbsp; SibSp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; int64<br>
+    &nbsp;7&nbsp;&nbsp; Parch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; int64<br>
+    &nbsp;8&nbsp;&nbsp; Ticket&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; object<br>
+    &nbsp;9&nbsp;&nbsp; Fare&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 891 non-null&nbsp;&nbsp;&nbsp; float64<br>
+    10&nbsp;&nbsp; Cabin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong style="color:#b52a14">204 non-null</strong>&nbsp;&nbsp;&nbsp; object&nbsp;&nbsp;&nbsp;<span style="color:#b52a14">← 687 missing!</span><br>
+    11&nbsp;&nbsp; Embarked&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong style="color:#b52a14">889 non-null</strong>&nbsp;&nbsp;&nbsp; object&nbsp;&nbsp;&nbsp;<span style="color:#b52a14">← 2 missing</span><br>
+    dtypes: float64(2), int64(5), object(5)<br>
+    memory usage: 83.7 KB
+  </div>
+
+  <div class="callout red">
+    <div class="ct">Read info() like a detective</div>
+    The "Non-Null Count" column is your first clue about data quality. Look for columns where the count is <strong>less than the total rows</strong> — those have missing values. Here: <strong>Age has 177 missing values</strong>, <strong>Cabin is 77% empty</strong>. Before any analysis or modelling, you need to decide what to do with these.
+  </div>
+
+  <h3>4. df.describe() — Statistical Summary</h3>
+
+  <p><code>df.describe()</code> shows count, mean, standard deviation, min, max, and quartiles for every numeric column — all in one table.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">df</span><span class="op">.</span><span class="fn">describe</span><span class="wh">()</span>
+
+<span class="cm"># Include text columns too</span>
+<span class="wh">df</span><span class="op">.</span><span class="fn">describe</span><span class="wh">(include</span><span class="op">=</span><span class="st">"all"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="df-inline">
+    <table>
+      <thead>
+        <tr>
+          <th class="idx-h">&nbsp;</th>
+          <th>PassengerId</th><th>Survived</th><th>Pclass</th><th>Age</th><th>SibSp</th><th>Parch</th><th>Fare</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="idx-c">count</td><td class="df-flt">891.00</td><td class="df-flt">891.00</td><td class="df-flt">891.00</td><td class="df-flt" style="color:var(--red)">714.00</td><td class="df-flt">891.00</td><td class="df-flt">891.00</td><td class="df-flt">891.00</td></tr>
+        <tr><td class="idx-c">mean</td><td class="df-flt">446.00</td><td class="df-flt">0.38</td><td class="df-flt">2.31</td><td class="df-flt">29.70</td><td class="df-flt">0.52</td><td class="df-flt">0.38</td><td class="df-flt">32.20</td></tr>
+        <tr><td class="idx-c">std</td><td class="df-flt">257.35</td><td class="df-flt">0.49</td><td class="df-flt">0.84</td><td class="df-flt">14.53</td><td class="df-flt">1.10</td><td class="df-flt">0.81</td><td class="df-flt">49.69</td></tr>
+        <tr><td class="idx-c">min</td><td class="df-flt">1.00</td><td class="df-flt">0.00</td><td class="df-flt">1.00</td><td class="df-flt">0.42</td><td class="df-flt">0.00</td><td class="df-flt">0.00</td><td class="df-flt">0.00</td></tr>
+        <tr><td class="idx-c">25%</td><td class="df-flt">223.50</td><td class="df-flt">0.00</td><td class="df-flt">2.00</td><td class="df-flt">20.13</td><td class="df-flt">0.00</td><td class="df-flt">0.00</td><td class="df-flt">7.91</td></tr>
+        <tr><td class="idx-c">50%</td><td class="df-flt">446.00</td><td class="df-flt">0.00</td><td class="df-flt">3.00</td><td class="df-flt">28.00</td><td class="df-flt">0.00</td><td class="df-flt">0.00</td><td class="df-flt">14.45</td></tr>
+        <tr><td class="idx-c">75%</td><td class="df-flt">668.50</td><td class="df-flt">1.00</td><td class="df-flt">3.00</td><td class="df-flt">38.00</td><td class="df-flt">1.00</td><td class="df-flt">0.00</td><td class="df-flt">31.00</td></tr>
+        <tr><td class="idx-c">max</td><td class="df-flt">891.00</td><td class="df-flt">1.00</td><td class="df-flt">3.00</td><td class="df-flt">80.00</td><td class="df-flt">8.00</td><td class="df-flt">6.00</td><td class="df-flt" style="color:var(--red)">512.33</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout amber">
+    <div class="ct">What describe() tells you instantly</div>
+    Just from this table: the survival rate was 38% (mean of Survived). Passengers were mostly 3rd class (mean Pclass = 2.31). Ages range from 0.42 to 80. The Fare column has an extreme outlier — max is £512 but the 75th percentile is only £31. These are the kinds of insights that take hours in Excel and seconds in Pandas.
+  </div>
+
+  <h3>5. df.dtypes and df.columns</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># See column names</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="atr">columns</span><span class="wh">.</span><span class="fn">tolist</span><span class="wh">())</span>
+<span class="cm"># ['PassengerId','Survived','Pclass','Name','Sex','Age','SibSp','Parch','Ticket','Fare','Cabin','Embarked']</span>
+
+<span class="cm"># See data types</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="atr">dtypes</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output (dtypes)</div>
+    PassengerId&nbsp;&nbsp;&nbsp;&nbsp; int64<br>
+    Survived&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int64<br>
+    Pclass&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int64<br>
+    Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; object<br>
+    Sex&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; object<br>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float64<br>
+    Fare&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float64<br>
+    Cabin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; object<br>
+    Embarked&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; object
+  </div>
+
+  <table class="dtype-table">
+    <thead><tr><th>Pandas dtype</th><th>Python equivalent</th><th>When you see it</th></tr></thead>
+    <tbody>
+      <tr><td>int64</td><td>int</td><td>Whole numbers — IDs, counts, binary (0/1)</td></tr>
+      <tr><td>float64</td><td>float</td><td>Decimal numbers — Age, Fare, percentages</td></tr>
+      <tr><td>object</td><td>str</td><td>Text — names, categories, any mixed type column</td></tr>
+      <tr><td>bool</td><td>bool</td><td>True/False columns</td></tr>
+      <tr><td>datetime64</td><td>datetime</td><td>Dates and timestamps — use pd.to_datetime()</td></tr>
+      <tr><td>category</td><td>—</td><td>Low-cardinality text columns (male/female) — saves memory</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- SELECTING DATA -->
+  <div class="sec">04 — selecting data</div>
+  <h2>Selecting Columns &amp; Rows</h2>
+
+  <p>Once you've loaded and understood your data, you need to access specific parts of it. Pandas gives you two ways to select: by column name, and by row index/condition.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Column Selection ──────────────────────────────────</span>
+
+<span class="cm"># Single column → returns a Series</span>
+<span class="wh">ages</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="fn">type</span><span class="wh">(ages))</span>          <span class="cm"># Series</span>
+
+<span class="cm"># Multiple columns → returns a DataFrame</span>
+<span class="wh">subset</span> <span class="op">=</span> <span class="wh">df[[</span><span class="st">"Name"</span><span class="wh">,</span> <span class="st">"Age"</span><span class="wh">,</span> <span class="st">"Survived"</span><span class="wh">]]</span>
+<span class="fn">print</span><span class="wh">(subset</span><span class="op">.</span><span class="fn">head</span><span class="wh">())</span>
+
+<span class="cm"># ── Row Selection ─────────────────────────────────────</span>
+
+<span class="cm"># By index — .iloc (integer location)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">iloc</span><span class="wh">[</span><span class="nm">0</span><span class="wh">])</span>            <span class="cm"># first row</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">iloc</span><span class="wh">[</span><span class="nm">0</span><span class="wh">:</span><span class="nm">5</span><span class="wh">])</span>          <span class="cm"># rows 0–4</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">iloc</span><span class="wh">[</span><span class="nm">0</span><span class="wh">,</span> <span class="nm">3</span><span class="wh">])</span>         <span class="cm"># row 0, column 3</span>
+
+<span class="cm"># By label — .loc (label-based)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">loc</span><span class="wh">[</span><span class="nm">0</span><span class="wh">,</span> <span class="st">"Age"</span><span class="wh">])</span>       <span class="cm"># row 0, "Age" column</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">loc</span><span class="wh">[:</span><span class="nm">4</span><span class="wh">, [</span><span class="st">"Name"</span><span class="wh">,</span> <span class="st">"Survived"</span><span class="wh">]])</span>
+
+<span class="cm"># ── Boolean / Conditional Selection ──────────────────</span>
+
+<span class="cm"># Only female passengers</span>
+<span class="wh">females</span> <span class="op">=</span> <span class="wh">df[df[</span><span class="st">"Sex"</span><span class="wh">]</span> <span class="op">==</span> <span class="st">"female"</span><span class="wh">]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Female passengers: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(females)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># First class survivors</span>
+<span class="wh">rich_survivors</span> <span class="op">=</span> <span class="wh">df[(df[</span><span class="st">"Pclass"</span><span class="wh">]</span> <span class="op">==</span> <span class="nm">1</span><span class="wh">)</span> <span class="op">&amp;</span> <span class="wh">(df[</span><span class="st">"Survived"</span><span class="wh">]</span> <span class="op">==</span> <span class="nm">1</span><span class="wh">)]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"1st class survivors: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(rich_survivors)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Passengers older than 60</span>
+<span class="wh">elderly</span> <span class="op">=</span> <span class="wh">df[df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">&gt;</span> <span class="nm">60</span><span class="wh">]</span>
+<span class="fn">print</span><span class="wh">(elderly[[</span><span class="st">"Name"</span><span class="wh">,</span> <span class="st">"Age"</span><span class="wh">,</span> <span class="st">"Survived"</span><span class="wh">]]</span><span class="op">.</span><span class="fn">head</span><span class="wh">())</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Female passengers: 314<br>
+    1st class survivors: 136
+  </div>
+
+  <div class="callout blue">
+    <div class="ct">iloc vs loc — when to use which</div>
+    <code>.iloc</code> uses <strong>integer positions</strong> — like list indexing. <code>df.iloc[0]</code> is always the first row, regardless of the index. <code>.loc</code> uses <strong>label-based access</strong> — it respects the actual index values. After filtering, your index might jump from 0 to 45 to 103 — <code>.iloc[0]</code> gives you the first remaining row, <code>.loc[0]</code> gives you the row where index == 0 (which might not exist). When in doubt, use <code>.iloc</code>.
+  </div>
+
+  <hr>
+
+  <!-- USEFUL METHODS -->
+  <div class="sec">05 — analysis methods</div>
+  <h2>Essential Exploration Methods</h2>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Value counts ──────────────────────────────────────</span>
+<span class="cm"># How many passengers in each class?</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Pclass"</span><span class="wh">]</span><span class="op">.</span><span class="fn">value_counts</span><span class="wh">())</span>
+<span class="cm"># 3    491</span>
+<span class="cm"># 1    216</span>
+<span class="cm"># 2    184</span>
+
+<span class="cm"># As percentage</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Pclass"</span><span class="wh">]</span><span class="op">.</span><span class="fn">value_counts</span><span class="wh">(normalize</span><span class="op">=</span><span class="kw">True</span><span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">2</span><span class="wh">))</span>
+
+<span class="cm"># ── Unique values ─────────────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Sex"</span><span class="wh">]</span><span class="op">.</span><span class="fn">unique</span><span class="wh">())</span>          <span class="cm"># ['male' 'female']</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">nunique</span><span class="wh">())</span>    <span class="cm"># 3 (S, C, Q)</span>
+
+<span class="cm"># ── Missing values ────────────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>            <span class="cm"># null count per column</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>      <span class="cm"># total nulls: 263</span>
+
+<span class="cm"># Percentage missing per column</span>
+<span class="wh">missing_pct</span> <span class="op">=</span> <span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span> <span class="op">/</span> <span class="fn">len</span><span class="wh">(df)</span> <span class="op">*</span> <span class="nm">100</span><span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">1</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(missing_pct[missing_pct</span> <span class="op">&gt;</span> <span class="nm">0</span><span class="wh">])</span>
+<span class="cm"># Age       19.9%</span>
+<span class="cm"># Cabin     77.1%</span>
+<span class="cm"># Embarked   0.2%</span>
+
+<span class="cm"># ── Column-level statistics ───────────────────────────</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>            <span class="cm"># 29.70 (only non-null)</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>         <span class="cm"># 14.45</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>       <span class="cm"># 0.384 = 38.4% survived</span>
+
+<span class="cm"># ── Sorting ───────────────────────────────────────────</span>
+<span class="wh">top_fares</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">sort_values</span><span class="wh">(</span><span class="st">"Fare"</span><span class="wh">, ascending</span><span class="op">=</span><span class="kw">False</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(top_fares[[</span><span class="st">"Name"</span><span class="wh">,</span><span class="st">"Fare"</span><span class="wh">,</span><span class="st">"Pclass"</span><span class="wh">]]</span><span class="op">.</span><span class="fn">head</span><span class="wh">(</span><span class="nm">3</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output (missing % and survival)</div>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 19.9%<br>
+    Cabin&nbsp;&nbsp;&nbsp; 77.1%<br>
+    Embarked&nbsp; 0.2%<br><br>
+    Survival rate: 38.4%<br>
+    Median fare: £14.45
+  </div>
+
+  <hr>
+
+  <!-- GROUPBY -->
+  <div class="sec">06 — groupby</div>
+  <h2>GroupBy — Aggregate by Category</h2>
+
+  <p><code>groupby()</code> is one of Pandas' most powerful features. It splits your data into groups, applies a function, and combines the results — the classic <strong>split-apply-combine</strong> pattern.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Survival rate by gender</span>
+<span class="wh">gender_survival</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Sex"</span><span class="wh">)[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span>
+<span class="fn">print</span><span class="wh">(gender_survival</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">))</span>
+
+<span class="cm"># Average fare per passenger class</span>
+<span class="wh">class_fare</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Pclass"</span><span class="wh">)[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">2</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(class_fare)</span>
+
+<span class="cm"># Multiple aggregations at once</span>
+<span class="wh">summary</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Pclass"</span><span class="wh">)</span><span class="op">.</span><span class="fn">agg</span><span class="wh">({</span>
+    <span class="st">"Survived"</span><span class="wh">:</span> <span class="wh">[</span><span class="st">"mean"</span><span class="wh">,</span> <span class="st">"sum"</span><span class="wh">],</span>
+    <span class="st">"Age"</span><span class="wh">:</span>      <span class="st">"mean"</span><span class="wh">,</span>
+    <span class="st">"Fare"</span><span class="wh">:</span>     <span class="wh">[</span><span class="st">"mean"</span><span class="wh">,</span> <span class="st">"max"</span><span class="wh">]</span>
+<span class="wh">})</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">2</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(summary)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Survival by gender:<br>
+    Sex<br>
+    female&nbsp;&nbsp;&nbsp; 0.742&nbsp;&nbsp; ← 74% of women survived<br>
+    male&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.189&nbsp;&nbsp; ← only 19% of men survived<br><br>
+    Average fare per class:<br>
+    Pclass<br>
+    1&nbsp;&nbsp;&nbsp; £84.15<br>
+    2&nbsp;&nbsp;&nbsp; £20.66<br>
+    3&nbsp;&nbsp;&nbsp; £13.68
+  </div>
+
+  <div class="callout green">
+    <div class="ct">The story in the numbers</div>
+    Two groupby operations just revealed the entire story of the Titanic: women had a <strong>74% survival rate</strong> vs men's 19% — "women and children first" in data form. First-class passengers paid over 6× more than third class — and had far better survival odds. This is what data exploration looks like: a few lines of code telling a human story.
+  </div>
+
+  <hr>
+
+  <!-- PROJECT -->
+  <div class="sec">07 — putting it together</div>
+  <h2>Project: Full First-Look Analysis</h2>
+
+  <p>Here's the complete workflow you'd run on any new dataset — load, inspect, explore, and extract first insights — all in one notebook cell sequence.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+
+<span class="cm"># ─ Step 1: Load ───────────────────────────────────────</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"✓ Data loaded"</span><span class="wh">)</span>
+
+<span class="cm"># ─ Step 2: Structure ──────────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"\nShape   : </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Columns : </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">columns</span><span class="op">.</span><span class="fn">tolist</span><span class="wh">()</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># ─ Step 3: Preview ────────────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"\n── First 5 rows ──"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">head</span><span class="wh">())</span>
+
+<span class="cm"># ─ Step 4: Data types &amp; missing values ───────────────</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"\n── Data Quality ──"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">info</span><span class="wh">())</span>
+<span class="wh">missing</span> <span class="op">=</span> <span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span> <span class="op">/</span> <span class="fn">len</span><span class="wh">(df)</span> <span class="op">*</span> <span class="nm">100</span><span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">1</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(missing[missing</span> <span class="op">&gt;</span> <span class="nm">0</span><span class="wh">])</span>
+
+<span class="cm"># ─ Step 5: Statistical summary ────────────────────────</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"\n── Descriptive Stats ──"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">describe</span><span class="wh">())</span>
+
+<span class="cm"># ─ Step 6: Key insights ───────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"\n── Key Findings ──"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Survival rate      : </span><span class="op">{</span><span class="wh">df[</span><span class="st">'Survived'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">*100:.1f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Average age        : </span><span class="op">{</span><span class="wh">df[</span><span class="st">'Age'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">:.1f</span><span class="op">}</span><span class="st"> years"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Gender split       : </span><span class="op">{</span><span class="wh">df[</span><span class="st">'Sex'</span><span class="wh">]</span><span class="op">.</span><span class="fn">value_counts</span><span class="wh">()</span><span class="op">.</span><span class="fn">to_dict</span><span class="wh">()</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Female survival    : </span><span class="op">{</span><span class="wh">df[df[</span><span class="st">'Sex'</span><span class="wh">]</span><span class="op">==</span><span class="st">'female'</span><span class="wh">][</span><span class="st">'Survived'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">*100:.1f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Male survival      : </span><span class="op">{</span><span class="wh">df[df[</span><span class="st">'Sex'</span><span class="wh">]</span><span class="op">==</span><span class="st">'male'</span><span class="wh">][</span><span class="st">'Survived'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">*100:.1f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"1st class survival : </span><span class="op">{</span><span class="wh">df[df[</span><span class="st">'Pclass'</span><span class="wh">]</span><span class="op">==</span><span class="nm">1</span><span class="wh">][</span><span class="st">'Survived'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">*100:.1f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"3rd class survival : </span><span class="op">{</span><span class="wh">df[df[</span><span class="st">'Pclass'</span><span class="wh">]</span><span class="op">==</span><span class="nm">3</span><span class="wh">][</span><span class="st">'Survived'</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">*100:.1f</span><span class="op">}</span><span class="st">%"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — Key Findings</div>
+    Survival rate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 38.4%<br>
+    Average age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 29.7 years<br>
+    Gender split&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : {'male': 577, 'female': 314}<br>
+    Female survival&nbsp;&nbsp;&nbsp; : 74.2%<br>
+    Male survival&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 18.9%<br>
+    1st class survival : 63.0%<br>
+    3rd class survival : 24.2%
+  </div>
+
+  <div class="callout teal">
+    <div class="ct">This is real data science</div>
+    You just did a complete first-look analysis — loading, inspecting, and extracting meaningful insights from a real dataset — in under 30 lines of code. These six steps are what data scientists actually do every time they open a new file. The Titanic data tells a clear, tragic story: being female or wealthy dramatically increased your chances of survival. That's the power of Pandas.
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-h3">Your Challenge — Explore the Titanic</div>
+    <ul class="clist">
+      <li>Load the Titanic dataset from the URL in this blog</li>
+      <li>Run all 5 first-look methods: head(), shape, info(), describe(), dtypes</li>
+      <li>Find the percentage of missing values in each column</li>
+      <li>Select only passengers older than 50 and print their names, ages, and survival status</li>
+      <li>Find the average fare paid by survivors vs non-survivors using groupby("Survived")</li>
+      <li>Find which embarkation port (S/C/Q) had the highest survival rate</li>
+      <li>Bonus: Find the youngest and oldest passenger using idxmin() and idxmax() on the Age column</li>
+      <li>Bonus 2: Create a new column "AgeGroup" where age &lt; 18 = "Child", else = "Adult" and find each group's survival rate</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 6 — NumPy for Beginners</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 8 — Data Cleaning with Pandas</strong></div>
+  </div>
+
+</main>
+</body>
+</html>
