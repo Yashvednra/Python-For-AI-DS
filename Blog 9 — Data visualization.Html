@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 9 — Data Visualization</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Syncopate:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --white:#ffffff;
+  --off-white:#f9f8f5;
+  --gallery:#f2f0eb;
+  --ink:#0d0d0d;
+  --ink2:#2a2a2a;
+  --mid:#888;
+  --border:#ddd;
+  --border2:#bbb;
+
+  /* Chart accent colours */
+  --chart-blue:#1a6eff;
+  --chart-red:#ff2d55;
+  --chart-green:#00c97a;
+  --chart-orange:#ff7a00;
+  --chart-purple:#8b5cf6;
+  --chart-teal:#00bcd4;
+  --chart-yellow:#f5c518;
+  --chart-pink:#ff6b9d;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--white);
+  color:var(--ink);
+  font-family:'Cormorant Garamond',serif;
+  font-size:19px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  border-bottom:1px solid var(--border);
+}
+
+/* gallery top border stripe */
+.hero::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,
+    var(--chart-blue) 0% 20%,
+    var(--chart-red) 20% 35%,
+    var(--chart-green) 35% 52%,
+    var(--chart-orange) 52% 65%,
+    var(--chart-purple) 65% 80%,
+    var(--chart-teal) 80% 100%
+  );
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barGrow{from{width:0}to{width:var(--w)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1);transform-origin:bottom}}
+
+.hero-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.5rem 3rem;
+  border-bottom:1px solid var(--border);
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.05s;
+}
+.hero-nav-left{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:var(--mid);letter-spacing:0.2em;text-transform:uppercase;
+}
+.hero-nav-right{
+  display:flex;gap:2rem;
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:var(--mid);letter-spacing:0.12em;
+}
+
+.hero-body{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+}
+
+.hero-left{
+  padding:4rem 3rem 3rem;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+
+.exhibit-num{
+  font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.25em;color:var(--mid);text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;margin-bottom:2rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.15s;
+}
+.exhibit-num::before{content:'◈';color:var(--chart-blue);font-size:12px}
+
+.hero-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.5rem,8vw,7.5rem);
+  font-weight:700;
+  line-height:0.88;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+  opacity:0;animation:fadeUp 0.7s ease forwards 0.2s;
+}
+.hero-title em{
+  font-style:italic;
+  color:var(--chart-blue);
+}
+.hero-title .block{display:block}
+
+.hero-sub{
+  font-family:'Syncopate',sans-serif;
+  font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--mid);margin-top:1.5rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.4s;
+}
+
+.hero-desc{
+  font-size:1.15rem;font-style:italic;color:var(--ink2);
+  max-width:400px;line-height:1.65;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.5s;
+  margin-top:auto;padding-top:2rem;
+}
+
+.hero-tags{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:1.5rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.65s;
+}
+.htag{
+  font-family:'DM Mono',monospace;font-size:9px;
+  padding:4px 12px;border:1px solid var(--border2);
+  color:var(--mid);letter-spacing:0.08em;text-transform:uppercase;
+}
+.htag.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
+
+/* Right hero — mini gallery preview */
+.hero-right{
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  opacity:0;animation:fadeIn 0.8s ease forwards 0.55s;
+}
+
+.gallery-thumb{
+  border-left:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:1.5rem;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+  cursor:default;
+  transition:background 0.3s;
+}
+.gallery-thumb:hover{background:var(--off-white)}
+.gallery-thumb:nth-child(2){border-right:none}
+.gallery-thumb:nth-child(3){border-bottom:none}
+.gallery-thumb:nth-child(4){border-bottom:none;border-right:none}
+
+.thumb-chart{flex:1;display:flex;align-items:flex-end;gap:4px;margin-bottom:0.75rem}
+
+/* mini bar chart */
+.mini-bar{
+  flex:1;border-radius:0;
+  animation:rise 0.8s ease forwards;
+  animation-delay:var(--d, 0s);
+  transform:scaleY(0);
+  transform-origin:bottom;
+}
+
+/* mini line chart using SVG in a div */
+.mini-svg{width:100%;height:70px}
+
+.thumb-label{
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:0.12em;text-transform:uppercase;color:var(--mid);
+}
+.thumb-name{
+  font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;
+  color:var(--ink);margin-top:2px;
+}
+
+/* ── MAIN ── */
+.main{max-width:960px;margin:0 auto;padding:5rem 2.5rem 8rem}
+
+.sec{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:var(--mid);letter-spacing:0.25em;text-transform:uppercase;
+  margin:5.5rem 0 1.5rem;
+  display:flex;align-items:center;gap:14px;
+}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec:first-child{margin-top:0}
+.sec-dot{
+  width:8px;height:8px;border-radius:50%;
+  flex-shrink:0;
+}
+
+h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:700;line-height:1.05;
+  color:var(--ink);margin-bottom:1.25rem;
+}
+h2 em{font-style:italic;color:var(--chart-blue)}
+
+h3{
+  font-family:'Syncopate',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--ink);margin:3.5rem 0 1rem;
+}
+
+p{margin-bottom:1.25rem;color:var(--ink2);line-height:1.85}
+strong{color:var(--ink);font-weight:600}
+em{font-style:italic;color:var(--chart-blue)}
+
+code{
+  font-family:'DM Mono',monospace;font-size:12.5px;
+  background:var(--gallery);border:1px solid var(--border);
+  padding:2px 8px;color:var(--chart-blue);
+}
+
+hr{border:none;border-top:1px solid var(--border);margin:5rem 0}
+
+/* OPENER */
+.opener{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.15rem,2.5vw,1.55rem);
+  font-style:italic;font-weight:300;
+  color:var(--ink);line-height:1.65;
+  border-left:4px solid var(--ink);
+  padding:1.25rem 2rem;margin-bottom:3.5rem;
+}
+
+/* ── CHART EXHIBITS ── */
+.exhibit{
+  margin:3rem 0;
+  border:1px solid var(--border);
+}
+
+.exhibit-header{
+  display:grid;grid-template-columns:3fr 2fr;
+  border-bottom:1px solid var(--border);
+}
+.exhibit-title-block{
+  padding:1.5rem 2rem;border-right:1px solid var(--border);
+}
+.exhibit-badge{
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:0.2em;text-transform:uppercase;
+  margin-bottom:0.4rem;
+}
+.exhibit-name{
+  font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;
+}
+.exhibit-meta{
+  padding:1.5rem 2rem;
+  display:flex;flex-direction:column;justify-content:center;gap:6px;
+}
+.exhibit-meta-row{
+  display:flex;gap:8px;align-items:center;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--mid);
+}
+.exhibit-meta-key{letter-spacing:0.08em;text-transform:uppercase;width:56px;flex-shrink:0}
+.exhibit-meta-val{color:var(--ink)}
+
+.exhibit-body{
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.exhibit-chart{
+  padding:2rem;border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--off-white);
+  min-height:220px;
+}
+.exhibit-code{
+  display:flex;flex-direction:column;
+}
+.exhibit-code-hdr{
+  padding:0.75rem 1rem;background:var(--gallery);
+  border-bottom:1px solid var(--border);
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);
+  letter-spacing:0.12em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.exhibit-code-hdr .dots{display:flex;gap:5px}
+.dot-r{width:9px;height:9px;border-radius:50%;background:#ff5f57}
+.dot-y{width:9px;height:9px;border-radius:50%;background:#febc2e}
+.dot-g{width:9px;height:9px;border-radius:50%;background:#28c840}
+
+.exhibit-code pre{
+  padding:1.25rem 1rem;
+  font-family:'DM Mono',monospace;font-size:11.5px;
+  line-height:1.85;overflow-x:auto;
+  color:#555;flex:1;background:var(--white);
+}
+
+/* SVG chart colours */
+.kw{color:#8b5cf6}.fn{color:var(--chart-blue)}.st{color:#16a34a}.nm{color:#ea580c}.cm{color:#ccc}.wh{color:#333}.op{color:#666}
+
+/* full code block */
+.code-block{
+  border:1px solid var(--border);margin:2rem 0;overflow:hidden;
+}
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;background:var(--gallery);border-bottom:1px solid var(--border);
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:9px;height:9px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);letter-spacing:0.15em;margin-left:6px;text-transform:uppercase}
+.copy-btn{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);background:none;border:1px solid var(--border2);padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.06em}
+.copy-btn:hover{color:var(--chart-blue);border-color:var(--chart-blue)}
+.code-block pre{
+  padding:1.5rem;font-family:'DM Mono',monospace;font-size:12.5px;
+  line-height:1.9;overflow-x:auto;color:#555;background:var(--white);
+}
+.output-box{
+  border:1px solid var(--border);border-top:none;
+  padding:1rem 1.5rem;font-family:'DM Mono',monospace;font-size:12px;
+  background:var(--gallery);color:var(--chart-green);
+  margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:7px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:4px solid var(--ink);
+  background:var(--off-white);font-size:1rem;
+  line-height:1.7;color:var(--ink2);
+}
+.callout.blue{border-color:var(--chart-blue);background:#eff6ff}
+.callout.green{border-color:var(--chart-green);background:#f0fdf4}
+.callout.orange{border-color:var(--chart-orange);background:#fff7ed}
+.callout.red{border-color:var(--chart-red);background:#fff1f2}
+
+.ct{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);margin-bottom:0.4rem}
+.callout.blue .ct{color:var(--chart-blue)}.callout.green .ct{color:var(--chart-green)}.callout.orange .ct{color:var(--chart-orange)}.callout.red .ct{color:var(--chart-red)}
+
+/* CHART TYPE GUIDE */
+.chart-guide{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--border);margin:2.5rem 0;
+}
+.cg-cell{
+  background:var(--white);padding:1.5rem;
+  transition:background 0.2s;
+}
+.cg-cell:hover{background:var(--off-white)}
+.cg-icon{
+  width:40px;height:40px;margin-bottom:0.75rem;
+  display:flex;align-items:flex-end;gap:3px;
+}
+.cg-bar{width:8px;border-radius:0}
+.cg-title{font-family:'Syncopate',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.cg-when{font-size:14px;color:var(--mid);line-height:1.5}
+
+/* CHALLENGE */
+.challenge{
+  background:var(--ink);color:var(--white);
+  padding:3rem;margin:3rem 0;
+  position:relative;
+}
+.challenge::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--chart-blue),var(--chart-green),var(--chart-orange),var(--chart-red));
+}
+.chal-h3{
+  font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;
+  font-style:italic;color:var(--white);margin-bottom:1rem;
+}
+.chal-tag{
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);margin-bottom:0.75rem;
+}
+.clist{list-style:none}
+.clist li{
+  font-family:'DM Mono',monospace;font-size:11.5px;color:#666;
+  padding:8px 0;border-bottom:1px solid #1a1a1a;
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6;
+}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'//';color:#333;flex-shrink:0;margin-top:1px}
+
+/* FOOTER */
+.post-footer{border-top:1px solid var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'DM Mono',monospace;font-size:9px;color:var(--mid);letter-spacing:0.12em;text-transform:uppercase;line-height:1.9}
+.foot-item strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:4px;font-weight:700;font-style:italic}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--white)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-nav">
+    <div class="hero-nav-left">Python for Data Science &amp; AI · Exhibition Hall 09</div>
+    <div class="hero-nav-right">
+      <span>Blog 09 / 20</span>
+      <span>14 min read</span>
+      <span>Beginner</span>
+    </div>
+  </div>
+
+  <div class="hero-body">
+    <div class="hero-left">
+      <div>
+        <div class="exhibit-num">Exhibit No. 09 — Data Visualization</div>
+        <h1 class="hero-title">
+          <span class="block">Making</span>
+          <span class="block"><em>Data</em></span>
+          <span class="block">Visible</span>
+        </h1>
+        <div class="hero-sub">Matplotlib · Seaborn · Charts · Patterns</div>
+      </div>
+      <div>
+        <p class="hero-desc">A number in a table is invisible. A bar chart is a story. Visualization is how data science communicates — and how you find patterns that no amount of .describe() will show you.</p>
+        <div class="hero-tags">
+          <span class="htag on">matplotlib</span>
+          <span class="htag on">seaborn</span>
+          <span class="htag on">bar chart</span>
+          <span class="htag on">line chart</span>
+          <span class="htag on">scatter plot</span>
+          <span class="htag">heatmap</span>
+          <span class="htag">histogram</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery thumbnails -->
+    <div class="hero-right">
+      <!-- Bar chart thumb -->
+      <div class="gallery-thumb">
+        <svg width="100%" height="90" viewBox="0 0 160 90">
+          <rect x="10" y="45" width="22" height="40" fill="#1a6eff" opacity="0.85" rx="1"/>
+          <rect x="38" y="20" width="22" height="65" fill="#1a6eff" rx="1"/>
+          <rect x="66" y="35" width="22" height="50" fill="#1a6eff" opacity="0.7" rx="1"/>
+          <rect x="94" y="10" width="22" height="75" fill="#1a6eff" opacity="0.9" rx="1"/>
+          <rect x="122" y="28" width="22" height="57" fill="#1a6eff" opacity="0.6" rx="1"/>
+          <line x1="10" y1="88" x2="150" y2="88" stroke="#ddd" stroke-width="1"/>
+        </svg>
+        <div class="thumb-label">Chart type 01</div>
+        <div class="thumb-name">Bar Chart</div>
+      </div>
+      <!-- Line chart thumb -->
+      <div class="gallery-thumb">
+        <svg width="100%" height="90" viewBox="0 0 160 90">
+          <polyline points="10,70 40,45 70,55 100,20 130,35 155,15" fill="none" stroke="#ff2d55" stroke-width="2.5" stroke-linejoin="round"/>
+          <polyline points="10,70 40,45 70,55 100,20 130,35 155,15" fill="none" stroke="#ff2d55" stroke-width="0" opacity="0.1"/>
+          <circle cx="10" cy="70" r="3" fill="#ff2d55"/>
+          <circle cx="40" cy="45" r="3" fill="#ff2d55"/>
+          <circle cx="70" cy="55" r="3" fill="#ff2d55"/>
+          <circle cx="100" cy="20" r="3" fill="#ff2d55"/>
+          <circle cx="130" cy="35" r="3" fill="#ff2d55"/>
+          <circle cx="155" cy="15" r="3" fill="#ff2d55"/>
+          <line x1="10" y1="88" x2="155" y2="88" stroke="#ddd" stroke-width="1"/>
+        </svg>
+        <div class="thumb-label">Chart type 02</div>
+        <div class="thumb-name">Line Chart</div>
+      </div>
+      <!-- Scatter thumb -->
+      <div class="gallery-thumb">
+        <svg width="100%" height="90" viewBox="0 0 160 90">
+          <circle cx="25" cy="65" r="5" fill="#00c97a" opacity="0.7"/>
+          <circle cx="45" cy="40" r="4" fill="#00c97a" opacity="0.8"/>
+          <circle cx="60" cy="55" r="6" fill="#00c97a" opacity="0.6"/>
+          <circle cx="80" cy="25" r="4" fill="#00c97a" opacity="0.9"/>
+          <circle cx="100" cy="45" r="7" fill="#00c97a" opacity="0.5"/>
+          <circle cx="115" cy="15" r="4" fill="#00c97a"/>
+          <circle cx="135" cy="35" r="5" fill="#00c97a" opacity="0.7"/>
+          <circle cx="50" cy="70" r="3" fill="#00c97a" opacity="0.6"/>
+          <circle cx="90" cy="60" r="4" fill="#00c97a" opacity="0.4"/>
+          <line x1="10" y1="88" x2="150" y2="88" stroke="#ddd" stroke-width="1"/>
+          <line x1="10" y1="88" x2="10" y2="10" stroke="#ddd" stroke-width="1"/>
+        </svg>
+        <div class="thumb-label">Chart type 03</div>
+        <div class="thumb-name">Scatter Plot</div>
+      </div>
+      <!-- Heatmap thumb -->
+      <div class="gallery-thumb">
+        <svg width="100%" height="90" viewBox="0 0 160 90">
+          <rect x="10" y="10" width="22" height="22" fill="#ff7a00" opacity="0.9" rx="1"/>
+          <rect x="35" y="10" width="22" height="22" fill="#ff7a00" opacity="0.4" rx="1"/>
+          <rect x="60" y="10" width="22" height="22" fill="#ff7a00" opacity="0.7" rx="1"/>
+          <rect x="85" y="10" width="22" height="22" fill="#ff7a00" opacity="0.2" rx="1"/>
+          <rect x="110" y="10" width="22" height="22" fill="#ff7a00" opacity="0.6" rx="1"/>
+          <rect x="10" y="35" width="22" height="22" fill="#ff7a00" opacity="0.3" rx="1"/>
+          <rect x="35" y="35" width="22" height="22" fill="#ff7a00" opacity="1" rx="1"/>
+          <rect x="60" y="35" width="22" height="22" fill="#ff7a00" opacity="0.5" rx="1"/>
+          <rect x="85" y="35" width="22" height="22" fill="#ff7a00" opacity="0.8" rx="1"/>
+          <rect x="110" y="35" width="22" height="22" fill="#ff7a00" opacity="0.15" rx="1"/>
+          <rect x="10" y="60" width="22" height="22" fill="#ff7a00" opacity="0.6" rx="1"/>
+          <rect x="35" y="60" width="22" height="22" fill="#ff7a00" opacity="0.2" rx="1"/>
+          <rect x="60" y="60" width="22" height="22" fill="#ff7a00" opacity="0.85" rx="1"/>
+          <rect x="85" y="60" width="22" height="22" fill="#ff7a00" opacity="0.4" rx="1"/>
+          <rect x="110" y="60" width="22" height="22" fill="#ff7a00" opacity="0.7" rx="1"/>
+        </svg>
+        <div class="thumb-label">Chart type 06</div>
+        <div class="thumb-name">Heatmap</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    Numbers don't speak for themselves. A column of 891 Titanic passenger ages tells you almost nothing. A histogram of those ages, coloured by survival, shows you instantly that children were prioritised. Visualization is the translator between data and understanding.
+  </div>
+
+  <!-- WHY VISUALIZE -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-blue)"></div>01 — foundations</div>
+  <h2>Matplotlib vs Seaborn — <em>What's the Difference?</em></h2>
+
+  <p>Python has two dominant visualization libraries. You'll use both — they complement each other perfectly.</p>
+
+  <div class="chart-guide">
+    <div class="cg-cell" style="grid-column:1/2">
+      <div style="font-family:'Syncopate',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;color:var(--chart-blue)">Matplotlib</div>
+      <p style="font-size:14px;color:var(--mid);line-height:1.65">The foundation. Extremely flexible and powerful, but verbose. You control every pixel. Think of it as a blank canvas — you can paint anything, but you have to paint it yourself. Used when you need full customisation or precise layouts.</p>
+    </div>
+    <div class="cg-cell" style="grid-column:2/4">
+      <div style="font-family:'Syncopate',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;color:var(--chart-orange)">Seaborn</div>
+      <p style="font-size:14px;color:var(--mid);line-height:1.65">Built on top of Matplotlib. Beautiful defaults, statistical built-in features, and DataFrame-native. One line of Seaborn code equals 10-15 lines of raw Matplotlib. Use Seaborn for exploration and EDA — it's faster and produces publication-ready charts with minimal effort. Seaborn doesn't replace Matplotlib; it extends it.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python — setup</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">matplotlib.pyplot</span> <span class="kw">as</span> <span class="wh">plt</span>
+<span class="kw">import</span> <span class="wh">seaborn</span> <span class="kw">as</span> <span class="wh">sns</span>
+<span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+
+<span class="cm"># Load the Titanic dataset</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+<span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>
+
+<span class="cm"># Set a clean Seaborn theme for all plots</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">set_theme</span><span class="wh">(style</span><span class="op">=</span><span class="st">"whitegrid"</span><span class="wh">, palette</span><span class="op">=</span><span class="st">"muted"</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">rcParams</span><span class="wh">[</span><span class="st">"figure.dpi"</span><span class="wh">]</span> <span class="op">=</span> <span class="nm">120</span>    <span class="cm"># sharper output in Colab</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">rcParams</span><span class="wh">[</span><span class="st">"figure.figsize"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">)</span></pre>
+  </div>
+
+  <hr>
+
+  <!-- CHART 1 — BAR -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-blue)"></div>02 — bar chart</div>
+  <h2>Bar Chart — <em>Comparing Categories</em></h2>
+
+  <p>Use a bar chart when you want to compare values across distinct categories. It's the most common chart type for a reason: it's immediately readable by anyone.</p>
+
+  <!-- Exhibit: Bar Chart -->
+  <div class="exhibit">
+    <div class="exhibit-header">
+      <div class="exhibit-title-block">
+        <div class="exhibit-badge" style="color:var(--chart-blue)">Chart Type 01</div>
+        <div class="exhibit-name">Survival Rate by Passenger Class</div>
+      </div>
+      <div class="exhibit-meta">
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Use when</span><span class="exhibit-meta-val">Comparing categories</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">X-axis</span><span class="exhibit-meta-val">Category (Pclass)</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Y-axis</span><span class="exhibit-meta-val">Numeric (survival rate)</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Library</span><span class="exhibit-meta-val">Matplotlib + Seaborn</span></div>
+      </div>
+    </div>
+    <div class="exhibit-body">
+      <div class="exhibit-chart">
+        <svg viewBox="0 0 320 200" width="100%" style="max-width:320px">
+          <!-- grid -->
+          <line x1="50" y1="10" x2="50" y2="160" stroke="#eee" stroke-width="1"/>
+          <line x1="50" y1="160" x2="310" y2="160" stroke="#ddd" stroke-width="1.5"/>
+          <line x1="50" y1="120" x2="310" y2="120" stroke="#eee" stroke-width="0.5"/>
+          <line x1="50" y1="80" x2="310" y2="80" stroke="#eee" stroke-width="0.5"/>
+          <line x1="50" y1="40" x2="310" y2="40" stroke="#eee" stroke-width="0.5"/>
+          <!-- y labels -->
+          <text x="44" y="163" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">0%</text>
+          <text x="44" y="123" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">25%</text>
+          <text x="44" y="83" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">50%</text>
+          <text x="44" y="43" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">75%</text>
+          <!-- bars: 1st=63%, 2nd=47%, 3rd=24% -->
+          <rect x="70" y="110" width="60" height="50" fill="#1a6eff" opacity="0.85" rx="1"/>
+          <text x="100" y="106" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" font-weight="600" fill="#1a6eff">63%</text>
+          <rect x="155" y="122" width="60" height="38" fill="#1a6eff" opacity="0.55" rx="1"/>
+          <text x="185" y="118" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" font-weight="600" fill="#1a6eff">47%</text>
+          <rect x="240" y="141" width="60" height="19" fill="#1a6eff" opacity="0.3" rx="1"/>
+          <text x="270" y="137" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" font-weight="600" fill="#1a6eff">24%</text>
+          <!-- x labels -->
+          <text x="100" y="175" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="#888">1st Class</text>
+          <text x="185" y="175" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="#888">2nd Class</text>
+          <text x="270" y="175" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="#888">3rd Class</text>
+          <!-- title -->
+          <text x="180" y="195" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#aaa" font-style="italic">Survival rate drops sharply with class</text>
+        </svg>
+      </div>
+      <div class="exhibit-code">
+        <div class="exhibit-code-hdr">
+          <div class="dots"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div></div>
+          <span>bar_chart.py</span>
+        </div>
+        <pre><span class="cm"># Matplotlib — full control</span>
+<span class="wh">class_survival</span> <span class="op">=</span> <span class="wh">(
+  df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Pclass"</span><span class="wh">)[</span><span class="st">"Survived"</span><span class="wh">]</span>
+    <span class="op">.</span><span class="fn">mean</span><span class="wh">()</span> <span class="op">*</span> <span class="nm">100</span>
+<span class="wh">)</span>
+
+<span class="wh">fig, ax</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">()</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">bar</span><span class="wh">(
+  class_survival</span><span class="op">.</span><span class="fn">index</span><span class="wh">,</span>
+  <span class="wh">class_survival</span><span class="op">.</span><span class="fn">values</span><span class="wh">,</span>
+  <span class="wh">color</span><span class="op">=</span><span class="st">"#1a6eff"</span><span class="wh">,</span>
+  <span class="wh">alpha</span><span class="op">=</span><span class="nm">0.85</span><span class="wh">,</span>
+  <span class="wh">width</span><span class="op">=</span><span class="nm">0.6</span>
+<span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_xlabel</span><span class="wh">(</span><span class="st">"Passenger Class"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Survival Rate (%)"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Survival by Class"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Seaborn — one line!</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">barplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Pclass"</span><span class="wh">,
+  y</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">, hue</span><span class="op">=</span><span class="st">"Sex"</span>
+<span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <div class="ct">The anatomy of a Matplotlib figure</div>
+    Every Matplotlib chart has a <code>Figure</code> (the whole canvas) and one or more <code>Axes</code> (the actual plot area). Always use <code>fig, ax = plt.subplots()</code> then call methods on <code>ax</code> — this gives you full control and is the professional way to write Matplotlib code. The shortcut <code>plt.bar()</code> works but is harder to customise.
+  </div>
+
+  <hr>
+
+  <!-- LINE CHART -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-red)"></div>03 — line chart</div>
+  <h2>Line Chart — <em>Showing Trends Over Time</em></h2>
+
+  <p>Line charts connect data points with a continuous line, making them perfect for showing how something changes over time — stock prices, model training accuracy, monthly sales, temperature readings.</p>
+
+  <div class="exhibit">
+    <div class="exhibit-header">
+      <div class="exhibit-title-block">
+        <div class="exhibit-badge" style="color:var(--chart-red)">Chart Type 02</div>
+        <div class="exhibit-name">Training Accuracy Over Epochs</div>
+      </div>
+      <div class="exhibit-meta">
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Use when</span><span class="exhibit-meta-val">Showing change over time</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">X-axis</span><span class="exhibit-meta-val">Time / sequence</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Y-axis</span><span class="exhibit-meta-val">Metric value</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Key feature</span><span class="exhibit-meta-val">Multiple lines for comparison</span></div>
+      </div>
+    </div>
+    <div class="exhibit-body">
+      <div class="exhibit-chart">
+        <svg viewBox="0 0 320 200" width="100%" style="max-width:320px">
+          <line x1="50" y1="10" x2="50" y2="160" stroke="#eee" stroke-width="1"/>
+          <line x1="50" y1="160" x2="310" y2="160" stroke="#ddd" stroke-width="1.5"/>
+          <line x1="50" y1="120" x2="310" y2="120" stroke="#eee" stroke-width="0.5"/>
+          <line x1="50" y1="80" x2="310" y2="80" stroke="#eee" stroke-width="0.5"/>
+          <line x1="50" y1="40" x2="310" y2="40" stroke="#eee" stroke-width="0.5"/>
+          <text x="44" y="163" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">0.5</text>
+          <text x="44" y="123" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">0.6</text>
+          <text x="44" y="83" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">0.7</text>
+          <text x="44" y="43" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="#999">0.8</text>
+          <!-- train accuracy line -->
+          <polyline points="55,148 97,120 139,95 181,72 223,58 265,45 307,38" fill="none" stroke="#ff2d55" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- val accuracy line -->
+          <polyline points="55,155 97,130 139,110 181,92 223,88 265,82 307,79" fill="none" stroke="#ff2d55" stroke-width="2" stroke-dasharray="6,3" stroke-linejoin="round" opacity="0.6"/>
+          <!-- dots on train -->
+          <circle cx="55" cy="148" r="3" fill="#ff2d55"/>
+          <circle cx="307" cy="38" r="3" fill="#ff2d55"/>
+          <!-- legend -->
+          <line x1="60" y1="15" x2="85" y2="15" stroke="#ff2d55" stroke-width="2.5"/>
+          <text x="90" y="19" font-family="DM Mono,monospace" font-size="9" fill="#888">Train</text>
+          <line x1="135" y1="15" x2="160" y2="15" stroke="#ff2d55" stroke-width="2" stroke-dasharray="6,3" opacity="0.6"/>
+          <text x="165" y="19" font-family="DM Mono,monospace" font-size="9" fill="#888">Validation</text>
+          <text x="55" y="175" font-family="DM Mono,monospace" font-size="9" fill="#bbb">1</text>
+          <text x="133" y="175" font-family="DM Mono,monospace" font-size="9" fill="#bbb">3</text>
+          <text x="213" y="175" font-family="DM Mono,monospace" font-size="9" fill="#bbb">5</text>
+          <text x="295" y="175" font-family="DM Mono,monospace" font-size="9" fill="#bbb">7</text>
+          <text x="180" y="193" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#aaa" font-style="italic">Epochs →</text>
+        </svg>
+      </div>
+      <div class="exhibit-code">
+        <div class="exhibit-code-hdr">
+          <div class="dots"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div></div>
+          <span>line_chart.py</span>
+        </div>
+        <pre><span class="cm"># Simulated training history</span>
+<span class="wh">epochs</span> <span class="op">=</span> <span class="fn">range</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">11</span><span class="wh">)</span>
+<span class="wh">train_acc</span> <span class="op">=</span> <span class="wh">[</span><span class="nm">0.52</span><span class="wh">,</span><span class="nm">0.61</span><span class="wh">,</span><span class="nm">0.68</span><span class="wh">,</span>
+             <span class="nm">0.73</span><span class="wh">,</span><span class="nm">0.77</span><span class="wh">,</span><span class="nm">0.80</span><span class="wh">,</span>
+             <span class="nm">0.82</span><span class="wh">,</span><span class="nm">0.84</span><span class="wh">,</span><span class="nm">0.85</span><span class="wh">,</span><span class="nm">0.86</span><span class="wh">]</span>
+<span class="wh">val_acc</span>   <span class="op">=</span> <span class="wh">[</span><span class="nm">0.50</span><span class="wh">,</span><span class="nm">0.58</span><span class="wh">,</span><span class="nm">0.63</span><span class="wh">,</span>
+             <span class="nm">0.66</span><span class="wh">,</span><span class="nm">0.67</span><span class="wh">,</span><span class="nm">0.68</span><span class="wh">,</span>
+             <span class="nm">0.68</span><span class="wh">,</span><span class="nm">0.69</span><span class="wh">,</span><span class="nm">0.70</span><span class="wh">,</span><span class="nm">0.70</span><span class="wh">]</span>
+
+<span class="wh">fig, ax</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">()</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">plot</span><span class="wh">(epochs, train_acc,
+  label</span><span class="op">=</span><span class="st">"Train"</span><span class="wh">, color</span><span class="op">=</span><span class="st">"#ff2d55"</span><span class="wh">,
+  linewidth</span><span class="op">=</span><span class="nm">2</span><span class="wh">, marker</span><span class="op">=</span><span class="st">"o"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">plot</span><span class="wh">(epochs, val_acc,
+  label</span><span class="op">=</span><span class="st">"Validation"</span><span class="wh">,
+  linestyle</span><span class="op">=</span><span class="st">"--"</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.7</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_xlabel</span><span class="wh">(</span><span class="st">"Epoch"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Accuracy"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">legend</span><span class="wh">()</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Model Training"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- SCATTER PLOT -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-green)"></div>04 — scatter plot</div>
+  <h2>Scatter Plot — <em>Finding Relationships</em></h2>
+
+  <p>Scatter plots show the relationship between two numeric variables. Each dot is one data point, plotted at coordinates (x, y). When dots cluster in a pattern — a line, a curve, a cluster — that's a correlation or a group worth investigating.</p>
+
+  <div class="exhibit">
+    <div class="exhibit-header">
+      <div class="exhibit-title-block">
+        <div class="exhibit-badge" style="color:var(--chart-green)">Chart Type 03</div>
+        <div class="exhibit-name">Age vs Fare — coloured by Survival</div>
+      </div>
+      <div class="exhibit-meta">
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Use when</span><span class="exhibit-meta-val">Correlation between two numeric columns</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Key params</span><span class="exhibit-meta-val">x, y, hue, size, alpha</span></div>
+        <div class="exhibit-meta-row"><span class="exhibit-meta-key">Watch for</span><span class="exhibit-meta-val">Clusters, outliers, trends</span></div>
+      </div>
+    </div>
+    <div class="exhibit-body">
+      <div class="exhibit-chart">
+        <svg viewBox="0 0 320 200" width="100%" style="max-width:320px">
+          <line x1="50" y1="10" x2="50" y2="160" stroke="#eee" stroke-width="1"/>
+          <line x1="50" y1="160" x2="310" y2="160" stroke="#ddd" stroke-width="1.5"/>
+          <text x="44" y="163" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#ccc">0</text>
+          <text x="44" y="110" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#ccc">100</text>
+          <text x="44" y="60" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#ccc">200</text>
+          <!-- survived dots (green) -->
+          <circle cx="90" cy="150" r="4" fill="#00c97a" opacity="0.7"/>
+          <circle cx="120" cy="140" r="5" fill="#00c97a" opacity="0.6"/>
+          <circle cx="150" cy="95" r="6" fill="#00c97a" opacity="0.8"/>
+          <circle cx="100" cy="120" r="4" fill="#00c97a" opacity="0.5"/>
+          <circle cx="170" cy="50" r="7" fill="#00c97a" opacity="0.7"/>
+          <circle cx="200" cy="40" r="8" fill="#00c97a" opacity="0.6"/>
+          <circle cx="80" cy="145" r="3" fill="#00c97a" opacity="0.8"/>
+          <circle cx="240" cy="30" r="5" fill="#00c97a" opacity="0.5"/>
+          <circle cx="130" cy="80" r="4" fill="#00c97a" opacity="0.7"/>
+          <!-- not survived (red) -->
+          <circle cx="70" cy="155" r="4" fill="#ff2d55" opacity="0.4"/>
+          <circle cx="180" cy="148" r="5" fill="#ff2d55" opacity="0.4"/>
+          <circle cx="220" cy="152" r="4" fill="#ff2d55" opacity="0.4"/>
+          <circle cx="260" cy="155" r="6" fill="#ff2d55" opacity="0.3"/>
+          <circle cx="280" cy="150" r="4" fill="#ff2d55" opacity="0.4"/>
+          <circle cx="140" cy="145" r="3" fill="#ff2d55" opacity="0.5"/>
+          <circle cx="190" cy="138" r="5" fill="#ff2d55" opacity="0.3"/>
+          <circle cx="110" cy="152" r="4" fill="#ff2d55" opacity="0.4"/>
+          <circle cx="300" cy="148" r="5" fill="#ff2d55" opacity="0.3"/>
+          <!-- legend -->
+          <circle cx="65" cy="15" r="4" fill="#00c97a" opacity="0.8"/>
+          <text x="75" y="19" font-family="DM Mono,monospace" font-size="9" fill="#888">Survived</text>
+          <circle cx="150" cy="15" r="4" fill="#ff2d55" opacity="0.6"/>
+          <text x="160" y="19" font-family="DM Mono,monospace" font-size="9" fill="#888">Did not survive</text>
+          <!-- axis labels -->
+          <text x="180" y="178" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#bbb">Age →</text>
+          <text x="180" y="195" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="11" fill="#aaa" font-style="italic">Higher fares = better survival odds</text>
+        </svg>
+      </div>
+      <div class="exhibit-code">
+        <div class="exhibit-code-hdr">
+          <div class="dots"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div></div>
+          <span>scatter_plot.py</span>
+        </div>
+        <pre><span class="cm"># Matplotlib scatter</span>
+<span class="wh">survived</span> <span class="op">=</span> <span class="wh">df[df[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">==</span><span class="nm">1</span><span class="wh">]</span>
+<span class="wh">died</span>     <span class="op">=</span> <span class="wh">df[df[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">==</span><span class="nm">0</span><span class="wh">]</span>
+
+<span class="wh">fig, ax</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">()</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">scatter</span><span class="wh">(survived[</span><span class="st">"Age"</span><span class="wh">],</span>
+           <span class="wh">survived[</span><span class="st">"Fare"</span><span class="wh">],</span>
+           <span class="wh">color</span><span class="op">=</span><span class="st">"#00c97a"</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span><span class="wh">,</span>
+           <span class="wh">label</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">scatter</span><span class="wh">(died[</span><span class="st">"Age"</span><span class="wh">],</span>
+           <span class="wh">died[</span><span class="st">"Fare"</span><span class="wh">],</span>
+           <span class="wh">color</span><span class="op">=</span><span class="st">"#ff2d55"</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.3</span><span class="wh">,</span>
+           <span class="wh">label</span><span class="op">=</span><span class="st">"Did not"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_xlabel</span><span class="wh">(</span><span class="st">"Age"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Fare"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">legend</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Seaborn — one line with hue!</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">scatterplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">,
+  y</span><span class="op">=</span><span class="st">"Fare"</span><span class="wh">, hue</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,
+  alpha</span><span class="op">=</span><span class="nm">0.6</span>
+<span class="wh">)</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- HISTOGRAM -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-purple)"></div>05 — histogram</div>
+  <h2>Histogram — <em>Understanding Distribution</em></h2>
+
+  <p>A histogram shows how a single numeric variable is distributed — how many values fall in each range (bin). Unlike a bar chart which compares categories, a histogram reveals the shape of data: is it normal? Skewed? Are there two peaks (bimodal)? Are there outliers?</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Matplotlib histogram</span>
+<span class="wh">fig, ax</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">()</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">hist</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">], bins</span><span class="op">=</span><span class="nm">30</span><span class="wh">,
+       color</span><span class="op">=</span><span class="st">"#8b5cf6"</span><span class="wh">, edgecolor</span><span class="op">=</span><span class="st">"white"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_xlabel</span><span class="wh">(</span><span class="st">"Age"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Count"</span><span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Age Distribution of Passengers"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Seaborn histplot — adds KDE curve automatically</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">histplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">,
+  hue</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,     </span><span class="cm"># split by survival!</span>
+  kde</span><span class="op">=</span><span class="kw">True</span><span class="wh">,            </span><span class="cm"># smooth density curve</span>
+  bins</span><span class="op">=</span><span class="nm">30</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span>
+<span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">title</span><span class="wh">(</span><span class="st">"Age Distribution by Survival"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="callout orange">
+    <div class="ct">Choosing the number of bins</div>
+    Too few bins (e.g. 5) and you lose detail — the distribution looks flat and uninformative. Too many bins (e.g. 200) and you get noise — every tiny fluctuation shows as a spike. A good starting point is <code>bins=30</code> for most datasets. Seaborn's default is usually sensible. Look at the shape: if it's too jagged, reduce bins; if it's too blocky, increase them.
+  </div>
+
+  <hr>
+
+  <!-- HEATMAP -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-orange)"></div>06 — heatmap</div>
+  <h2>Heatmap — <em>Visualising Correlations</em></h2>
+
+  <p>A correlation heatmap shows how every numeric column in your dataset relates to every other. Values range from -1 (perfect negative correlation) to +1 (perfect positive correlation). This is typically one of the <em>last</em> things you make before starting ML modelling.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Correlation matrix heatmap — the standard EDA closer</span>
+<span class="wh">numeric_df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">select_dtypes</span><span class="wh">(include</span><span class="op">=</span><span class="st">"number"</span><span class="wh">)</span>
+<span class="wh">corr</span> <span class="op">=</span> <span class="wh">numeric_df</span><span class="op">.</span><span class="fn">corr</span><span class="wh">()</span>
+
+<span class="wh">fig, ax</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">8</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">))</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">heatmap</span><span class="wh">(
+  corr,</span>
+  <span class="wh">annot</span><span class="op">=</span><span class="kw">True</span><span class="wh">,       </span><span class="cm"># show values inside cells</span>
+  <span class="wh">fmt</span><span class="op">=</span><span class="st">".2f"</span><span class="wh">,         </span><span class="cm"># 2 decimal places</span>
+  <span class="wh">cmap</span><span class="op">=</span><span class="st">"coolwarm"</span><span class="wh">,  </span><span class="cm"># blue=negative, red=positive</span>
+  <span class="wh">center</span><span class="op">=</span><span class="nm">0</span><span class="wh">,          </span><span class="cm"># 0 = neutral grey</span>
+  <span class="wh">square</span><span class="op">=</span><span class="kw">True</span><span class="wh">,</span>
+  <span class="wh">linewidths</span><span class="op">=</span><span class="nm">0.5</span><span class="wh">,</span>
+  <span class="wh">ax</span><span class="op">=</span><span class="wh">ax</span>
+<span class="wh">)</span>
+<span class="wh">ax</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Titanic — Feature Correlation Matrix"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Find the features most correlated with survival</span>
+<span class="fn">print</span><span class="wh">(corr[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">sort_values</span><span class="wh">(ascending</span><span class="op">=</span><span class="kw">False</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — Correlation with Survived</div>
+    Survived&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.000<br>
+    Fare&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.257&nbsp;&nbsp; ← higher fare = more survival<br>
+    Parch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.082<br>
+    SibSp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.035<br>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.070<br>
+    Pclass&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.338&nbsp;&nbsp; ← higher class number = less survival
+  </div>
+
+  <div class="callout green">
+    <div class="ct">Reading the heatmap</div>
+    A value close to <strong>+1</strong> means the two variables move together — as one rises, so does the other. Close to <strong>-1</strong> means they move opposite — as one rises, the other falls. Close to <strong>0</strong> means no linear relationship. In the Titanic data: Pclass has -0.338 correlation with Survived — a strong signal that class dramatically affected survival odds.
+  </div>
+
+  <hr>
+
+  <!-- CHART GUIDE -->
+  <div class="sec"><div class="sec-dot" style="background:var(--ink)"></div>07 — when to use what</div>
+  <h2>The Chart Selection <em>Guide</em></h2>
+  <p>The most common mistake beginners make is using the wrong chart for their data. Here's a quick reference:</p>
+
+  <div class="chart-guide">
+    <div class="cg-cell">
+      <div class="cg-icon">
+        <div class="cg-bar" style="height:20px;background:var(--chart-blue)"></div>
+        <div class="cg-bar" style="height:35px;background:var(--chart-blue)"></div>
+        <div class="cg-bar" style="height:28px;background:var(--chart-blue)"></div>
+        <div class="cg-bar" style="height:40px;background:var(--chart-blue)"></div>
+      </div>
+      <div class="cg-title" style="color:var(--chart-blue)">Bar Chart</div>
+      <div class="cg-when">Comparing values across a few distinct categories (max ~15). Survival by class. Sales by region. Counts by label.</div>
+    </div>
+    <div class="cg-cell">
+      <svg class="cg-icon" viewBox="0 0 40 40" style="align-items:center">
+        <polyline points="5,35 12,22 20,28 28,10 36,15" fill="none" stroke="#ff2d55" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>
+      <div class="cg-title" style="color:var(--chart-red)">Line Chart</div>
+      <div class="cg-when">Showing change over an ordered sequence — time series, training epochs, model iterations. Never use for unordered categories.</div>
+    </div>
+    <div class="cg-cell">
+      <svg class="cg-icon" viewBox="0 0 40 40">
+        <circle cx="12" cy="28" r="3" fill="#00c97a" opacity="0.7"/>
+        <circle cx="20" cy="18" r="4" fill="#00c97a" opacity="0.6"/>
+        <circle cx="28" cy="24" r="3" fill="#00c97a" opacity="0.8"/>
+        <circle cx="32" cy="10" r="3" fill="#00c97a"/>
+        <circle cx="16" cy="32" r="2" fill="#00c97a" opacity="0.5"/>
+      </svg>
+      <div class="cg-title" style="color:var(--chart-green)">Scatter Plot</div>
+      <div class="cg-when">Exploring the relationship between two numeric variables. Looking for correlations, clusters, or outliers in your data.</div>
+    </div>
+    <div class="cg-cell">
+      <div class="cg-icon">
+        <div class="cg-bar" style="height:10px;width:6px;background:var(--chart-purple)"></div>
+        <div class="cg-bar" style="height:30px;width:6px;background:var(--chart-purple)"></div>
+        <div class="cg-bar" style="height:40px;width:6px;background:var(--chart-purple)"></div>
+        <div class="cg-bar" style="height:25px;width:6px;background:var(--chart-purple)"></div>
+        <div class="cg-bar" style="height:12px;width:6px;background:var(--chart-purple)"></div>
+      </div>
+      <div class="cg-title" style="color:var(--chart-purple)">Histogram</div>
+      <div class="cg-when">Understanding how a single numeric column is distributed. Is it skewed? Are there outliers? Is it bimodal? Essential for EDA.</div>
+    </div>
+    <div class="cg-cell">
+      <svg class="cg-icon" viewBox="0 0 40 40">
+        <rect x="3" y="3" width="11" height="11" fill="#ff7a00" opacity="0.9" rx="1"/>
+        <rect x="16" y="3" width="11" height="11" fill="#ff7a00" opacity="0.3" rx="1"/>
+        <rect x="29" y="3" width="11" height="11" fill="#ff7a00" opacity="0.7" rx="1"/>
+        <rect x="3" y="16" width="11" height="11" fill="#ff7a00" opacity="0.4" rx="1"/>
+        <rect x="16" y="16" width="11" height="11" fill="#ff7a00" opacity="1" rx="1"/>
+        <rect x="29" y="16" width="11" height="11" fill="#ff7a00" opacity="0.5" rx="1"/>
+        <rect x="3" y="29" width="11" height="11" fill="#ff7a00" opacity="0.6" rx="1"/>
+        <rect x="16" y="29" width="11" height="11" fill="#ff7a00" opacity="0.2" rx="1"/>
+        <rect x="29" y="29" width="11" height="11" fill="#ff7a00" opacity="0.8" rx="1"/>
+      </svg>
+      <div class="cg-title" style="color:var(--chart-orange)">Heatmap</div>
+      <div class="cg-when">Visualising a matrix of values — most commonly a correlation matrix between all features before ML modelling.</div>
+    </div>
+    <div class="cg-cell">
+      <svg class="cg-icon" viewBox="0 0 40 40">
+        <rect x="5" y="5" width="30" height="30" rx="15" fill="none" stroke="#00bcd4" stroke-width="2"/>
+        <path d="M 20 20 L 20 5 A 15 15 0 0 1 35 20 Z" fill="#00bcd4" opacity="0.8"/>
+        <path d="M 20 20 L 35 20 A 15 15 0 0 1 10 32 Z" fill="#00bcd4" opacity="0.4"/>
+        <path d="M 20 20 L 10 32 A 15 15 0 0 1 20 5 Z" fill="#00bcd4" opacity="0.15"/>
+      </svg>
+      <div class="cg-title" style="color:var(--chart-teal)">Pie / Donut</div>
+      <div class="cg-when">Showing part-to-whole relationships — only when you have fewer than 5 categories and the total matters. Often a bar chart is clearer.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- MINI PROJECT -->
+  <div class="sec"><div class="sec-dot" style="background:var(--chart-orange)"></div>08 — mini project</div>
+  <h2>Project: Titanic Visual <em>Story</em></h2>
+  <p>Let's create a 2×2 dashboard of four charts that tell the full Titanic story — all in one figure using <code>plt.subplots()</code>.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">matplotlib.pyplot</span> <span class="kw">as</span> <span class="wh">plt</span>
+<span class="kw">import</span> <span class="wh">seaborn</span> <span class="kw">as</span> <span class="wh">sns</span>
+<span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+<span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>
+
+<span class="fn">sns</span><span class="op">.</span><span class="fn">set_theme</span><span class="wh">(style</span><span class="op">=</span><span class="st">"whitegrid"</span><span class="wh">)</span>
+
+<span class="cm"># 2x2 dashboard</span>
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">2</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">10</span><span class="wh">))</span>
+<span class="wh">fig</span><span class="op">.</span><span class="fn">suptitle</span><span class="wh">(</span><span class="st">"Titanic — The Data Story"</span><span class="wh">,
+             fontsize</span><span class="op">=</span><span class="nm">18</span><span class="wh">, fontweight</span><span class="op">=</span><span class="st">"bold"</span><span class="wh">)</span>
+
+<span class="cm"># Chart 1 (top-left): Survival by Class</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">barplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Pclass"</span><span class="wh">, y</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,
+  palette</span><span class="op">=</span><span class="st">"Blues_r"</span><span class="wh">, ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Survival Rate by Class"</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Survival Rate"</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_xticklabels</span><span class="wh">([</span><span class="st">"1st"</span><span class="wh">,</span><span class="st">"2nd"</span><span class="wh">,</span><span class="st">"3rd"</span><span class="wh">])</span>
+
+<span class="cm"># Chart 2 (top-right): Survival by Gender</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">barplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Sex"</span><span class="wh">, y</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,
+  palette</span><span class="op">=</span><span class="wh">[</span><span class="st">"#ff6b9d"</span><span class="wh">,</span><span class="st">"#1a6eff"</span><span class="wh">],</span>
+  <span class="wh">ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">1</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">1</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Survival Rate by Gender"</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">][</span><span class="nm">1</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Survival Rate"</span><span class="wh">)</span>
+
+<span class="cm"># Chart 3 (bottom-left): Age distribution</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">histplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">, hue</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,
+  kde</span><span class="op">=</span><span class="kw">True</span><span class="wh">, bins</span><span class="op">=</span><span class="nm">30</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span><span class="wh">,
+  ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">1</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">1</span><span class="wh">][</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Age Distribution by Survival"</span><span class="wh">)</span>
+
+<span class="cm"># Chart 4 (bottom-right): Fare vs Age scatter</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">scatterplot</span><span class="wh">(
+  data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">, y</span><span class="op">=</span><span class="st">"Fare"</span><span class="wh">,
+  hue</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.5</span><span class="wh">,
+  ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">1</span><span class="wh">][</span><span class="nm">1</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">1</span><span class="wh">][</span><span class="nm">1</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Age vs Fare (by Survival)"</span><span class="wh">)</span>
+
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="callout red">
+    <div class="ct">plt.tight_layout() — always use it</div>
+    When you have multiple subplots, labels and titles can overlap. <code>plt.tight_layout()</code> automatically adjusts the spacing between subplots so nothing overlaps. Call it every time before <code>plt.show()</code> when using subplots. It takes one second and makes your charts look professional.
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-tag">Exhibition Exercise 09</div>
+    <h3 class="chal-h3">Create Your Own Visual Story</h3>
+    <ul class="clist">
+      <li>Load the Titanic dataset and set up Seaborn's whitegrid theme</li>
+      <li>Create a bar chart showing survival rate for each embarkation port (S, C, Q) — which port had the best survival odds?</li>
+      <li>Create a histogram of Fare with kde=True — what does the shape tell you?</li>
+      <li>Create a scatter plot of Age vs Fare with hue="Pclass" — do classes cluster differently?</li>
+      <li>Create a heatmap of the full correlation matrix with annot=True</li>
+      <li>Combine all 4 charts into one 2×2 figure using plt.subplots(2, 2) — add a suptitle</li>
+      <li>Bonus: Use sns.boxplot(data=df, x="Pclass", y="Age") to see the age distribution per class</li>
+      <li>Bonus 2: Save your final dashboard as a PNG with plt.savefig("titanic_story.png", dpi=150, bbox_inches="tight")</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 8 — Data Cleaning with Pandas</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 10 — Exploratory Data Analysis</strong></div>
+  </div>
+
+</main>
+</body>
+</html>\

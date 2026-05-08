@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 8 — Data Cleaning with Pandas</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Overpass+Mono:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --steel:#1a1e24;
+  --steel2:#22272f;
+  --steel3:#2c323c;
+  --plate:#343c47;
+  --rust:#c85a14;
+  --rust2:#a04010;
+  --rust-glow:rgba(200,90,20,0.12);
+  --rust-dim:rgba(200,90,20,0.06);
+  --yellow:#e8b800;
+  --green:#28a050;
+  --green-dim:rgba(40,160,80,0.08);
+  --red:#d43030;
+  --blue:#3a80c8;
+  --text:#b8c4d0;
+  --bright:#e0e8f0;
+  --muted:#5a6878;
+  --border:rgba(200,90,20,0.2);
+  --border2:rgba(200,90,20,0.4);
+  --grid:rgba(200,90,20,0.05);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--steel);
+  color:var(--text);
+  font-family:'Libre Baskerville',serif;
+  font-size:17px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+/* riveted plate background texture */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(circle at 24px 24px, rgba(200,90,20,0.04) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:48px 48px, 48px 48px, 48px 48px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  border-bottom:3px solid var(--rust);
+  overflow:hidden;
+}
+
+/* diagonal warning stripes at top */
+.hero-warning{
+  height:8px;
+  background:repeating-linear-gradient(
+    -45deg,
+    var(--yellow) 0px,
+    var(--yellow) 10px,
+    var(--steel) 10px,
+    var(--steel) 20px
+  );
+  flex-shrink:0;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes flowRight{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.hero-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2.5rem;
+  border-bottom:1px solid var(--border);
+  font-family:'Overpass Mono',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.1s;
+}
+.hero-topbar-status{
+  display:flex;align-items:center;gap:8px;
+}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--rust);
+  animation:pulse 2s ease infinite;
+}
+.status-dot.ok{background:var(--green)}
+
+.hero-main{
+  flex:1;
+  display:grid;grid-template-columns:1fr 1fr;
+  position:relative;
+}
+
+.hero-left{
+  padding:3.5rem 2.5rem;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;z-index:1;
+}
+
+.process-id{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  color:var(--rust);letter-spacing:0.25em;text-transform:uppercase;
+  margin-bottom:1rem;display:flex;align-items:center;gap:10px;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.2s;
+}
+.process-id::before{content:'⬡';font-size:12px}
+
+.hero-num{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(5rem,10vw,9rem);
+  font-weight:900;line-height:0.85;
+  color:rgba(200,90,20,0.06);
+  letter-spacing:-0.02em;
+  user-select:none;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.25s;
+}
+
+.hero-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(2rem,4vw,3.6rem);
+  font-weight:900;
+  line-height:0.95;letter-spacing:0.01em;
+  color:var(--bright);
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.35s;
+}
+.hero-title .rust{color:var(--rust);text-shadow:0 0 30px rgba(200,90,20,0.4)}
+.hero-title .sub{
+  font-size:0.42em;font-weight:400;color:var(--muted);display:block;
+  letter-spacing:0.1em;margin-top:0.5rem;font-family:'Overpass Mono',monospace;
+}
+
+.hero-desc{
+  font-style:italic;font-size:15px;color:var(--muted);
+  margin-top:1.5rem;max-width:380px;line-height:1.7;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.5s;
+}
+
+.hero-tags{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:1.75rem;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.65s;
+}
+.htag{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  padding:4px 12px;border:1px solid var(--border2);
+  color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;
+}
+.htag.on{border-color:var(--rust);color:var(--rust);background:var(--rust-dim)}
+
+/* RIGHT SIDE — Pipeline diagram */
+.hero-right{
+  padding:2.5rem;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;animation:fadeIn 0.8s ease forwards 0.6s;
+}
+
+.pipeline{
+  width:100%;max-width:380px;
+}
+
+.pipe-stage{
+  position:relative;
+  margin-bottom:4px;
+}
+
+.pipe-header{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;
+}
+
+.pipe-header .pipe-num{
+  background:var(--plate);border:1px solid var(--border2);
+  padding:1px 6px;font-size:8px;color:var(--rust);
+}
+
+.pipe-box{
+  background:var(--steel2);
+  border:1px solid var(--border);
+  padding:1rem 1.25rem;
+  font-family:'Overpass Mono',monospace;font-size:11px;
+  position:relative;overflow:hidden;
+}
+
+.pipe-box::after{
+  content:'';position:absolute;
+  top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(200,90,20,0.04),transparent);
+  animation:flowRight 3s linear infinite;
+  pointer-events:none;
+}
+
+.pipe-box.dirty{border-color:rgba(212,48,48,0.3);background:rgba(212,48,48,0.05)}
+.pipe-box.clean{border-color:rgba(40,160,80,0.3);background:var(--green-dim)}
+
+.pipe-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:10px;
+}
+.pipe-row:last-child{border-bottom:none}
+
+.cell-v{color:var(--text)}
+.cell-nan{color:var(--red);font-style:italic}
+.cell-bad{color:var(--red)}
+.cell-ok{color:var(--green)}
+.cell-col{color:var(--rust);font-weight:600;opacity:0.8}
+
+.pipe-connector{
+  display:flex;align-items:center;justify-content:center;
+  height:24px;position:relative;
+}
+.pipe-connector::before{
+  content:'';position:absolute;
+  left:50%;top:0;width:2px;height:100%;
+  background:var(--rust);transform:translateX(-50%);
+}
+.pipe-connector-label{
+  background:var(--steel);border:1px solid var(--rust);
+  font-family:'Overpass Mono',monospace;font-size:8px;
+  color:var(--rust);padding:2px 8px;letter-spacing:0.1em;
+  position:relative;z-index:1;
+}
+
+.pipe-stats{
+  display:flex;gap:4px;margin-top:8px;
+}
+.pipe-stat{
+  flex:1;background:var(--plate);border:1px solid var(--border);
+  padding:6px 8px;text-align:center;
+}
+.pipe-stat-val{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--rust)}
+.pipe-stat-lbl{font-family:'Overpass Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.1em;margin-top:2px}
+
+.pipe-stat.ok .pipe-stat-val{color:var(--green)}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:5rem 2.5rem 8rem;position:relative;z-index:1}
+
+.sec{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  color:var(--rust);letter-spacing:0.25em;text-transform:uppercase;
+  margin:5rem 0 1.5rem;
+  display:flex;align-items:center;gap:12px;
+}
+.sec::before{content:'//';color:var(--rust);opacity:0.6}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec:first-child{margin-top:0}
+
+h2{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.6rem,3vw,2.5rem);
+  font-weight:700;line-height:1.05;letter-spacing:0.02em;
+  color:var(--bright);margin-bottom:1.25rem;
+}
+
+h3{
+  font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;
+  color:var(--rust);margin:3rem 0 0.75rem;letter-spacing:0.05em;
+}
+
+p{margin-bottom:1.25rem;color:var(--text);line-height:1.85}
+strong{color:var(--bright);font-weight:700}
+em{font-style:italic;color:var(--rust)}
+
+code{
+  font-family:'Overpass Mono',monospace;font-size:12px;
+  background:var(--steel3);border:1px solid var(--border);
+  padding:2px 8px;color:var(--yellow);
+}
+
+hr{border:none;border-top:1px solid var(--border);margin:4.5rem 0}
+
+/* OPENER */
+.opener{
+  border-left:4px solid var(--rust);
+  padding:1rem 1.75rem;
+  background:var(--rust-dim);
+  margin-bottom:3rem;
+  font-style:italic;font-size:1.05rem;
+  color:var(--text);line-height:1.7;
+}
+
+/* WARNING BOX */
+.warn-box{
+  background:rgba(212,48,48,0.06);
+  border:1px solid rgba(212,48,48,0.3);
+  border-left:4px solid var(--red);
+  padding:1.25rem 1.5rem;margin:2rem 0;
+  font-size:14.5px;line-height:1.7;color:#c89090;
+}
+.warn-title{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  color:var(--red);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.4rem;
+}
+
+/* CODE BLOCK */
+.code-block{
+  background:#0d1117;border:1px solid var(--border2);
+  margin:2rem 0;overflow:hidden;position:relative;
+}
+.code-block::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--rust),var(--yellow),var(--rust));
+  opacity:0.5;
+}
+
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:#080c10;border-bottom:1px solid rgba(200,90,20,0.1);
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:9px;height:9px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'Overpass Mono',monospace;font-size:9px;color:#3a4858;letter-spacing:0.15em;margin-left:6px;text-transform:uppercase}
+.copy-btn{font-family:'Overpass Mono',monospace;font-size:9px;color:#3a4858;background:none;border:1px solid #1a2530;padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.08em}
+.copy-btn:hover{color:var(--rust);border-color:var(--rust)}
+
+pre{padding:1.5rem;font-family:'Overpass Mono',monospace;font-size:12.5px;line-height:1.9;overflow-x:auto;color:#7890a8}
+
+.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.nm{color:#f78c6c}.cm{color:#2a3a4a;font-style:italic}.op{color:#89ddff}.wh{color:#a6b4c8}.out{color:#c3e88d}.atr{color:#ffcb6b}
+
+.output-box{
+  border:1px solid var(--border);border-top:none;
+  padding:1rem 1.5rem;
+  font-family:'Overpass Mono',monospace;font-size:12px;
+  background:#080c10;color:var(--green);
+  margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-size:9px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:4px solid var(--rust);
+  background:var(--rust-dim);font-size:15px;line-height:1.7;color:var(--text);
+}
+.callout.green{border-color:var(--green);background:var(--green-dim);color:#90c8a8}
+.callout.yellow{border-color:var(--yellow);background:rgba(232,184,0,0.05);color:#c8b070}
+.callout.blue{border-color:var(--blue);background:rgba(58,128,200,0.05);color:#90aac8}
+
+.ct{font-family:'Overpass Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--rust);margin-bottom:0.4rem}
+.callout.green .ct{color:var(--green)}.callout.yellow .ct{color:var(--yellow)}.callout.blue .ct{color:var(--blue)}
+
+/* BEFORE / AFTER TABLE */
+.ba-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;
+  background:var(--border2);margin:2rem 0;
+}
+.ba-panel{padding:0;overflow:hidden}
+.ba-header{
+  padding:0.75rem 1rem;
+  font-family:'Overpass Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+.ba-dirty .ba-header{background:rgba(212,48,48,0.15);color:var(--red)}
+.ba-clean .ba-header{background:rgba(40,160,80,0.12);color:var(--green)}
+
+.ba-table{width:100%;border-collapse:collapse;font-family:'Overpass Mono',monospace;font-size:11px}
+.ba-table th{background:var(--plate);color:var(--muted);padding:6px 10px;text-align:left;font-size:9px;letter-spacing:0.08em}
+.ba-table td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text)}
+.ba-table tr:last-child td{border-bottom:none}
+.t-nan{color:var(--red);font-style:italic}
+.t-bad{color:var(--red)}
+.t-ok{color:var(--green)}
+.t-warn{color:var(--yellow)}
+
+/* DECISION TABLE */
+.dec-table{width:100%;border-collapse:collapse;font-size:14px;margin:2rem 0}
+.dec-table th{font-family:'Overpass Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;background:var(--steel2)}
+.dec-table td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+.dec-table tr:last-child td{border-bottom:none}
+.dec-table tr:hover td{background:var(--rust-dim)}
+.dec-table td:first-child{font-family:'Overpass Mono',monospace;font-size:11px;color:var(--yellow)}
+.dec-table td:nth-child(2){color:var(--text);font-size:13px}
+.dec-table td:last-child{font-family:'Overpass Mono',monospace;font-size:11px;color:var(--green)}
+
+/* PROGRESS METER */
+.progress-bar{
+  height:20px;background:var(--steel3);border:1px solid var(--border);
+  margin:0.5rem 0;overflow:hidden;position:relative;
+}
+.progress-fill{
+  height:100%;
+  display:flex;align-items:center;padding-left:8px;
+  font-family:'Overpass Mono',monospace;font-size:10px;font-weight:700;
+}
+.pf-red{background:rgba(212,48,48,0.3);color:var(--red)}
+.pf-yellow{background:rgba(232,184,0,0.2);color:var(--yellow)}
+.pf-green{background:rgba(40,160,80,0.2);color:var(--green)}
+.p-label{font-family:'Overpass Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:2px;letter-spacing:0.08em}
+
+/* CHALLENGE */
+.challenge{
+  border:2px solid var(--rust);padding:2.5rem;margin:3rem 0;
+  background:var(--rust-dim);position:relative;
+}
+.challenge::before{
+  content:'⬡ EXERCISE_08';position:absolute;top:-12px;left:2rem;
+  font-family:'Overpass Mono',monospace;font-size:9px;color:var(--rust);
+  background:var(--steel);padding:0 8px;letter-spacing:0.15em;
+}
+.chal-h3{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;color:var(--bright);margin-bottom:1rem;letter-spacing:0.02em}
+.clist{list-style:none}
+.clist li{
+  font-family:'Overpass Mono',monospace;font-size:11.5px;
+  color:var(--muted);padding:8px 0;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6;
+}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'[ ]';color:var(--border2);flex-shrink:0;margin-top:1px}
+
+/* FOOTER */
+.post-footer{border-top:1px solid var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'Overpass Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;line-height:1.9}
+.foot-item strong{display:block;font-family:'Orbitron',sans-serif;font-size:0.95rem;color:var(--bright);text-transform:none;letter-spacing:0.02em;margin-top:4px;font-weight:700}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--steel)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+  <div class="hero-warning"></div>
+
+  <div class="hero-topbar">
+    <span>DATA_CLEANING_PIPELINE.ipynb · Module 08</span>
+    <div class="hero-topbar-status">
+      <div class="status-dot"></div>
+      <span>DIRTY DATA DETECTED — PROCESSING</span>
+    </div>
+    <span>Blog 08/20 · 14 min</span>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-left">
+      <div class="process-id">PROCESS_08 · DATA REFINERY</div>
+      <div class="hero-num">08</div>
+      <h1 class="hero-title">
+        Data <span class="rust">Cleaning</span>
+        <span class="sub">WITH PANDAS · RAW TO REFINED</span>
+      </h1>
+      <p class="hero-desc">80% of a data scientist's time is spent cleaning data. Here's how to do it fast, correctly, and without losing sleep.</p>
+      <div class="hero-tags">
+        <span class="htag on">missing values</span>
+        <span class="htag on">fillna / dropna</span>
+        <span class="htag on">duplicates</span>
+        <span class="htag on">dtypes</span>
+        <span class="htag on">string cleaning</span>
+        <span class="htag">outliers</span>
+      </div>
+    </div>
+
+    <!-- Pipeline diagram -->
+    <div class="hero-right">
+      <div class="pipeline">
+
+        <div class="pipe-stage">
+          <div class="pipe-header"><span class="pipe-num">IN</span> RAW INPUT — DIRTY DATA</div>
+          <div class="pipe-box dirty">
+            <div class="pipe-row"><span class="cell-col">Name</span><span class="cell-v">Arjun</span><span class="cell-nan">NaN</span><span class="cell-v">Priya</span></div>
+            <div class="pipe-row"><span class="cell-col">Age</span><span class="cell-v">22</span><span class="cell-nan">NaN</span><span class="cell-bad">-5</span></div>
+            <div class="pipe-row"><span class="cell-col">City</span><span class="cell-bad">delhi</span><span class="cell-v">Mumbai</span><span class="cell-bad">delhi</span></div>
+            <div class="pipe-row"><span class="cell-col">Score</span><span class="cell-v">88</span><span class="cell-bad">88</span><span class="cell-v">92</span></div>
+          </div>
+          <div class="pipe-stats">
+            <div class="pipe-stat"><div class="pipe-stat-val">2</div><div class="pipe-stat-lbl">NULLs</div></div>
+            <div class="pipe-stat"><div class="pipe-stat-val">1</div><div class="pipe-stat-lbl">DUP</div></div>
+            <div class="pipe-stat"><div class="pipe-stat-val">1</div><div class="pipe-stat-lbl">INVALID</div></div>
+          </div>
+        </div>
+
+        <div class="pipe-connector">
+          <span class="pipe-connector-label">fillna · dropna · strip · drop_duplicates</span>
+        </div>
+
+        <div class="pipe-stage">
+          <div class="pipe-header"><span class="pipe-num" style="color:var(--green);border-color:rgba(40,160,80,0.4)">OUT</span> CLEAN OUTPUT</div>
+          <div class="pipe-box clean">
+            <div class="pipe-row"><span class="cell-col">Name</span><span class="cell-ok">Arjun</span><span class="cell-ok">Priya</span></div>
+            <div class="pipe-row"><span class="cell-col">Age</span><span class="cell-ok">22</span><span class="cell-ok">29.7 ←mean</span></div>
+            <div class="pipe-row"><span class="cell-col">City</span><span class="cell-ok">Delhi</span><span class="cell-ok">Mumbai</span></div>
+            <div class="pipe-row"><span class="cell-col">Score</span><span class="cell-ok">88</span><span class="cell-ok">92</span></div>
+          </div>
+          <div class="pipe-stats">
+            <div class="pipe-stat ok"><div class="pipe-stat-val">0</div><div class="pipe-stat-lbl">NULLs</div></div>
+            <div class="pipe-stat ok"><div class="pipe-stat-val">0</div><div class="pipe-stat-lbl">DUPs</div></div>
+            <div class="pipe-stat ok"><div class="pipe-stat-val">✓</div><div class="pipe-stat-lbl">CLEAN</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    In data science, they say "garbage in, garbage out." A machine learning model trained on dirty data — missing values, wrong data types, duplicates, inconsistent text — will produce garbage predictions. Cleaning data is not glamorous. But it is the difference between models that work and models that fail.
+  </div>
+
+  <!-- WHY CLEANING -->
+  <div class="sec">01 — the problem</div>
+  <h2>Why is Real Data Always Dirty?</h2>
+
+  <p>Real-world data comes from humans, sensors, forms, databases, and scrapers — all of which introduce errors. Here are the most common problems you'll encounter:</p>
+
+  <div class="ba-grid">
+    <div class="ba-panel ba-dirty">
+      <div class="ba-header">⚠ Raw Dirty Data — df.head()</div>
+      <table class="ba-table">
+        <thead><tr><th>#</th><th>Name</th><th>Age</th><th>City</th><th>Salary</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>Arjun</td><td class="t-nan">NaN</td><td class="t-bad">delhi</td><td>₹50000</td></tr>
+          <tr><td>1</td><td class="t-nan">NaN</td><td>28</td><td>Mumbai</td><td class="t-bad">₹-1000</td></tr>
+          <tr><td>2</td><td>Priya</td><td>24</td><td class="t-bad">mumbai</td><td>₹72000</td></tr>
+          <tr><td>3</td><td>Arjun</td><td class="t-nan">NaN</td><td class="t-bad">delhi</td><td>₹50000</td></tr>
+          <tr><td>4</td><td>Sneha  </td><td class="t-warn">999</td><td>Chennai</td><td>₹65000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ba-panel ba-clean">
+      <div class="ba-header">✓ After Cleaning — df.head()</div>
+      <table class="ba-table">
+        <thead><tr><th>#</th><th>Name</th><th>Age</th><th>City</th><th>Salary</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td class="t-ok">Arjun</td><td class="t-ok">26.0</td><td class="t-ok">Delhi</td><td class="t-ok">50000</td></tr>
+          <tr><td>1</td><td class="t-ok">Unknown</td><td class="t-ok">28</td><td class="t-ok">Mumbai</td><td colspan="1" style="color:var(--red);font-size:10px">→ dropped</td></tr>
+          <tr><td>2</td><td class="t-ok">Priya</td><td class="t-ok">24</td><td class="t-ok">Mumbai</td><td class="t-ok">72000</td></tr>
+          <tr><td colspan="5" style="color:var(--muted);font-size:10px;font-style:italic">row 3 dropped (duplicate)</td></tr>
+          <tr><td>3</td><td class="t-ok">Sneha</td><td class="t-ok">26.0</td><td class="t-ok">Chennai</td><td class="t-ok">65000</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p style="font-size:14px;color:var(--muted);font-family:'Overpass Mono',monospace;margin-bottom:2rem">Problems identified: missing values (NaN) · duplicate rows · inconsistent capitalisation · invalid values (negative salary, age=999) · wrong dtype (salary stored as string)</p>
+
+  <hr>
+
+  <!-- MISSING VALUES -->
+  <div class="sec">02 — missing values</div>
+  <h2>Handling Missing Values</h2>
+
+  <p>Missing values appear as <code>NaN</code> (Not a Number) in Pandas. They happen because data wasn't collected, was lost, or was never applicable. Your first job is to find them, understand why they're missing, and decide what to do.</p>
+
+  <h3>Step 1 — Find Missing Values</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+
+<span class="cm"># Count nulls per column</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>
+
+<span class="cm"># Percentage missing — more actionable</span>
+<span class="wh">missing_pct</span> <span class="op">=</span> <span class="wh">(df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span> <span class="op">/</span> <span class="fn">len</span><span class="wh">(df)</span> <span class="op">*</span> <span class="nm">100</span><span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">1</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(missing_pct[missing_pct</span> <span class="op">&gt;</span> <span class="nm">0</span><span class="wh">])</span>
+
+<span class="cm"># Which rows have ANY null?</span>
+<span class="wh">rows_with_nulls</span> <span class="op">=</span> <span class="wh">df[df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">any</span><span class="wh">(axis</span><span class="op">=</span><span class="nm">1</span><span class="wh">)]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Rows with at least one null: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(rows_with_nulls)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — missing percentages</div>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 19.9%<br>
+    Cabin&nbsp;&nbsp;&nbsp;&nbsp; 77.1%<br>
+    Embarked&nbsp;&nbsp; 0.2%<br><br>
+    Rows with at least one null: 708
+  </div>
+
+  <p class="p-label">Column severity (% missing):</p>
+  <div class="progress-bar"><div class="progress-fill pf-red" style="width:77.1%">Cabin — 77.1%</div></div>
+  <div class="progress-bar"><div class="progress-fill pf-yellow" style="width:19.9%">Age — 19.9%</div></div>
+  <div class="progress-bar"><div class="progress-fill pf-green" style="width:2%">Embarked — 0.2%</div></div>
+
+  <h3>Step 2 — Decide: Drop or Fill?</h3>
+
+  <table class="dec-table">
+    <thead><tr><th>Situation</th><th>What to do</th><th>Method</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 5% missing</td><td>Usually safe to drop those rows</td><td>dropna(subset=["col"])</td></tr>
+      <tr><td>Numeric, random</td><td>Fill with mean (normal) or median (skewed)</td><td>fillna(df["col"].mean())</td></tr>
+      <tr><td>Categorical</td><td>Fill with mode (most frequent) or "Unknown"</td><td>fillna(df["col"].mode()[0])</td></tr>
+      <tr><td>&gt; 50% missing</td><td>Drop the entire column — not useful</td><td>drop(columns=["col"])</td></tr>
+      <tr><td>Time series</td><td>Forward-fill from previous valid value</td><td>fillna(method="ffill")</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Step 3 — Apply the Fix</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Strategy for Titanic dataset:</span>
+<span class="cm"># Age (19.9% missing) → fill with median</span>
+<span class="cm"># Cabin (77.1% missing) → drop the column</span>
+<span class="cm"># Embarked (0.2% missing) → drop those 2 rows</span>
+
+<span class="cm"># ── Fill numeric — use median (robust to outliers) ────</span>
+<span class="wh">age_median</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">()</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df</span><span class="wh">[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(age_median)</span>
+
+<span class="cm"># ── Drop column — too many nulls (77%) ───────────────</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop</span><span class="wh">(columns</span><span class="op">=</span><span class="wh">[</span><span class="st">"Cabin"</span><span class="wh">])</span>
+
+<span class="cm"># ── Drop rows — only 2 rows affected ─────────────────</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">dropna</span><span class="wh">(subset</span><span class="op">=</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">])</span>
+
+<span class="cm"># Verify — should be 0 for our target columns</span>
+<span class="fn">print</span><span class="wh">(df[[</span><span class="st">"Age"</span><span class="wh">,</span> <span class="st">"Embarked"</span><span class="wh">]]</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>
+
+<span class="cm"># ── Fill categorical with mode ────────────────────────</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mode</span><span class="wh">()[</span><span class="nm">0</span><span class="wh">])</span>
+
+<span class="cm"># ── Fill with custom label ─────────────────────────────</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(</span><span class="st">"Unknown"</span><span class="wh">)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Remaining nulls: </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br>
+    Embarked&nbsp;&nbsp; 0<br>
+    dtype: int64<br><br>
+    Remaining nulls: 0
+  </div>
+
+  <div class="callout yellow">
+    <div class="ct">Mean vs Median — Which to use?</div>
+    Use <strong>mean</strong> when data is normally distributed (symmetric bell curve). Use <strong>median</strong> when data has outliers or is skewed — the median is resistant to extreme values. For the Titanic's Age column, a few passengers are very old (max 80), so median is safer. For Fare (extremely skewed — max £512 vs median £14), always use median.
+  </div>
+
+  <div class="warn-box">
+    <div class="warn-title">⚠ Warning — the inplace trap</div>
+    Many tutorials use <code>df.fillna(x, inplace=True)</code>. This modifies the original DataFrame directly without returning anything. It's considered bad practice in modern Pandas because it can cause unexpected behaviour. Always prefer the assignment style: <code>df["col"] = df["col"].fillna(x)</code> or <code>df = df.fillna(x)</code>.
+  </div>
+
+  <hr>
+
+  <!-- DUPLICATES -->
+  <div class="sec">03 — duplicates</div>
+  <h2>Finding &amp; Removing Duplicates</h2>
+
+  <p>Duplicate rows corrupt your analysis. Counting customers? Duplicates inflate numbers. Training a model? Duplicates cause overfitting — the model memorises those rows. Always check for and remove them early.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Check for duplicates ──────────────────────────────</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">duplicated</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>     <span class="cm"># total duplicate rows</span>
+
+<span class="cm"># See the actual duplicate rows</span>
+<span class="fn">print</span><span class="wh">(df[df</span><span class="op">.</span><span class="fn">duplicated</span><span class="wh">(keep</span><span class="op">=</span><span class="kw">False</span><span class="wh">)])</span>  <span class="cm"># shows ALL copies</span>
+
+<span class="cm"># Check duplicates in a specific column (e.g. email)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">duplicated</span><span class="wh">(subset</span><span class="op">=</span><span class="wh">[</span><span class="st">"PassengerId"</span><span class="wh">])</span><span class="op">.</span><span class="fn">sum</span><span class="wh">())</span>
+
+<span class="cm"># ── Remove duplicates ─────────────────────────────────</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop_duplicates</span><span class="wh">()</span>     <span class="cm"># keep first occurrence</span>
+
+<span class="cm"># Keep last occurrence instead</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop_duplicates</span><span class="wh">(keep</span><span class="op">=</span><span class="st">"last"</span><span class="wh">)</span>
+
+<span class="cm"># Remove based on specific columns only</span>
+<span class="cm"># (e.g., same PassengerId regardless of other cols)</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop_duplicates</span><span class="wh">(subset</span><span class="op">=</span><span class="wh">[</span><span class="st">"PassengerId"</span><span class="wh">], keep</span><span class="op">=</span><span class="st">"first"</span><span class="wh">)</span>
+
+<span class="cm"># Always reset index after dropping rows!</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">reset_index</span><span class="wh">(drop</span><span class="op">=</span><span class="kw">True</span><span class="wh">)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Shape after dedup: </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="callout">
+    <div class="ct">Always reset_index after dropping</div>
+    When you drop rows, the index becomes non-consecutive (e.g., 0, 1, 5, 8...). This can cause bugs later when you use <code>.iloc</code> or merge DataFrames. Always call <code>df.reset_index(drop=True)</code> after dropping rows. The <code>drop=True</code> prevents the old index from becoming a column.
+  </div>
+
+  <hr>
+
+  <!-- DATA TYPES -->
+  <div class="sec">04 — data types</div>
+  <h2>Fixing Wrong Data Types</h2>
+
+  <p>Pandas is smart about types but not perfect. When you load a CSV, numbers stored as text come in as <code>object</code> dtype — and you can't do math on them. Dates come in as strings. Categories come in as generic text. Fix them early.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Sample dataframe with type problems</span>
+<span class="wh">df_messy</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">DataFrame</span><span class="wh">({</span>
+    <span class="st">"price"</span><span class="wh">:</span>    <span class="wh">[</span><span class="st">"₹1,200"</span><span class="wh">,</span> <span class="st">"₹850"</span><span class="wh">,</span>   <span class="st">"₹3,400"</span><span class="wh">],</span>
+    <span class="st">"date"</span><span class="wh">:</span>     <span class="wh">[</span><span class="st">"2024-01-15"</span><span class="wh">,</span> <span class="st">"2024-03-22"</span><span class="wh">,</span> <span class="st">"2024-07-01"</span><span class="wh">],</span>
+    <span class="st">"gender"</span><span class="wh">:</span>   <span class="wh">[</span><span class="st">"Male"</span><span class="wh">,</span>     <span class="st">"Female"</span><span class="wh">,</span>   <span class="st">"Male"</span><span class="wh">],</span>
+    <span class="st">"is_active"</span><span class="wh">:[</span><span class="st">"True"</span><span class="wh">,</span>     <span class="st">"False"</span><span class="wh">,</span>    <span class="st">"True"</span><span class="wh">]</span>
+<span class="wh">})</span>
+
+<span class="fn">print</span><span class="wh">(df_messy</span><span class="op">.</span><span class="atr">dtypes</span><span class="wh">)</span>  <span class="cm"># all "object" — wrong!</span>
+
+<span class="cm"># ── Fix 1: String with symbols → numeric ─────────────</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"price"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(
+    df_messy[</span><span class="st">"price"</span><span class="wh">]</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">replace</span><span class="wh">(</span><span class="st">"₹"</span><span class="wh">,</span> <span class="st">""</span><span class="wh">, regex</span><span class="op">=</span><span class="kw">False</span><span class="wh">)</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">replace</span><span class="wh">(</span><span class="st">","</span><span class="wh">,</span>  <span class="st">""</span><span class="wh">, regex</span><span class="op">=</span><span class="kw">False</span><span class="wh">)</span>
+    <span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="fn">float</span><span class="wh">)</span>
+<span class="wh">)</span>
+
+<span class="cm"># ── Fix 2: String dates → datetime ───────────────────</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"date"</span><span class="wh">]</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">to_datetime</span><span class="wh">(df_messy[</span><span class="st">"date"</span><span class="wh">])</span>
+
+<span class="cm"># Now you can extract parts!</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"month"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df_messy[</span><span class="st">"date"</span><span class="wh">]</span><span class="op">.</span><span class="atr">dt</span><span class="op">.</span><span class="atr">month</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"year"</span><span class="wh">]</span>  <span class="op">=</span> <span class="wh">df_messy[</span><span class="st">"date"</span><span class="wh">]</span><span class="op">.</span><span class="atr">dt</span><span class="op">.</span><span class="atr">year</span>
+
+<span class="cm"># ── Fix 3: Low-cardinality text → category ────────────</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"gender"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df_messy[</span><span class="st">"gender"</span><span class="wh">]</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="st">"category"</span><span class="wh">)</span>
+
+<span class="cm"># ── Fix 4: "True"/"False" strings → boolean ──────────</span>
+<span class="wh">df_messy</span><span class="wh">[</span><span class="st">"is_active"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df_messy[</span><span class="st">"is_active"</span><span class="wh">]</span><span class="op">.</span><span class="fn">map</span><span class="wh">({</span><span class="st">"True"</span><span class="wh">:</span> <span class="kw">True</span><span class="wh">,</span> <span class="st">"False"</span><span class="wh">:</span> <span class="kw">False</span><span class="wh">})</span>
+
+<span class="fn">print</span><span class="wh">(df_messy</span><span class="op">.</span><span class="atr">dtypes</span><span class="wh">)</span>  <span class="cm"># now all correct!</span>
+<span class="fn">print</span><span class="wh">(df_messy[</span><span class="st">"price"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>   <span class="cm"># 1816.67 — math works!</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — fixed dtypes</div>
+    price&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float64<br>
+    date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; datetime64[ns]<br>
+    gender&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; category<br>
+    is_active&nbsp;&nbsp; bool<br>
+    month&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int32<br>
+    year&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int32<br><br>
+    Average price: 1816.67
+  </div>
+
+  <div class="callout blue">
+    <div class="ct">Why "category" dtype matters</div>
+    When a text column has only a few unique values (like gender: Male/Female, or Pclass: 1/2/3), converting to <code>category</code> dtype can reduce memory usage by up to <strong>90%</strong>. On a dataset with a million rows, this is the difference between 8MB and 800KB for that column. In production ML pipelines with large datasets, this matters enormously.
+  </div>
+
+  <hr>
+
+  <!-- STRING CLEANING -->
+  <div class="sec">05 — string cleaning</div>
+  <h2>Cleaning Text &amp; String Columns</h2>
+
+  <p>Text data is almost always inconsistent. Extra spaces, mixed capitalisation, different abbreviations — all create fake duplicates and ruin groupby operations. Pandas' <code>.str</code> accessor gives you string methods for entire columns at once.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="wh">df_cities</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">DataFrame</span><span class="wh">({</span>
+    <span class="st">"city"</span><span class="wh">: [</span><span class="st">"  delhi  "</span><span class="wh">,</span> <span class="st">"MUMBAI"</span><span class="wh">,</span> <span class="st">"Bangalore"</span><span class="wh">,</span>
+             <span class="st">"mumbai"</span><span class="wh">,</span>   <span class="st">"Delhi"</span><span class="wh">,</span>   <span class="st">"BANGALORE"</span><span class="wh">],</span>
+    <span class="st">"name"</span><span class="wh">: [</span><span class="st">"  Arjun "</span><span class="wh">,</span> <span class="st">"priya"</span><span class="wh">,</span> <span class="st">"ROHAN"</span><span class="wh">,</span>
+             <span class="st">"Sneha  "</span><span class="wh">,</span>  <span class="st">"dev"</span><span class="wh">,</span>   <span class="st">"Ananya"</span><span class="wh">]</span>
+<span class="wh">})</span>
+
+<span class="cm"># Before cleaning — 5 "unique" cities, really only 3</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Before:"</span><span class="wh">, df_cities[</span><span class="st">"city"</span><span class="wh">]</span><span class="op">.</span><span class="fn">nunique</span><span class="wh">())</span>  <span class="cm"># 6!</span>
+
+<span class="cm"># ── The standard cleaning chain ───────────────────────</span>
+<span class="wh">df_cities</span><span class="wh">[</span><span class="st">"city"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(
+    df_cities[</span><span class="st">"city"</span><span class="wh">]</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">strip</span><span class="wh">()</span>           <span class="cm"># remove leading/trailing spaces</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">lower</span><span class="wh">()</span>           <span class="cm"># lowercase everything</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">capitalize</span><span class="wh">()</span>      <span class="cm"># Title case: "delhi" → "Delhi"</span>
+<span class="wh">)</span>
+
+<span class="wh">df_cities</span><span class="wh">[</span><span class="st">"name"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(
+    df_cities[</span><span class="st">"name"</span><span class="wh">]</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">strip</span><span class="wh">()</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">title</span><span class="wh">()</span>           <span class="cm"># Title Case each word</span>
+<span class="wh">)</span>
+
+<span class="cm"># After cleaning</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"After :"</span><span class="wh">, df_cities[</span><span class="st">"city"</span><span class="wh">]</span><span class="op">.</span><span class="fn">nunique</span><span class="wh">())</span>   <span class="cm"># 3! ✓</span>
+
+<span class="cm"># More useful .str methods</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">contains</span><span class="wh">(</span><span class="st">"Mrs"</span><span class="wh">)</span>      <span class="cm"># boolean mask</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">replace</span><span class="wh">(</span><span class="st">"Mr."</span><span class="wh">,</span> <span class="st">""</span><span class="wh">)</span>   <span class="cm"># remove prefix</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">split</span><span class="wh">(</span><span class="st">","</span><span class="wh">)</span>           <span class="cm"># split into list</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">len</span><span class="wh">()</span>               <span class="cm"># length of each string</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Name"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">startswith</span><span class="wh">(</span><span class="st">"A"</span><span class="wh">)</span>     <span class="cm"># starts with "A"</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Before: 6&nbsp;&nbsp; (delhi, MUMBAI, Bangalore, mumbai, Delhi, BANGALORE)<br>
+    After : 3&nbsp;&nbsp; (Delhi, Mumbai, Bangalore)
+  </div>
+
+  <hr>
+
+  <!-- OUTLIERS -->
+  <div class="sec">06 — outliers</div>
+  <h2>Detecting &amp; Handling Outliers</h2>
+
+  <p>Outliers are values that are far from the rest of the data. They can be genuine (a billionaire in a salary dataset) or errors (age = 999). Detecting them is crucial before training any ML model.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Method 1: IQR (Interquartile Range) ───────────────</span>
+<span class="cm"># The most robust statistical method</span>
+<span class="wh">Q1</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">quantile</span><span class="wh">(</span><span class="nm">0.25</span><span class="wh">)</span>
+<span class="wh">Q3</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">quantile</span><span class="wh">(</span><span class="nm">0.75</span><span class="wh">)</span>
+<span class="wh">IQR</span> <span class="op">=</span> <span class="wh">Q3</span> <span class="op">-</span> <span class="wh">Q1</span>
+
+<span class="wh">lower</span> <span class="op">=</span> <span class="wh">Q1</span> <span class="op">-</span> <span class="nm">1.5</span> <span class="op">*</span> <span class="wh">IQR</span>
+<span class="wh">upper</span> <span class="op">=</span> <span class="wh">Q3</span> <span class="op">+</span> <span class="nm">1.5</span> <span class="op">*</span> <span class="wh">IQR</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Fare outlier bounds: £</span><span class="op">{</span><span class="wh">lower</span><span class="op">:.2f</span><span class="op">}</span><span class="st"> to £</span><span class="op">{</span><span class="wh">upper</span><span class="op">:.2f</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="wh">outliers</span> <span class="op">=</span> <span class="wh">df[(df[</span><span class="st">"Fare"</span><span class="wh">]</span> <span class="op">&lt;</span> <span class="wh">lower)</span> <span class="op">|</span> <span class="wh">(df[</span><span class="st">"Fare"</span><span class="wh">]</span> <span class="op">&gt;</span> <span class="wh">upper)]</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Outlier rows: </span><span class="op">{</span><span class="fn">len</span><span class="wh">(outliers)</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># ── Option A: Remove outlier rows ─────────────────────</span>
+<span class="wh">df_clean</span> <span class="op">=</span> <span class="wh">df[(df[</span><span class="st">"Fare"</span><span class="wh">]</span> <span class="op">&gt;=</span> <span class="wh">lower)</span> <span class="op">&amp;</span> <span class="wh">(df[</span><span class="st">"Fare"</span><span class="wh">]</span> <span class="op">&lt;=</span> <span class="wh">upper)]</span>
+
+<span class="cm"># ── Option B: Cap (clip) outliers at bounds ───────────</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Fare_capped"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">clip</span><span class="wh">(lower</span><span class="op">=</span><span class="wh">lower, upper</span><span class="op">=</span><span class="wh">upper)</span>
+
+<span class="cm"># ── Method 2: Simple domain-knowledge filter ──────────</span>
+<span class="cm"># Age can't be negative or over 120</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df[(df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">&gt;=</span> <span class="nm">0</span><span class="wh">)</span> <span class="op">&amp;</span> <span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">&lt;=</span> <span class="nm">120</span><span class="wh">)]</span></pre>
+  </div>
+
+  <div class="callout green">
+    <div class="ct">Remove vs cap — which one?</div>
+    <strong>Remove</strong> when the outlier is almost certainly an error (age = 999, negative salary). <strong>Cap (clip)</strong> when the outlier might be real but you don't want it to distort your model — capping keeps the data point but limits its extreme effect. For the Titanic's Fare column: the £512 fare is real (first class), so capping is better than removal.
+  </div>
+
+  <hr>
+
+  <!-- FULL PROJECT -->
+  <div class="sec">07 — complete pipeline</div>
+  <h2>The Complete Cleaning Pipeline</h2>
+
+  <p>Here is a production-ready cleaning function that combines everything you've learned — the kind of function you'd actually write at the start of a real data science project.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+
+<span class="kw">def</span> <span class="fn">clean_titanic</span><span class="wh">(df):</span>
+    <span class="st">"""Complete Titanic data cleaning pipeline."""</span>
+    <span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">copy</span><span class="wh">()</span>    <span class="cm"># never modify original!</span>
+
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"Starting shape: </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"Initial nulls : </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+
+    <span class="cm"># ── Step 1: Drop high-null column ─────────────────</span>
+    <span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop</span><span class="wh">(columns</span><span class="op">=</span><span class="wh">[</span><span class="st">"Cabin"</span><span class="wh">])</span>
+
+    <span class="cm"># ── Step 2: Handle missing values ─────────────────</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Age"</span><span class="wh">]</span>      <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mode</span><span class="wh">()[</span><span class="nm">0</span><span class="wh">])</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Fare"</span><span class="wh">]</span>     <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>
+
+    <span class="cm"># ── Step 3: Remove duplicates ─────────────────────</span>
+    <span class="wh">n_before</span> <span class="op">=</span> <span class="fn">len</span><span class="wh">(df)</span>
+    <span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop_duplicates</span><span class="wh">()</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"Removed </span><span class="op">{</span><span class="wh">n_before</span> <span class="op">-</span> <span class="fn">len</span><span class="wh">(df)</span><span class="op">}</span><span class="st"> duplicate rows"</span><span class="wh">)</span>
+
+    <span class="cm"># ── Step 4: Fix data types ────────────────────────</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Sex"</span><span class="wh">]</span>      <span class="op">=</span> <span class="wh">df[</span><span class="st">"Sex"</span><span class="wh">]</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="st">"category"</span><span class="wh">)</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Embarked"</span><span class="wh">]</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="st">"category"</span><span class="wh">)</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Pclass"</span><span class="wh">]</span>   <span class="op">=</span> <span class="wh">df[</span><span class="st">"Pclass"</span><span class="wh">]</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="st">"category"</span><span class="wh">)</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Survived"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="fn">bool</span><span class="wh">)</span>
+
+    <span class="cm"># ── Step 5: String cleaning ───────────────────────</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Sex"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Sex"</span><span class="wh">]</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">strip</span><span class="wh">()</span><span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">lower</span><span class="wh">()</span>
+
+    <span class="cm"># ── Step 6: Cap outliers ──────────────────────────</span>
+    <span class="wh">Q1</span><span class="wh">,</span> <span class="wh">Q3</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">quantile</span><span class="wh">([</span><span class="nm">0.25</span><span class="wh">,</span> <span class="nm">0.75</span><span class="wh">])</span>
+    <span class="wh">IQR</span> <span class="op">=</span> <span class="wh">Q3</span> <span class="op">-</span> <span class="wh">Q1</span>
+    <span class="wh">df</span><span class="wh">[</span><span class="st">"Fare"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Fare"</span><span class="wh">]</span><span class="op">.</span><span class="fn">clip</span><span class="wh">(
+        lower</span><span class="op">=</span><span class="wh">Q1</span> <span class="op">-</span> <span class="nm">1.5</span><span class="op">*</span><span class="wh">IQR</span><span class="wh">, upper</span><span class="op">=</span><span class="wh">Q3</span> <span class="op">+</span> <span class="nm">1.5</span><span class="op">*</span><span class="wh">IQR</span>
+    <span class="wh">)</span>
+
+    <span class="cm"># ── Step 7: Reset index ───────────────────────────</span>
+    <span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">reset_index</span><span class="wh">(drop</span><span class="op">=</span><span class="kw">True</span><span class="wh">)</span>
+
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"Final shape   : </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"Remaining nulls: </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()}</span><span class="st">"</span><span class="wh">)</span>
+    <span class="kw">return</span> <span class="wh">df</span>
+
+<span class="cm"># Run it!</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">raw_df</span>   <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+<span class="wh">clean_df</span> <span class="op">=</span> <span class="fn">clean_titanic</span><span class="wh">(raw_df)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Starting shape: (891, 12)<br>
+    Initial nulls : 866<br>
+    Removed 0 duplicate rows<br>
+    Final shape   : (889, 11)<br>
+    Remaining nulls: 0
+  </div>
+
+  <div class="callout green">
+    <div class="ct">Always use df.copy()</div>
+    The first line of any cleaning function should be <code>df = df.copy()</code>. This creates an independent copy so your cleaning function never modifies the original DataFrame. It lets you run the function multiple times, experiment safely, and compare raw vs clean data side by side. This is a professional habit — use it always.
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-h3">Build Your Own Cleaning Pipeline</div>
+    <ul class="clist">
+      <li>Load the Titanic dataset and run df.info() and df.isnull().sum() to document all problems</li>
+      <li>Fill the Age column with median, not mean — explain in a comment why median is better here</li>
+      <li>Drop the Cabin column (77% missing) and drop the 2 rows where Embarked is null</li>
+      <li>Check for duplicate rows with .duplicated().sum() and remove any found</li>
+      <li>Convert Sex, Embarked, and Pclass to "category" dtype and print the memory savings with df.info(memory_usage="deep")</li>
+      <li>Clean the Name column: strip whitespace and use .str.extract() to pull out just the title (Mr, Mrs, Miss, Master) into a new "Title" column</li>
+      <li>Use the IQR method to find outliers in the Age column and cap them with .clip()</li>
+      <li>Bonus: Write the entire pipeline as a reusable function clean_titanic(df) that returns a clean copy</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 7 — Pandas: Load &amp; Explore Data</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 9 — Data Visualization</strong></div>
+  </div>
+
+</main>
+</body>
+</html>
