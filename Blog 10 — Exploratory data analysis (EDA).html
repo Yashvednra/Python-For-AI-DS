@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 10 — Exploratory Data Analysis (EDA)</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Josefin+Slab:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cork:#2a1e0f;
+  --cork2:#321f0c;
+  --board:#1e150a;
+  --paper:#f5e6c8;
+  --paper2:#f0ddb5;
+  --paper3:#ecdba0;
+  --ink:#1a0f05;
+  --ink2:#2e1f0d;
+  --amber:#d4881a;
+  --amber2:#e8a020;
+  --amber-glow:rgba(212,136,26,0.15);
+  --amber-glow2:rgba(212,136,26,0.06);
+  --red-string:#c0281a;
+  --muted:#7a5a30;
+  --muted2:#5a3a18;
+  --border:#5a3a18;
+  --border2:#7a5230;
+  --green:#2a6040;
+  --blue:#1a3a7a;
+  --text:#c8a870;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--board);
+  color:var(--text);
+  font-family:'Josefin Slab',serif;
+  font-size:17px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+/* cork board texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(ellipse at 20% 80%, rgba(212,136,26,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(200,80,20,0.02) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  border-bottom:2px solid var(--border2);
+  overflow:hidden;
+}
+
+/* red string decoration */
+.hero-string{
+  position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  overflow:hidden;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:0.8}94%{opacity:1}96%{opacity:0.9}97%{opacity:1}}
+@keyframes pinDrop{from{opacity:0;transform:translateY(-10px) scale(0.8)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.hero-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2.5rem;
+  border-bottom:1px solid var(--border);
+  font-family:'Courier Prime',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;
+  position:relative;z-index:2;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.05s;
+}
+
+.case-badge{
+  display:flex;align-items:center;gap:8px;
+}
+.case-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--amber);
+  animation:flicker 4s ease infinite;
+}
+
+.hero-main{
+  flex:1;display:grid;grid-template-columns:1fr 1fr;
+  position:relative;z-index:1;
+}
+
+.hero-left{
+  padding:3.5rem 2.5rem;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+
+.case-id{
+  font-family:'Courier Prime',monospace;font-size:10px;
+  color:var(--amber);letter-spacing:0.25em;text-transform:uppercase;
+  margin-bottom:1rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.15s;
+  display:flex;align-items:center;gap:10px;
+}
+.case-id::before{content:'◆';font-size:8px}
+
+.hero-num{
+  font-family:'Special Elite',serif;
+  font-size:clamp(5rem,10vw,9rem);
+  line-height:0.85;
+  color:rgba(212,136,26,0.07);
+  letter-spacing:0.02em;user-select:none;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.2s;
+}
+
+.hero-title{
+  font-family:'Special Elite',serif;
+  font-size:clamp(2.4rem,4.5vw,4.2rem);
+  line-height:0.92;letter-spacing:0.02em;
+  color:var(--paper);
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.3s;
+}
+.hero-title .amber{color:var(--amber);text-shadow:0 0 20px rgba(212,136,26,0.3)}
+.hero-title .sub{
+  font-family:'Courier Prime',monospace;font-size:13px;
+  font-weight:400;color:var(--muted);display:block;
+  letter-spacing:0.12em;margin-top:0.6rem;text-transform:uppercase;
+}
+
+.hero-desc{
+  font-style:italic;font-size:15px;color:var(--muted);
+  max-width:380px;line-height:1.7;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.5s;
+  margin-top:auto;padding-top:2rem;
+  font-family:'Josefin Slab',serif;
+}
+
+.hero-tags{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:1.5rem;
+  opacity:0;animation:fadeUp 0.6s ease forwards 0.65s;
+}
+.htag{
+  font-family:'Courier Prime',monospace;font-size:9px;
+  padding:4px 10px;border:1px solid var(--border2);
+  color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;
+}
+.htag.on{border-color:var(--amber);color:var(--amber);background:var(--amber-glow2)}
+
+/* RIGHT: investigation board */
+.hero-right{
+  padding:2rem;position:relative;
+  opacity:0;animation:fadeIn 0.8s ease forwards 0.55s;
+}
+
+/* Evidence cards (pinned notes) */
+.pin-board{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1rem;height:100%;align-content:center;
+}
+
+.evidence-card{
+  background:var(--paper2);
+  padding:1rem 1.25rem;
+  position:relative;
+  transform:rotate(var(--rot, -1deg));
+  transition:transform 0.2s;
+  border:1px solid rgba(90,58,24,0.4);
+  box-shadow:3px 4px 12px rgba(0,0,0,0.4);
+  cursor:default;
+}
+.evidence-card:hover{transform:rotate(0deg) scale(1.02)}
+
+/* pushpin */
+.evidence-card::before{
+  content:'●';position:absolute;top:-6px;left:50%;
+  transform:translateX(-50%);
+  font-size:12px;color:var(--red-string);
+  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+}
+
+.ec-num{
+  font-family:'Courier Prime',monospace;font-size:9px;
+  color:var(--muted2);letter-spacing:0.15em;
+  text-transform:uppercase;margin-bottom:0.4rem;
+}
+.ec-title{
+  font-family:'Special Elite',serif;font-size:1rem;
+  color:var(--ink);margin-bottom:0.3rem;line-height:1.2;
+}
+.ec-body{font-size:11px;color:var(--ink2);line-height:1.5;font-family:'Josefin Slab',serif}
+.ec-stat{
+  font-family:'Courier Prime',monospace;font-size:13px;
+  font-weight:700;color:var(--amber);margin-top:0.4rem;
+}
+
+/* String connecting cards */
+.string-overlay{
+  position:absolute;inset:0;pointer-events:none;
+}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:5rem 2.5rem 8rem;position:relative;z-index:1}
+
+.sec{
+  font-family:'Courier Prime',monospace;font-size:10px;
+  color:var(--amber);letter-spacing:0.25em;text-transform:uppercase;
+  margin:5.5rem 0 1.5rem;
+  display:flex;align-items:center;gap:14px;
+}
+.sec::before{content:'◆';font-size:8px;opacity:0.7}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec:first-child{margin-top:0}
+
+h2{
+  font-family:'Special Elite',serif;
+  font-size:clamp(1.7rem,3.5vw,2.8rem);
+  line-height:1.05;letter-spacing:0.02em;
+  color:var(--paper);margin-bottom:1.25rem;
+}
+h2 em{font-style:italic;color:var(--amber)}
+
+h3{
+  font-family:'Special Elite',serif;font-size:1.15rem;
+  color:var(--amber);margin:3rem 0 0.75rem;letter-spacing:0.04em;
+}
+
+p{margin-bottom:1.25rem;color:var(--text);line-height:1.85}
+strong{color:var(--paper);font-weight:700}
+em{font-style:italic;color:var(--amber)}
+
+code{
+  font-family:'Courier Prime',monospace;font-size:12.5px;
+  background:var(--cork2);border:1px solid var(--border);
+  padding:2px 8px;color:var(--amber2);
+}
+
+hr{border:none;border-top:1px solid var(--border);margin:4.5rem 0}
+
+/* OPENER */
+.opener{
+  border-left:4px solid var(--amber);
+  padding:1.25rem 1.75rem;
+  background:var(--amber-glow2);
+  margin-bottom:3rem;
+  font-style:italic;font-size:1.05rem;
+  color:var(--text);line-height:1.7;
+}
+
+/* THE 5 QUESTIONS — big feature */
+.five-questions{
+  display:grid;grid-template-columns:1fr;gap:2px;
+  background:var(--border);margin:2.5rem 0;
+}
+.fq-item{
+  background:var(--cork2);
+  display:grid;grid-template-columns:80px 1fr;
+  overflow:hidden;
+}
+.fq-num{
+  background:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Special Elite',serif;font-size:2rem;
+  color:var(--board);padding:1.5rem;
+  flex-shrink:0;
+}
+.fq-content{padding:1.25rem 1.5rem}
+.fq-question{
+  font-family:'Special Elite',serif;font-size:1.1rem;
+  color:var(--paper);margin-bottom:0.4rem;
+}
+.fq-methods{
+  font-family:'Courier Prime',monospace;font-size:11px;
+  color:var(--muted);letter-spacing:0.05em;
+}
+.fq-methods span{color:var(--amber2)}
+
+/* CODE BLOCK */
+.code-block{
+  background:#100a04;
+  border:1px solid var(--border2);
+  margin:2rem 0;overflow:hidden;position:relative;
+}
+.code-block::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--amber),var(--amber2),var(--amber));
+  opacity:0.5;
+}
+
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;background:#0a0602;border-bottom:1px solid var(--border);
+}
+.code-hdr-left{display:flex;align-items:center;gap:7px}
+.cd{width:9px;height:9px;border-radius:50%}
+.cd:nth-child(1){background:#ff5f57}
+.cd:nth-child(2){background:#febc2e}
+.cd:nth-child(3){background:#28c840}
+.code-lang{font-family:'Courier Prime',monospace;font-size:9px;color:var(--muted2);letter-spacing:0.15em;margin-left:6px;text-transform:uppercase}
+.copy-btn{font-family:'Courier Prime',monospace;font-size:9px;color:var(--muted2);background:none;border:1px solid var(--border);padding:3px 10px;cursor:pointer;transition:all 0.2s;letter-spacing:0.08em}
+.copy-btn:hover{color:var(--amber);border-color:var(--amber)}
+
+pre{
+  padding:1.5rem;font-family:'Courier Prime',monospace;
+  font-size:12.5px;line-height:1.9;overflow-x:auto;color:#9a7a40;
+}
+.kw{color:#c892e8}.fn{color:#82aae8}.st{color:#a8d890}.nm{color:#e8b860}.cm{color:#3a2810;font-style:italic}.op{color:#e89060}.wh{color:#b89860}.out{color:#80c890}.atr{color:#e8c870}
+
+.output-box{
+  background:#0a0602;border:1px solid var(--border);border-top:none;
+  padding:1rem 1.5rem;font-family:'Courier Prime',monospace;font-size:12px;
+  color:var(--green);margin-top:-2rem;margin-bottom:2rem;
+}
+.out-lbl{font-family:'Courier Prime',monospace;font-size:9px;color:var(--muted2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px}
+
+/* CALLOUT */
+.callout{
+  padding:1.25rem 1.75rem;margin:2rem 0;
+  border-left:4px solid var(--amber);
+  background:var(--amber-glow2);font-size:15px;line-height:1.7;color:var(--text);
+}
+.callout.red{border-color:var(--red-string);background:rgba(192,40,26,0.06);color:#c89080}
+.callout.green{border-color:var(--green);background:rgba(42,96,64,0.06);color:#80c890}
+.callout.blue{border-color:var(--blue);background:rgba(26,58,122,0.06);color:#8090c8}
+
+.ct{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:0.4rem}
+.callout.red .ct{color:var(--red-string)}.callout.green .ct{color:var(--green)}.callout.blue .ct{color:var(--blue)}
+
+/* FINDINGS BOX */
+.finding{
+  background:var(--paper2);
+  border:1px solid rgba(90,58,24,0.5);
+  padding:1.5rem;margin:2rem 0;
+  position:relative;
+  transform:rotate(-0.3deg);
+  box-shadow:4px 4px 16px rgba(0,0,0,0.4);
+}
+.finding::before{
+  content:'● FINDING';position:absolute;
+  top:-10px;left:1.5rem;
+  font-family:'Courier Prime',monospace;font-size:9px;
+  color:var(--paper);background:var(--red-string);
+  padding:2px 10px;letter-spacing:0.15em;
+}
+.finding-text{
+  font-family:'Special Elite',serif;font-size:1.05rem;
+  color:var(--ink);line-height:1.6;
+}
+.finding-stat{
+  font-family:'Courier Prime',monospace;font-size:13px;font-weight:700;
+  color:var(--amber);margin-top:0.5rem;display:block;
+}
+
+/* EDA FRAMEWORK STEPS */
+.eda-steps{
+  counter-reset:step;
+  margin:2.5rem 0;
+}
+.eda-step{
+  display:grid;grid-template-columns:56px 1fr;
+  gap:0;margin-bottom:2px;
+  background:var(--cork2);
+  border:1px solid var(--border);
+}
+.eda-step-num{
+  counter-increment:step;
+  background:var(--cork);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Special Elite',serif;font-size:1.4rem;
+  color:var(--amber);
+  border-right:1px solid var(--border);
+  flex-shrink:0;
+}
+.eda-step-content{padding:1.25rem 1.5rem}
+.eda-step-title{font-family:'Special Elite',serif;font-size:1rem;color:var(--paper);margin-bottom:0.3rem}
+.eda-step-desc{font-size:14px;color:var(--muted);line-height:1.6;font-family:'Josefin Slab',serif}
+.eda-step-method{font-family:'Courier Prime',monospace;font-size:10px;color:var(--amber2);margin-top:0.4rem;letter-spacing:0.05em}
+
+/* INSIGHT GRID */
+.insight-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:2px;
+  background:var(--border);margin:2rem 0;
+}
+.insight-cell{
+  background:var(--cork2);padding:1.5rem;
+}
+.insight-q{
+  font-family:'Courier Prime',monospace;font-size:10px;
+  letter-spacing:0.15em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:0.5rem;
+  display:flex;align-items:center;gap:8px;
+}
+.insight-q::before{content:'?';background:var(--amber);color:var(--board);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.insight-answer{font-family:'Special Elite',serif;font-size:1.05rem;color:var(--paper);margin-bottom:0.3rem}
+.insight-data{font-family:'Courier Prime',monospace;font-size:11px;color:var(--muted);line-height:1.6}
+.insight-highlight{font-family:'Courier Prime',monospace;font-size:12px;font-weight:700;color:var(--amber2);margin-top:0.4rem;display:block}
+
+/* CHALLENGE */
+.challenge{
+  background:var(--paper);color:var(--ink);
+  padding:2.5rem;margin:3rem 0;
+  border:2px solid var(--border2);
+  position:relative;transform:rotate(-0.2deg);
+  box-shadow:5px 5px 20px rgba(0,0,0,0.5);
+}
+.challenge::before{
+  content:'CASE FILE — EXERCISE 10';position:absolute;
+  top:-1px;left:2rem;
+  font-family:'Courier Prime',monospace;font-size:9px;color:var(--red-string);
+  background:var(--paper);padding:0 8px;letter-spacing:0.15em;border-top:2px solid var(--border2);margin-top:-2px;
+}
+.chal-h3{font-family:'Special Elite',serif;font-size:1.6rem;color:var(--ink);margin-bottom:1rem;line-height:1.2}
+.clist{list-style:none}
+.clist li{font-family:'Courier Prime',monospace;font-size:11.5px;color:var(--muted2);padding:8px 0;border-bottom:1px solid rgba(90,58,24,0.2);display:flex;align-items:flex-start;gap:10px;line-height:1.6}
+.clist li:last-child{border-bottom:none}
+.clist li::before{content:'[ ]';color:var(--border2);flex-shrink:0;margin-top:1px}
+
+/* FOOTER */
+.post-footer{border-top:1px solid var(--border);padding-top:3rem;margin-top:4rem;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.foot-item{font-family:'Courier Prime',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;line-height:1.9}
+.foot-item strong{display:block;font-family:'Special Elite',serif;font-size:1.05rem;color:var(--paper);text-transform:none;letter-spacing:0.02em;margin-top:4px;font-weight:400}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--board)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<header class="hero">
+
+  <div class="hero-topbar">
+    <div class="case-badge">
+      <div class="case-dot"></div>
+      <span>Case File: TITANIC_001 · Python for Data Science Series</span>
+    </div>
+    <span>Blog 10 / 20 · 16 min read</span>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-left">
+      <div>
+        <div class="case-id">Investigation No. 10 — Data Detective Work</div>
+        <div class="hero-num">10</div>
+        <h1 class="hero-title">
+          Exploratory<br>
+          <span class="amber">Data</span><br>
+          Analysis
+          <span class="sub">EDA · Questions · Insights · Story</span>
+        </h1>
+      </div>
+      <div>
+        <p class="hero-desc">Before you build any model, you must first understand your data. EDA is the art of asking the right questions — then letting the data answer them.</p>
+        <div class="hero-tags">
+          <span class="htag on">univariate</span>
+          <span class="htag on">bivariate</span>
+          <span class="htag on">multivariate</span>
+          <span class="htag on">questions</span>
+          <span class="htag on">insights</span>
+          <span class="htag">storytelling</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence board -->
+    <div class="hero-right">
+      <div class="pin-board">
+
+        <div class="evidence-card" style="--rot:-2deg">
+          <div class="ec-num">Finding #001</div>
+          <div class="ec-title">Survival Rate</div>
+          <div class="ec-body">Overall survival rate of all 891 passengers aboard the Titanic.</div>
+          <div class="ec-stat">38.4% survived</div>
+        </div>
+
+        <div class="evidence-card" style="--rot:1.5deg">
+          <div class="ec-num">Finding #002</div>
+          <div class="ec-title">Gender Gap</div>
+          <div class="ec-body">Women were 4× more likely to survive than men. "Women and children first."</div>
+          <div class="ec-stat">74% ♀ vs 19% ♂</div>
+        </div>
+
+        <div class="evidence-card" style="--rot:-1deg">
+          <div class="ec-num">Finding #003</div>
+          <div class="ec-title">Class Effect</div>
+          <div class="ec-body">1st class passengers survived at nearly 3× the rate of 3rd class.</div>
+          <div class="ec-stat">63% vs 24%</div>
+        </div>
+
+        <div class="evidence-card" style="--rot:2deg">
+          <div class="ec-num">Finding #004</div>
+          <div class="ec-title">Age Pattern</div>
+          <div class="ec-body">Children under 10 had notably higher survival rates. Adults 20-30 had lowest survival.</div>
+          <div class="ec-stat">Age &lt; 10: ~60%</div>
+        </div>
+
+        <div class="evidence-card" style="--rot:-0.5deg;grid-column:1/-1">
+          <div class="ec-num">Hypothesis</div>
+          <div class="ec-title">The Key Predictors</div>
+          <div class="ec-body">Sex, Pclass, and Age are the three strongest predictors of survival — these should be the primary features in any predictive model.</div>
+          <div class="ec-stat">Correlation confirmed ✓</div>
+        </div>
+
+      </div>
+
+      <!-- String connections -->
+      <svg class="string-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;pointer-events:none;opacity:0.25">
+        <line x1="30" y1="25" x2="70" y2="25" stroke="#c0281a" stroke-width="0.3"/>
+        <line x1="30" y1="55" x2="70" y2="55" stroke="#c0281a" stroke-width="0.3"/>
+        <line x1="30" y1="25" x2="30" y2="55" stroke="#c0281a" stroke-width="0.3"/>
+        <line x1="70" y1="25" x2="50" y2="80" stroke="#c0281a" stroke-width="0.3"/>
+        <line x1="30" y1="55" x2="50" y2="80" stroke="#c0281a" stroke-width="0.3"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <div class="opener">
+    EDA is not a step in data science. It <em>is</em> data science. Before training a single model, before writing a single prediction, you must spend real time sitting with your data — asking questions, making charts, finding surprises. The insights from EDA tell you what model to build, which features matter, and what to clean.
+  </div>
+
+  <!-- WHAT IS EDA -->
+  <div class="sec">01 — what is EDA</div>
+  <h2>What is <em>Exploratory Data Analysis?</em></h2>
+
+  <p>Exploratory Data Analysis (EDA) is the process of <strong>investigating a dataset</strong> to understand its structure, find patterns, detect anomalies, and test hypotheses — before any formal modelling. The term was coined by statistician John Tukey in 1977 and remains the foundation of every serious data science project.</p>
+
+  <p>Think of it as detective work. You've been handed a case file (your dataset). Before making any conclusions, you look at the evidence from every angle. You ask questions. You build a picture. You form theories — then check them against the data.</p>
+
+  <div class="eda-steps">
+    <div class="eda-step">
+      <div class="eda-step-num">1</div>
+      <div class="eda-step-content">
+        <div class="eda-step-title">Understand the dataset structure</div>
+        <div class="eda-step-desc">What does each column mean? How many rows? What data types? Are there nulls?</div>
+        <div class="eda-step-method">shape · info() · dtypes · isnull().sum()</div>
+      </div>
+    </div>
+    <div class="eda-step">
+      <div class="eda-step-num">2</div>
+      <div class="eda-step-content">
+        <div class="eda-step-title">Univariate analysis — one column at a time</div>
+        <div class="eda-step-desc">How is each variable distributed? What's the range? Any outliers? Any skew?</div>
+        <div class="eda-step-method">describe() · histplot() · value_counts() · boxplot()</div>
+      </div>
+    </div>
+    <div class="eda-step">
+      <div class="eda-step-num">3</div>
+      <div class="eda-step-content">
+        <div class="eda-step-title">Bivariate analysis — two columns together</div>
+        <div class="eda-step-desc">How do pairs of variables relate? Is there correlation? Do categories differ?</div>
+        <div class="eda-step-method">scatterplot() · boxplot(x,y) · groupby().mean() · corr()</div>
+      </div>
+    </div>
+    <div class="eda-step">
+      <div class="eda-step-num">4</div>
+      <div class="eda-step-content">
+        <div class="eda-step-title">Multivariate analysis — many columns together</div>
+        <div class="eda-step-desc">How do multiple variables interact? What patterns emerge when you combine features?</div>
+        <div class="eda-step-method">heatmap(corr()) · pairplot() · hue= parameter</div>
+      </div>
+    </div>
+    <div class="eda-step">
+      <div class="eda-step-num">5</div>
+      <div class="eda-step-content">
+        <div class="eda-step-title">Document findings and hypotheses</div>
+        <div class="eda-step-desc">Write down what you found. What features matter? What needs cleaning? What will your model use?</div>
+        <div class="eda-step-method">Markdown cells in Colab · written summary</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- SETUP -->
+  <div class="sec">02 — setup</div>
+  <h2>Setting Up Your <em>EDA Notebook</em></h2>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python — eda_setup.py</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── EDA Standard Imports ──────────────────────────────</span>
+<span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+<span class="kw">import</span> <span class="wh">matplotlib.pyplot</span> <span class="kw">as</span> <span class="wh">plt</span>
+<span class="kw">import</span> <span class="wh">seaborn</span> <span class="kw">as</span> <span class="wh">sns</span>
+<span class="kw">import</span> <span class="wh">warnings</span>
+<span class="wh">warnings</span><span class="op">.</span><span class="fn">filterwarnings</span><span class="wh">(</span><span class="st">"ignore"</span><span class="wh">)</span>
+
+<span class="cm"># Style setup</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">set_theme</span><span class="wh">(style</span><span class="op">=</span><span class="st">"whitegrid"</span><span class="wh">, palette</span><span class="op">=</span><span class="st">"muted"</span><span class="wh">, font_scale</span><span class="op">=</span><span class="nm">1.1</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">rcParams</span><span class="wh">[</span><span class="st">"figure.dpi"</span><span class="wh">]</span>    <span class="op">=</span> <span class="nm">120</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">rcParams</span><span class="wh">[</span><span class="st">"figure.figsize"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">)</span>
+
+<span class="cm"># Load and clean the Titanic dataset</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Age"</span><span class="wh">]</span>  <span class="op">=</span> <span class="wh">df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">fillna</span><span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">median</span><span class="wh">())</span>
+<span class="wh">df</span>  <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">dropna</span><span class="wh">(subset</span><span class="op">=</span><span class="wh">[</span><span class="st">"Embarked"</span><span class="wh">])</span>
+<span class="wh">df</span>  <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">drop</span><span class="wh">(columns</span><span class="op">=</span><span class="wh">[</span><span class="st">"Cabin"</span><span class="wh">])</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Dataset ready: </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="atr">shape</span><span class="op">}</span><span class="st"> — </span><span class="op">{</span><span class="wh">df</span><span class="op">.</span><span class="fn">isnull</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">.</span><span class="fn">sum</span><span class="wh">()</span><span class="op">}</span><span class="st"> nulls remaining"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Dataset ready: (889, 11) — 0 nulls remaining
+  </div>
+
+  <hr>
+
+  <!-- UNIVARIATE -->
+  <div class="sec">03 — univariate analysis</div>
+  <h2>Univariate Analysis — <em>One Variable at a Time</em></h2>
+
+  <p>Univariate means you examine each column in isolation. The goal is to understand the <strong>distribution</strong>, <strong>central tendency</strong>, <strong>spread</strong>, and <strong>outliers</strong> of each feature. This is where you first spot problems and surprises.</p>
+
+  <h3>Numeric columns — describe + histogram</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Step 1: Get stats for all numeric columns ─────────</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">describe</span><span class="wh">())</span>
+
+<span class="cm"># ── Step 2: Visualise each numeric distribution ───────</span>
+<span class="wh">numeric_cols</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Age"</span><span class="wh">,</span> <span class="st">"Fare"</span><span class="wh">,</span> <span class="st">"SibSp"</span><span class="wh">,</span> <span class="st">"Parch"</span><span class="wh">]</span>
+
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">2</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">8</span><span class="wh">))</span>
+<span class="wh">axes</span> <span class="op">=</span> <span class="wh">axes</span><span class="op">.</span><span class="fn">flatten</span><span class="wh">()</span>
+
+<span class="kw">for</span> <span class="wh">i, col</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="wh">(numeric_cols):</span>
+    <span class="fn">sns</span><span class="op">.</span><span class="fn">histplot</span><span class="wh">(
+        data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="wh">col, kde</span><span class="op">=</span><span class="kw">True</span><span class="wh">,
+        ax</span><span class="op">=</span><span class="wh">axes[i], color</span><span class="op">=</span><span class="st">"#d4881a"</span>
+    <span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">f"</span><span class="op">{</span><span class="wh">col</span><span class="op">}</span><span class="st"> Distribution"</span><span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">axvline</span><span class="wh">(df[col]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">(),</span>
+        <span class="wh">color</span><span class="op">=</span><span class="st">"red"</span><span class="wh">, linestyle</span><span class="op">=</span><span class="st">"--"</span><span class="wh">,</span>
+        <span class="wh">label</span><span class="op">=</span><span class="st">f"Mean: </span><span class="op">{</span><span class="wh">df[col]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">()</span><span class="op">:.1f</span><span class="op">}</span><span class="st">"</span><span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">legend</span><span class="wh">(fontsize</span><span class="op">=</span><span class="nm">9</span><span class="wh">)</span>
+
+<span class="wh">plt</span><span class="op">.</span><span class="fn">suptitle</span><span class="wh">(</span><span class="st">"Titanic — Numeric Distributions"</span><span class="wh">,</span>
+             <span class="wh">fontsize</span><span class="op">=</span><span class="nm">14</span><span class="wh">, fontweight</span><span class="op">=</span><span class="st">"bold"</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="finding">
+    <div class="finding-text">Age is roughly normally distributed (mean ~29.7). Fare is heavily right-skewed — most passengers paid cheap tickets but a few paid enormous sums. SibSp and Parch are both heavily concentrated at 0 — most passengers were travelling alone.</div>
+    <span class="finding-stat">→ Fare needs log-transformation before modelling. SibSp &amp; Parch may be combined into a single "FamilySize" feature.</span>
+  </div>
+
+  <h3>Categorical columns — value counts + bar charts</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># All categorical columns at once</span>
+<span class="wh">cat_cols</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Sex"</span><span class="wh">,</span> <span class="st">"Pclass"</span><span class="wh">,</span> <span class="st">"Embarked"</span><span class="wh">]</span>
+
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">3</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">4</span><span class="wh">))</span>
+
+<span class="kw">for</span> <span class="wh">i, col</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="wh">(cat_cols):</span>
+    <span class="wh">counts</span> <span class="op">=</span> <span class="wh">df[col]</span><span class="op">.</span><span class="fn">value_counts</span><span class="wh">()</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">bar</span><span class="wh">(counts</span><span class="op">.</span><span class="fn">index</span><span class="wh">.</span><span class="fn">astype</span><span class="wh">(</span><span class="fn">str</span><span class="wh">),</span>
+               <span class="wh">counts</span><span class="op">.</span><span class="fn">values</span><span class="wh">, color</span><span class="op">=</span><span class="st">"#d4881a"</span><span class="wh">,</span>
+               <span class="wh">alpha</span><span class="op">=</span><span class="nm">0.8</span><span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">f"</span><span class="op">{</span><span class="wh">col</span><span class="op">}</span><span class="st"> Counts"</span><span class="wh">)</span>
+
+    <span class="cm"># Add count labels on top of bars</span>
+    <span class="kw">for</span> <span class="wh">j, v</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="wh">(counts</span><span class="op">.</span><span class="fn">values</span><span class="wh">):</span>
+        <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">text</span><span class="wh">(j, v</span><span class="op">+</span><span class="nm">5</span><span class="wh">, </span><span class="fn">str</span><span class="wh">(v),</span>
+                    <span class="wh">ha</span><span class="op">=</span><span class="st">"center"</span><span class="wh">, fontsize</span><span class="op">=</span><span class="nm">10</span><span class="wh">)</span>
+
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Detailed look at a single column</span>
+<span class="fn">print</span><span class="wh">(df[</span><span class="st">"Pclass"</span><span class="wh">]</span><span class="op">.</span><span class="fn">value_counts</span><span class="wh">(normalize</span><span class="op">=</span><span class="kw">True</span><span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — Pclass proportions</div>
+    Pclass<br>
+    3&nbsp;&nbsp;&nbsp;&nbsp; 0.551&nbsp;&nbsp; ← 55% were 3rd class<br>
+    1&nbsp;&nbsp;&nbsp;&nbsp; 0.243<br>
+    2&nbsp;&nbsp;&nbsp;&nbsp; 0.206
+  </div>
+
+  <div class="callout">
+    <div class="ct">Univariate insight for modelling</div>
+    Heavily imbalanced or skewed columns are a warning sign. The Fare column's extreme skew (max £512 when median is £14) will distort any model that assumes normal distributions. Flag these for transformation. The Pclass imbalance (55% 3rd class) means your model will see far more 3rd class examples — worth noting before evaluation.
+  </div>
+
+  <hr>
+
+  <!-- BIVARIATE -->
+  <div class="sec">04 — bivariate analysis</div>
+  <h2>Bivariate Analysis — <em>Two Variables Together</em></h2>
+
+  <p>Now we compare pairs of columns. The key question is always: <strong>how does feature X relate to the target variable Y?</strong> For the Titanic, Y is "Survived". We want to find which features most strongly differentiate survivors from non-survivors.</p>
+
+  <h3>Categorical feature vs target — survival rates</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Survival rate by Sex, Class, Embarked — all at once</span>
+<span class="wh">cat_features</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Sex"</span><span class="wh">,</span> <span class="st">"Pclass"</span><span class="wh">,</span> <span class="st">"Embarked"</span><span class="wh">]</span>
+
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">3</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">))</span>
+
+<span class="kw">for</span> <span class="wh">i, feat</span> <span class="kw">in</span> <span class="fn">enumerate</span><span class="wh">(cat_features):</span>
+    <span class="fn">sns</span><span class="op">.</span><span class="fn">barplot</span><span class="wh">(
+        data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="wh">feat, y</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,</span>
+        <span class="wh">palette</span><span class="op">=</span><span class="st">"YlOrBr"</span><span class="wh">, ax</span><span class="op">=</span><span class="wh">axes[i]</span>
+    <span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">f"Survival by {feat}"</span><span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Survival Rate"</span><span class="wh">)</span>
+    <span class="wh">axes[i]</span><span class="op">.</span><span class="fn">set_ylim</span><span class="wh">(</span><span class="nm">0</span><span class="wh">,</span> <span class="nm">1</span><span class="wh">)</span>
+
+<span class="wh">plt</span><span class="op">.</span><span class="fn">suptitle</span><span class="wh">(</span><span class="st">"Survival Rate by Categorical Features"</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Print the exact numbers</span>
+<span class="kw">for</span> <span class="wh">feat</span> <span class="kw">in</span> <span class="wh">cat_features:</span>
+    <span class="fn">print</span><span class="wh">(</span><span class="st">f"\n── Survival by {feat} ──"</span><span class="wh">)</span>
+    <span class="fn">print</span><span class="wh">(
+        df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(feat)[</span><span class="st">"Survived"</span><span class="wh">]</span>
+          <span class="op">.</span><span class="fn">agg</span><span class="wh">([</span><span class="st">"mean"</span><span class="wh">,</span><span class="st">"count"</span><span class="wh">])</span>
+          <span class="op">.</span><span class="fn">rename</span><span class="wh">(columns</span><span class="op">=</span><span class="wh">{</span><span class="st">"mean"</span><span class="wh">:</span><span class="st">"rate"</span><span class="wh">})</span>
+          <span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">)</span>
+    <span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    ── Survival by Sex ──<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rate&nbsp; count<br>
+    female&nbsp; 0.742&nbsp; 312<br>
+    male&nbsp;&nbsp;&nbsp; 0.189&nbsp; 577<br><br>
+    ── Survival by Pclass ──<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rate&nbsp; count<br>
+    1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.630&nbsp; 214<br>
+    2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.473&nbsp; 184<br>
+    3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.242&nbsp; 491<br><br>
+    ── Survival by Embarked ──<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rate&nbsp; count<br>
+    C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.554&nbsp; 168<br>
+    Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.390&nbsp;&nbsp; 77<br>
+    S&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.336&nbsp; 644
+  </div>
+
+  <h3>Numeric feature vs target — boxplots</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Age distribution for survivors vs non-survivors</span>
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">))</span>
+
+<span class="cm"># Box plot — shows median, IQR, outliers</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">boxplot</span><span class="wh">(
+    data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">, y</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">,</span>
+    <span class="wh">palette</span><span class="op">=</span><span class="wh">[</span><span class="st">"#c0281a"</span><span class="wh">,</span><span class="st">"#2a6040"</span><span class="wh">]</span><span class="wh">, ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Age by Survival Status"</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_xticklabels</span><span class="wh">([</span><span class="st">"Did Not Survive"</span><span class="wh">,</span> <span class="st">"Survived"</span><span class="wh">])</span>
+
+<span class="cm"># Histogram — overlapping distributions</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">histplot</span><span class="wh">(
+    data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Age"</span><span class="wh">, hue</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,</span>
+    <span class="wh">kde</span><span class="op">=</span><span class="kw">True</span><span class="wh">, bins</span><span class="op">=</span><span class="nm">25</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span><span class="wh">,</span>
+    <span class="wh">palette</span><span class="op">=</span><span class="wh">[</span><span class="st">"#c0281a"</span><span class="wh">,</span><span class="st">"#2a6040"</span><span class="wh">],</span>
+    <span class="wh">ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">1</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">1</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Age Distribution by Survival"</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Summary stats: mean age by survival</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Survived"</span><span class="wh">)[</span><span class="st">"Age"</span><span class="wh">]</span><span class="op">.</span><span class="fn">describe</span><span class="wh">())</span></pre>
+  </div>
+
+  <div class="finding">
+    <div class="finding-text">Survivors had a slightly lower median age (28) compared to non-survivors (29). The distribution shows a notable spike of survivors among children under 10 — consistent with "women and children first." However, age alone is a weak predictor compared to Sex and Pclass.</div>
+    <span class="finding-stat">→ Age is a useful but secondary predictor. Engineer an "IsChild" binary feature (Age &lt; 10) for the model.</span>
+  </div>
+
+  <hr>
+
+  <!-- MULTIVARIATE -->
+  <div class="sec">05 — multivariate analysis</div>
+  <h2>Multivariate Analysis — <em>The Full Picture</em></h2>
+
+  <p>Now we look at three or more variables together. This reveals <strong>interaction effects</strong> — situations where the effect of one variable depends on another. These are often the richest insights in EDA.</p>
+
+  <h3>Interaction: Sex × Class × Survival</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Sex + Class interaction on survival</span>
+<span class="wh">fig, axes</span> <span class="op">=</span> <span class="fn">plt</span><span class="op">.</span><span class="fn">subplots</span><span class="wh">(</span><span class="nm">1</span><span class="wh">,</span> <span class="nm">2</span><span class="wh">, figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">14</span><span class="wh">,</span> <span class="nm">5</span><span class="wh">))</span>
+
+<span class="cm"># Bar chart: Class vs Survival, split by Sex</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">barplot</span><span class="wh">(
+    data</span><span class="op">=</span><span class="wh">df, x</span><span class="op">=</span><span class="st">"Pclass"</span><span class="wh">, y</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,</span>
+    <span class="wh">hue</span><span class="op">=</span><span class="st">"Sex"</span><span class="wh">, palette</span><span class="op">=</span><span class="wh">[</span><span class="st">"#ff6b9d"</span><span class="wh">,</span><span class="st">"#1a6eff"</span><span class="wh">],</span>
+    <span class="wh">ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span>
+<span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Survival by Class and Sex"</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_ylabel</span><span class="wh">(</span><span class="st">"Survival Rate"</span><span class="wh">)</span>
+
+<span class="cm"># Pivot table: exact numbers</span>
+<span class="wh">pivot</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">pivot_table</span><span class="wh">(
+    values</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">,
+    index</span><span class="op">=</span><span class="st">"Pclass"</span><span class="wh">, columns</span><span class="op">=</span><span class="st">"Sex"</span><span class="wh">,
+    aggfunc</span><span class="op">=</span><span class="st">"mean"</span>
+<span class="wh">)</span><span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">)</span>
+
+<span class="fn">sns</span><span class="op">.</span><span class="fn">heatmap</span><span class="wh">(pivot, annot</span><span class="op">=</span><span class="kw">True</span><span class="wh">, fmt</span><span class="op">=</span><span class="st">".2f"</span><span class="wh">,
+            cmap</span><span class="op">=</span><span class="st">"YlOrRd"</span><span class="wh">, ax</span><span class="op">=</span><span class="wh">axes[</span><span class="nm">1</span><span class="wh">],</span>
+            <span class="wh">linewidths</span><span class="op">=</span><span class="nm">0.5</span><span class="wh">)</span>
+<span class="wh">axes[</span><span class="nm">1</span><span class="wh">]</span><span class="op">.</span><span class="fn">set_title</span><span class="wh">(</span><span class="st">"Survival Rate: Class × Sex"</span><span class="wh">)</span>
+<span class="wh">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — Survival rate: Class × Sex</div>
+    Sex&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; female&nbsp;&nbsp;&nbsp; male<br>
+    Pclass<br>
+    1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.968&nbsp;&nbsp; 0.369<br>
+    2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.921&nbsp;&nbsp; 0.157<br>
+    3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.500&nbsp;&nbsp; 0.135
+  </div>
+
+  <div class="finding">
+    <div class="finding-text">The interaction between Sex and Pclass is extraordinary. 1st class women had a 96.8% survival rate — nearly guaranteed survival. 3rd class men had only a 13.5% rate. The combined effect of these two variables is far stronger than either alone. This means Sex × Pclass is a powerful engineered feature.</div>
+    <span class="finding-stat">→ Create feature: "Sex_Pclass" = sex + "_" + pclass as a combined categorical feature.</span>
+  </div>
+
+  <h3>Correlation heatmap — all numeric features</h3>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># Full correlation matrix</span>
+<span class="wh">numeric_df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">select_dtypes</span><span class="wh">(include</span><span class="op">=</span><span class="st">"number"</span><span class="wh">)</span>
+<span class="wh">corr</span> <span class="op">=</span> <span class="wh">numeric_df</span><span class="op">.</span><span class="fn">corr</span><span class="wh">()</span>
+
+<span class="wh">plt</span><span class="op">.</span><span class="fn">figure</span><span class="wh">(figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">8</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">))</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">heatmap</span><span class="wh">(corr, annot</span><span class="op">=</span><span class="kw">True</span><span class="wh">, fmt</span><span class="op">=</span><span class="st">".2f"</span><span class="wh">,</span>
+            <span class="wh">cmap</span><span class="op">=</span><span class="st">"coolwarm"</span><span class="wh">, center</span><span class="op">=</span><span class="nm">0</span><span class="wh">,</span>
+            <span class="wh">square</span><span class="op">=</span><span class="kw">True</span><span class="wh">, linewidths</span><span class="op">=</span><span class="nm">0.5</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">title</span><span class="wh">(</span><span class="st">"Titanic — Full Correlation Heatmap"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Features most correlated with Survived</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Correlation with Survived:"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(corr[</span><span class="st">"Survived"</span><span class="wh">]</span>
+      <span class="op">.</span><span class="fn">sort_values</span><span class="wh">()</span>
+      <span class="op">.</span><span class="fn">drop</span><span class="wh">(</span><span class="st">"Survived"</span><span class="wh">)</span>
+      <span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output — Correlation with Survived (sorted)</div>
+    Pclass&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.338&nbsp; ← strongest negative<br>
+    Age&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.070<br>
+    SibSp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.035<br>
+    PassengerId -0.005<br>
+    Parch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.082<br>
+    Fare&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.257&nbsp; ← strongest positive
+  </div>
+
+  <hr>
+
+  <!-- FEATURE ENGINEERING HINTS -->
+  <div class="sec">06 — engineering from EDA</div>
+  <h2>Feature Engineering <em>Insights from EDA</em></h2>
+
+  <p>Good EDA doesn't just describe data — it suggests <strong>new features to create</strong>. Here are the features our Titanic EDA suggests we should engineer before modelling:</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Feature 1: FamilySize ─────────────────────────────</span>
+<span class="cm"># SibSp + Parch + 1 (the passenger themselves)</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"FamilySize"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"SibSp"</span><span class="wh">]</span> <span class="op">+</span> <span class="wh">df[</span><span class="st">"Parch"</span><span class="wh">]</span> <span class="op">+</span> <span class="nm">1</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"IsAlone"</span><span class="wh">]</span>   <span class="op">=</span> <span class="wh">(df[</span><span class="st">"FamilySize"</span><span class="wh">]</span> <span class="op">==</span> <span class="nm">1</span><span class="wh">)</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="fn">int</span><span class="wh">)</span>
+
+<span class="cm"># Check: solo travellers vs group survivors</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"IsAlone"</span><span class="wh">)[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>
+
+<span class="cm"># ── Feature 2: IsChild ────────────────────────────────</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"IsChild"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(df[</span><span class="st">"Age"</span><span class="wh">]</span> <span class="op">&lt;</span> <span class="nm">10</span><span class="wh">)</span><span class="op">.</span><span class="fn">astype</span><span class="wh">(</span><span class="fn">int</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"IsChild"</span><span class="wh">)[</span><span class="st">"Survived"</span><span class="wh">]</span><span class="op">.</span><span class="fn">mean</span><span class="wh">())</span>
+
+<span class="cm"># ── Feature 3: Title from Name ────────────────────────</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Title"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">(df[</span><span class="st">"Name"</span><span class="wh">]</span>
+    <span class="op">.</span><span class="fn">str</span><span class="op">.</span><span class="fn">extract</span><span class="wh">(</span><span class="st">r" ([A-Za-z]+)\."</span><span class="wh">)[</span><span class="nm">0</span><span class="wh">]</span>)</span>
+
+<span class="cm"># Group rare titles</span>
+<span class="wh">rare</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Lady"</span><span class="wh">,</span><span class="st">"Countess"</span><span class="wh">,</span><span class="st">"Capt"</span><span class="wh">,</span><span class="st">"Col"</span><span class="wh">,</span>
+         <span class="st">"Don"</span><span class="wh">,</span><span class="st">"Rev"</span><span class="wh">,</span><span class="st">"Dr"</span><span class="wh">,</span><span class="st">"Major"</span><span class="wh">,</span><span class="st">"Sir"</span><span class="wh">,</span><span class="st">"Jonkheer"</span><span class="wh">]</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Title"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Title"</span><span class="wh">]</span><span class="op">.</span><span class="fn">replace</span><span class="wh">(rare, </span><span class="st">"Rare"</span><span class="wh">)</span>
+<span class="wh">df</span><span class="wh">[</span><span class="st">"Title"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Title"</span><span class="wh">]</span><span class="op">.</span><span class="fn">replace</span><span class="wh">(
+    {</span><span class="st">"Mlle"</span><span class="wh">:</span><span class="st">"Miss"</span><span class="wh">,</span> <span class="st">"Ms"</span><span class="wh">:</span><span class="st">"Miss"</span><span class="wh">,</span> <span class="st">"Mme"</span><span class="wh">:</span><span class="st">"Mrs"</span><span class="wh">})</span>
+
+<span class="fn">print</span><span class="wh">(df</span><span class="op">.</span><span class="fn">groupby</span><span class="wh">(</span><span class="st">"Title"</span><span class="wh">)[</span><span class="st">"Survived"</span><span class="wh">]</span>
+        <span class="op">.</span><span class="fn">agg</span><span class="wh">([</span><span class="st">"mean"</span><span class="wh">,</span><span class="st">"count"</span><span class="wh">])</span>
+        <span class="op">.</span><span class="fn">round</span><span class="wh">(</span><span class="nm">3</span><span class="wh">))</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    IsAlone survival:<br>
+    0 (not alone)&nbsp; 0.506&nbsp; ← groups survived more<br>
+    1 (alone)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.304<br><br>
+    IsChild survival:<br>
+    0 (adult)&nbsp; 0.373<br>
+    1 (child)&nbsp; 0.613&nbsp; ← children survived at 61%!<br><br>
+    Title survival:<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mean&nbsp; count<br>
+    Master&nbsp; 0.575&nbsp;&nbsp;&nbsp; 40<br>
+    Miss&nbsp;&nbsp;&nbsp; 0.702&nbsp;&nbsp; 182<br>
+    Mr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.157&nbsp;&nbsp; 517<br>
+    Mrs&nbsp;&nbsp;&nbsp;&nbsp; 0.792&nbsp;&nbsp; 125<br>
+    Rare&nbsp;&nbsp;&nbsp; 0.348&nbsp;&nbsp;&nbsp; 23
+  </div>
+
+  <div class="callout green">
+    <div class="ct">EDA leads to better features</div>
+    Notice that "Title" extracted from the Name column has a <strong>stronger signal</strong> than raw Sex alone. "Mrs" has 79.2% survival, "Master" (young boys) has 57.5%, "Mr" has only 15.7%. This is a feature we'd never know to create without EDA. The best features often come from <strong>domain understanding combined with data observation</strong> — not from automated feature selection.
+  </div>
+
+  <hr>
+
+  <!-- WRITING UP FINDINGS -->
+  <div class="sec">07 — the EDA report</div>
+  <h2>The Five <em>Key Findings</em></h2>
+
+  <p>Every EDA ends with a written summary. This is where you transform raw numbers into insight — the kind of summary that tells a non-technical person what the data is saying.</p>
+
+  <div class="insight-grid">
+    <div class="insight-cell">
+      <div class="insight-q">What is the overall survival rate?</div>
+      <div class="insight-answer">Only 38% of passengers survived</div>
+      <div class="insight-data">889 passengers total after cleaning. 342 survived. The stark majority — 547 people — did not make it off the ship.</div>
+      <span class="insight-highlight">df["Survived"].mean() = 0.384</span>
+    </div>
+
+    <div class="insight-cell">
+      <div class="insight-q">Which single feature predicts survival best?</div>
+      <div class="insight-answer">Sex is the strongest predictor by far</div>
+      <div class="insight-data">Women survived at 74.2% — nearly 4× the male rate of 18.9%. The protocol "women and children first" is clearly visible in the data.</div>
+      <span class="insight-highlight">Gap: +55.3 percentage points</span>
+    </div>
+
+    <div class="insight-cell">
+      <div class="insight-q">Did wealth affect survival odds?</div>
+      <div class="insight-answer">Dramatically — class was life or death</div>
+      <div class="insight-data">1st class: 63% survival. 2nd class: 47%. 3rd class: 24%. Passengers who paid higher fares (corr +0.257 with survival) had access to better cabin locations and lifeboats.</div>
+      <span class="insight-highlight">1st class 2.6× more likely to survive than 3rd</span>
+    </div>
+
+    <div class="insight-cell">
+      <div class="insight-q">Did travelling alone hurt survival chances?</div>
+      <div class="insight-answer">Yes — solo travellers survived less</div>
+      <div class="insight-data">Passengers travelling alone had a 30.4% survival rate vs 50.6% for those with family. Being in a group meant people helped each other reach lifeboats.</div>
+      <span class="insight-highlight">IsAlone = 1 → survival drops 20 points</span>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-text">The three strongest predictors of Titanic survival are: (1) Sex — female passengers had a 74% rate vs 19% for males. (2) Pclass — 1st class had 63% survival vs 24% for 3rd class. (3) The interaction of Sex × Pclass — 1st class women had a 96.8% survival rate, the highest of any subgroup. These three variables, plus engineered features (FamilySize, IsChild, Title), form the core of a predictive model.</div>
+    <span class="finding-stat">→ Recommended features for modelling: Sex, Pclass, Age, Fare, FamilySize, IsAlone, IsChild, Title</span>
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-h3">Your EDA Assignment — Titanic Case File</div>
+    <ul class="clist">
+      <li>Run the complete setup: load Titanic, clean nulls, import all libraries</li>
+      <li>Univariate: create histograms for all 4 numeric columns in a 2×2 grid with mean lines</li>
+      <li>Univariate: create bar charts for Sex, Pclass, Embarked showing value counts</li>
+      <li>Bivariate: plot survival rate for every categorical feature using sns.barplot</li>
+      <li>Bivariate: create boxplots of Age and Fare grouped by Survived — what do you notice?</li>
+      <li>Multivariate: pivot table of Sex × Pclass survival rates, displayed as a heatmap</li>
+      <li>Feature engineering: create FamilySize, IsAlone, IsChild, and Title columns</li>
+      <li>Write up 5 key findings in Markdown cells — write as if presenting to a non-technical manager</li>
+      <li>Bonus: Find which embarkation port had the highest survival rate and explain why (hint: look at Pclass distribution per port)</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 9 — Data Visualization</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 11 — Intro to Machine Learning</strong></div>
+  </div>
+
+</main>
+</body>
+</html>
