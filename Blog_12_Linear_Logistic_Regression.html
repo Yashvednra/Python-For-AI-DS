@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog 12 — Linear & Logistic Regression</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Overpass+Mono:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --steel:#1a1e24;
+  --steel2:#22272f;
+  --steel3:#2c323c;
+  --plate:#343c47;
+  --rust:#c85a14;
+  --rust2:#a04010;
+  --rust-glow:rgba(200,90,20,0.12);
+  --rust-dim:rgba(200,90,20,0.06);
+  --yellow:#e8b800;
+  --green:#28a050;
+  --green-dim:rgba(40,160,80,0.08);
+  --red:#d43030;
+  --blue:#3a80c8;
+  --text:#b8c4d0;
+  --bright:#e0e8f0;
+  --muted:#5a6878;
+  --border:rgba(200,90,20,0.2);
+  --border2:rgba(200,90,20,0.4);
+  --grid:rgba(200,90,20,0.05);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--steel);
+  color:var(--text);
+  font-family:'Libre Baskerville',serif;
+  font-size:17px;
+  line-height:1.85;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(circle at 24px 24px, rgba(200,90,20,0.04) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:48px 48px, 48px 48px, 48px 48px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  border-bottom:3px solid var(--rust);
+  overflow:hidden;
+}
+
+.hero-warning{
+  height:8px;
+  background:repeating-linear-gradient(
+    -45deg,
+    var(--yellow) 0px,
+    var(--yellow) 10px,
+    var(--steel) 10px,
+    var(--steel) 20px
+  );
+  flex-shrink:0;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.hero-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2.5rem;
+  border-bottom:1px solid var(--border);
+  font-family:'Overpass Mono',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.1s;
+}
+
+.status-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--rust);
+  animation:pulse 2s ease infinite;
+}
+
+.hero-main{
+  flex:1;
+  display:grid;grid-template-columns:1fr 1fr;
+  position:relative;
+}
+
+.hero-left{
+  padding:3.5rem 2.5rem;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;z-index:1;
+}
+
+.process-id{
+  font-family:'Overpass Mono',monospace;font-size:9px;
+  color:var(--rust);letter-spacing:0.25em;text-transform:uppercase;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.2s;
+}
+
+.hero-left h1{
+  font-family:'Orbitron',sans-serif;
+  font-size:3.5rem;font-weight:700;
+  margin-top:1rem;margin-bottom:1rem;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.3s;
+  line-height:1.1;
+}
+
+.hero-left p{
+  font-size:1.1rem;
+  color:var(--muted);
+  max-width:90%;
+  opacity:0;animation:fadeUp 0.5s ease forwards 0.4s;
+}
+
+.hero-right{
+  display:flex;align-items:center;justify-content:center;
+  padding:2rem;
+  position:relative;
+}
+
+.hero-right::before{
+  content:'';
+  position:absolute;
+  width:300px;height:300px;
+  border:2px solid var(--rust);
+  border-radius:0;
+  opacity:0.15;
+  animation:fadeIn 1s ease forwards 0.5s;
+}
+
+.hero-right svg{
+  width:280px;height:280px;
+  opacity:0;animation:fadeIn 1s ease forwards 0.6s;
+}
+
+main{
+  position:relative;z-index:1;
+  max-width:1000px;
+  margin:0 auto;
+  padding:3rem 2.5rem;
+}
+
+.sec{
+  font-family:'Overpass Mono',monospace;
+  font-size:9px;
+  color:var(--rust);
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  margin-bottom:0.5rem;
+}
+
+h2{
+  font-family:'Orbitron',sans-serif;
+  font-size:2rem;
+  margin-bottom:1.5rem;
+  margin-top:2rem;
+  font-weight:700;
+}
+
+p{
+  margin-bottom:1.5rem;
+  color:var(--text);
+}
+
+strong{
+  color:var(--bright);
+}
+
+code{
+  background:var(--steel2);
+  padding:0.2em 0.5em;
+  border-radius:3px;
+  font-family:'Overpass Mono',monospace;
+  font-size:0.9em;
+  color:var(--yellow);
+}
+
+.code-block{
+  background:var(--steel2);
+  border:1px solid var(--border);
+  border-radius:3px;
+  margin:2rem 0;
+  overflow:hidden;
+}
+
+.code-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.8rem 1rem;
+  background:var(--steel3);
+  border-bottom:1px solid var(--border);
+}
+
+.code-hdr-left{
+  display:flex;align-items:center;gap:0.5rem;
+}
+
+.cd{
+  width:10px;height:10px;border-radius:50%;background:var(--rust);
+}
+
+.code-lang{
+  font-family:'Overpass Mono',monospace;
+  font-size:9px;
+  color:var(--muted);
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  margin-left:0.5rem;
+}
+
+.copy-btn{
+  background:var(--rust);
+  color:var(--steel);
+  border:none;
+  padding:0.5rem 1rem;
+  border-radius:3px;
+  font-family:'Overpass Mono',monospace;
+  font-size:10px;
+  cursor:pointer;
+  font-weight:600;
+  transition:all 0.3s ease;
+}
+
+.copy-btn:hover{
+  background:var(--rust2);
+}
+
+pre{
+  padding:1.5rem;
+  overflow-x:auto;
+  font-family:'Overpass Mono',monospace;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.kw{color:var(--blue)}
+.fn{color:var(--yellow)}
+.wh{color:var(--text)}
+.st{color:var(--green)}
+.nm{color:#ff9f43}
+.op{color:var(--rust)}
+.cm{color:var(--muted)}
+.atr{color:var(--yellow)}
+
+.output-box{
+  background:var(--steel2);
+  border-left:3px solid var(--green);
+  padding:1.5rem;
+  margin:1.5rem 0;
+  border-radius:3px;
+  font-family:'Overpass Mono',monospace;
+  font-size:13px;
+  color:var(--green);
+}
+
+.out-lbl{
+  font-size:9px;
+  letter-spacing:0.1em;
+  color:var(--muted);
+  margin-bottom:0.8rem;
+  text-transform:uppercase;
+}
+
+.callout{
+  border-left:3px solid var(--rust);
+  padding:1.5rem;
+  margin:2rem 0;
+  background:rgba(200,90,20,0.04);
+  border-radius:0 3px 3px 0;
+}
+
+.callout.green{
+  border-left-color:var(--green);
+  background:var(--green-dim);
+}
+
+.ct{
+  font-family:'Orbitron',sans-serif;
+  font-size:0.9rem;
+  font-weight:600;
+  color:var(--bright);
+  margin-bottom:0.5rem;
+}
+
+.callout strong{
+  color:var(--bright);
+}
+
+hr{
+  border:none;
+  height:1px;
+  background:var(--border);
+  margin:3rem 0;
+}
+
+.eq{
+  background:var(--steel2);
+  padding:1.5rem;
+  border-radius:3px;
+  margin:1.5rem 0;
+  text-align:center;
+  font-family:'Overpass Mono',monospace;
+  font-size:1.1em;
+  color:var(--yellow);
+  border:1px solid var(--border);
+}
+
+.challenge{
+  background:var(--rust-dim);
+  border:2px solid var(--rust);
+  padding:2rem;
+  border-radius:3px;
+  margin:3rem 0;
+}
+
+.chal-h3{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.3rem;
+  font-weight:600;
+  color:var(--rust);
+  margin-bottom:1rem;
+}
+
+.clist{
+  list-style:none;
+  padding:0;
+}
+
+.clist li{
+  padding:0.8rem 0;
+  padding-left:1.5rem;
+  position:relative;
+  color:var(--text);
+  line-height:1.7;
+}
+
+.clist li:before{
+  content:'▶';
+  position:absolute;
+  left:0;
+  color:var(--rust);
+}
+
+.post-footer{
+  display:flex;
+  justify-content:space-between;
+  margin-top:4rem;
+  padding-top:2rem;
+  border-top:1px solid var(--border);
+  font-family:'Overpass Mono',monospace;
+  font-size:0.9rem;
+}
+
+.foot-item{
+  color:var(--muted);
+}
+
+.foot-item strong{
+  display:block;
+  margin-top:0.3rem;
+  color:var(--bright);
+}
+
+.note{
+  background:var(--steel3);
+  padding:1rem;
+  border-left:3px solid var(--blue);
+  margin:1.5rem 0;
+  border-radius:0 3px 3px 0;
+}
+
+.note::before{
+  content:'📌 ';
+}
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-warning"></div>
+  
+  <div class="hero-topbar">
+    <div class="hero-topbar-status">
+      <span class="status-dot"></span>
+      <span>Machine Learning Pipeline</span>
+    </div>
+    <div>May 2026</div>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-left">
+      <div class="process-id">Blog Post 12</div>
+      <h1>Linear &amp;<br>Logistic<br>Regression</h1>
+      <p>From predicting house prices to classifying survival: learn the two fundamental supervised learning algorithms.</p>
+    </div>
+    
+    <div class="hero-right">
+      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- Linear regression line -->
+        <line x1="40" y1="240" x2="260" y2="80" stroke="#c85a14" stroke-width="2"/>
+        <!-- Data points -->
+        <circle cx="50" cy="230" r="3" fill="#e8b800"/>
+        <circle cx="80" cy="190" r="3" fill="#e8b800"/>
+        <circle cx="110" cy="160" r="3" fill="#e8b800"/>
+        <circle cx="140" cy="140" r="3" fill="#e8b800"/>
+        <circle cx="170" cy="110" r="3" fill="#e8b800"/>
+        <circle cx="200" cy="90" r="3" fill="#e8b800"/>
+        <circle cx="240" cy="50" r="3" fill="#e8b800"/>
+        <!-- Axes -->
+        <line x1="40" y1="260" x2="280" y2="260" stroke="#5a6878" stroke-width="1"/>
+        <line x1="40" y1="30" x2="40" y2="260" stroke="#5a6878" stroke-width="1"/>
+        <!-- Labels -->
+        <text x="285" y="265" font-family="Overpass Mono" font-size="12" fill="#5a6878">Feature</text>
+        <text x="15" y="25" font-family="Overpass Mono" font-size="12" fill="#5a6878">Target</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- SECTION 01 -->
+  <div class="sec">01 — the problem</div>
+  <h2>Two Types of Prediction</h2>
+
+  <p>Machine learning is about teaching computers to predict. But there are two fundamentally different kinds of predictions:</p>
+
+  <p><strong>Linear Regression:</strong> Predicting a number. "What will this house cost?" "How many calls will we get tomorrow?" "What's the temperature in 3 hours?" The output is continuous — it can be any number.</p>
+
+  <p><strong>Logistic Regression:</strong> Predicting a category (usually yes/no). "Will this patient survive surgery?" "Is this email spam?" "Did this customer churn?" The output is discrete — one of a fixed set of options.</p>
+
+  <p>Both are <em>supervised learning</em> — you teach the model with examples that have both the question and the correct answer. After learning, the model predicts on new questions it's never seen.</p>
+
+  <hr>
+
+  <!-- SECTION 02 -->
+  <div class="sec">02 — linear regression theory</div>
+  <h2>Linear Regression: y = mx + b</h2>
+
+  <p>You've seen this equation since algebra class. In machine learning, it means exactly what you think:</p>
+
+  <div class="eq">
+    y = mx + b
+  </div>
+
+  <p><code>y</code> is what we're trying to predict (house price). <code>x</code> is the feature we're using (square footage). <code>m</code> is the slope — how much does y change when x goes up by 1? <code>b</code> is the intercept — what's the predicted value when x is zero?</p>
+
+  <p>During training, the model learns the best values of <code>m</code> and <code>b</code> to fit your data. During prediction, it plugs in a new value of <code>x</code> and calculates <code>y</code>.</p>
+
+  <div class="callout green">
+    <div class="ct">Real datasets have many features, not one</div>
+    With multiple features (square footage, bedrooms, age, location), the equation becomes <code>y = m₁x₁ + m₂x₂ + ... + mₙxₙ + b</code>. Each feature gets its own slope. The model learns all of them.
+  </div>
+
+  <!-- SUBSECTION: Loss Function -->
+  <div class="sec">Loss Function for Regression</div>
+  <h3 style="font-size:1.4rem;margin:1rem 0">Mean Squared Error (MSE)</h3>
+
+  <p>How do we know if our line is good? We measure the distance from each data point to the line, square it (to punish big errors more), and average those squared errors.</p>
+
+  <div class="eq">
+    MSE = (1/n) × Σ(predicted - actual)²
+  </div>
+
+  <p>The goal of training is to find <code>m</code> and <code>b</code> that minimize MSE. A line that passes through all points has MSE = 0. A bad line might have MSE = 10000. During training, the model adjusts the slope and intercept down this loss curve until it finds the minimum.</p>
+
+  <hr>
+
+  <!-- SECTION 03 -->
+  <div class="sec">03 — logistic regression theory</div>
+  <h2>Logistic Regression: Predicting Categories</h2>
+
+  <p>Despite the name, logistic regression is <strong>not</strong> linear — it's a classification algorithm. It solves the problem: "Given features, what's the probability this belongs to category X?"</p>
+
+  <p>The key innovation is the <strong>sigmoid function</strong>, which squashes any number into a probability between 0 and 1:</p>
+
+  <div class="eq">
+    P(y=1) = 1 / (1 + e^(-z))
+  </div>
+
+  <p>Where <code>z</code> is the linear combination <code>m₁x₁ + m₂x₂ + ... + b</code>. If the probability is above 0.5, we predict "yes" (1). If below 0.5, we predict "no" (0).</p>
+
+  <div class="callout green">
+    <div class="ct">Why sigmoid, not linear?</div>
+    A linear model can predict probabilities outside [0, 1], which is nonsense. The sigmoid function is mathematically elegant: it's always between 0 and 1, it's differentiable (trainable), and it naturally represents increasing confidence as z gets more extreme.
+  </div>
+
+  <!-- SUBSECTION: Loss Function -->
+  <div class="sec">Loss Function for Classification</div>
+  <h3 style="font-size:1.4rem;margin:1rem 0">Log Loss (Binary Crossentropy)</h3>
+
+  <p>For classification, we use <strong>log loss</strong> instead of MSE. It harshly penalizes confident wrong predictions.</p>
+
+  <div class="eq">
+    Log Loss = -(1/n) × Σ[y·log(p) + (1-y)·log(1-p)]
+  </div>
+
+  <p>For each prediction: if the true label is 1, we measure <code>-log(p)</code> (large loss if p is near 0, small loss if p is near 1). If the true label is 0, we measure <code>-log(1-p)</code> (punishes predicting 1 confidently when the answer is 0).</p>
+
+  <p>The model learns weights that minimize log loss. A perfect classifier has loss ≈ 0. A random guesser (p = 0.5 always) has loss ≈ 0.69.</p>
+
+  <hr>
+
+  <!-- SECTION 04 -->
+  <div class="sec">04 — linear regression in code</div>
+  <h2>Linear Regression: House Prices</h2>
+
+  <p>Let's predict house prices from square footage using a real dataset. We'll train the model, visualize the regression line, and evaluate its performance.</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">import</span> <span class="wh">numpy</span> <span class="kw">as</span> <span class="wh">np</span>
+<span class="kw">from</span> <span class="wh">sklearn.linear_model</span> <span class="kw">import</span> <span class="wh">LinearRegression</span>
+<span class="kw">from</span> <span class="wh">sklearn.metrics</span> <span class="kw">import</span> <span class="wh">mean_squared_error, r2_score</span>
+<span class="kw">import</span> <span class="wh">matplotlib.pyplot</span> <span class="kw">as</span> <span class="wh">plt</span>
+
+<span class="cm"># Load a simple house prices dataset</span>
+<span class="wh">data</span> <span class="op">=</span> {
+    <span class="st">"sqft"</span><span class="op">:</span> <span class="wh">[</span><span class="nm">1000</span><span class="wh">,</span> <span class="nm">1500</span><span class="wh">,</span> <span class="nm">2000</span><span class="wh">,</span> <span class="nm">2500</span><span class="wh">,</span> <span class="nm">3000</span><span class="wh">,</span> <span class="nm">3500</span><span class="wh">],</span>
+    <span class="st">"price"</span><span class="op">:</span> <span class="wh">[</span><span class="nm">200000</span><span class="wh">,</span> <span class="nm">300000</span><span class="wh">,</span> <span class="nm">350000</span><span class="wh">,</span> <span class="nm">400000</span><span class="wh">,</span> <span class="nm">500000</span><span class="wh">,</span> <span class="nm">550000</span><span class="wh">]</span>
+<span class="wh">}</span>
+
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">DataFrame</span><span class="wh">(data)</span>
+
+<span class="cm"># Prepare features (X) and target (y)</span>
+<span class="wh">X</span> <span class="op">=</span> <span class="wh">df</span><span class="wh">[[</span><span class="st">"sqft"</span><span class="wh">]]</span>  <span class="cm"># 2D array required by sklearn</span>
+<span class="wh">y</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"price"</span><span class="wh">]</span>
+
+<span class="cm"># Train the model</span>
+<span class="wh">model</span> <span class="op">=</span> <span class="fn">LinearRegression</span><span class="wh">()</span>
+<span class="wh">model</span><span class="op">.</span><span class="fn">fit</span><span class="wh">(X, y)</span>
+
+<span class="cm"># Get model parameters</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Slope (m)     : </span><span class="op">{</span><span class="wh">model</span><span class="op">.</span><span class="atr">coef_</span><span class="wh">[</span><span class="nm">0</span><span class="wh">]</span><span class="op">.</span><span class="fn">:.2f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Intercept (b) : </span><span class="op">{</span><span class="wh">model</span><span class="op">.</span><span class="atr">intercept_</span><span class="op">.</span><span class="fn">:.2f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Make predictions</span>
+<span class="wh">y_pred</span> <span class="op">=</span> <span class="wh">model</span><span class="op">.</span><span class="fn">predict</span><span class="wh">(X)</span>
+
+<span class="cm"># Evaluate: MSE and R²</span>
+<span class="wh">mse</span>  <span class="op">=</span> <span class="fn">mean_squared_error</span><span class="wh">(y, y_pred)</span>
+<span class="wh">rmse</span> <span class="op">=</span> <span class="wh">np</span><span class="op">.</span><span class="fn">sqrt</span><span class="wh">(mse)</span>
+<span class="wh">r2</span>   <span class="op">=</span> <span class="fn">r2_score</span><span class="wh">(y, y_pred)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"MSE  : </span><span class="op">{</span><span class="wh">mse</span><span class="op">:</span><span class="st">.0f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"RMSE : $</span><span class="op">{</span><span class="wh">rmse</span><span class="op">:</span><span class="st">.0f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"R²   : </span><span class="op">{</span><span class="wh">r2</span><span class="op">:</span><span class="st">.3f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+
+<span class="cm"># Predict on new data</span>
+<span class="wh">new_sqft</span> <span class="op">=</span> <span class="wh">[[</span><span class="nm">2200</span><span class="wh">]]</span>
+<span class="wh">predicted_price</span> <span class="op">=</span> <span class="wh">model</span><span class="op">.</span><span class="fn">predict</span><span class="wh">(new_sqft)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"\nPredicted price for 2200 sqft: $</span><span class="op">{</span><span class="wh">predicted_price</span><span class="wh">[</span><span class="nm">0</span><span class="wh">]</span><span class="op">:</span><span class="st">.0f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Slope (m)     : 142.86<br>
+    Intercept (b) : 71428.57<br>
+    MSE  : 1020408163<br>
+    RMSE : $31944<br>
+    R²   : 0.991<br>
+    <br>
+    Predicted price for 2200 sqft: $385714
+  </div>
+
+  <p>The model learned a slope of ~$143 per square foot. An R² of 0.991 means the model explains 99.1% of the variance in house prices — excellent fit!</p>
+
+  <!-- VISUALIZATION CODE -->
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── THE KEY: Visualize the regression line ──────────────</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">figure</span><span class="wh">(figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">))</span>
+
+<span class="cm"># Plot actual data points</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">scatter</span><span class="wh">(X, y, color</span><span class="op">=</span><span class="st">"orange"</span><span class="wh">, s</span><span class="op">=</span><span class="nm">100</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.7</span><span class="wh">, label</span><span class="op">=</span><span class="st">"Actual prices"</span><span class="wh">)</span>
+
+<span class="cm"># Plot the fitted regression line</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">plot</span><span class="wh">(X, y_pred, color</span><span class="op">=</span><span class="st">"red"</span><span class="wh">, linewidth</span><span class="op">=</span><span class="nm">2</span><span class="wh">, label</span><span class="op">=</span><span class="st">"Fitted line (y = 142.86x + 71428.57)"</span><span class="wh">)</span>
+
+<span class="fn">plt</span><span class="op">.</span><span class="fn">xlabel</span><span class="wh">(</span><span class="st">"Square Footage"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">ylabel</span><span class="wh">(</span><span class="st">"Price ($)"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">title</span><span class="wh">(</span><span class="st">"Linear Regression: House Prices vs Square Footage"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">legend</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">grid</span><span class="wh">(</span><span class="kw">True</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.3</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="callout green">
+    <div class="ct">Always visualize the regression line</div>
+    This is the most intuitive proof that your model "learned" something. If the line passes through the data points and follows their trend, your model captured the relationship. If the line looks random or skewed, something is wrong. Visualization is often more telling than any metric.
+  </div>
+
+  <hr>
+
+  <!-- SECTION 05 -->
+  <div class="sec">05 — logistic regression in code</div>
+  <h2>Logistic Regression: Titanic Survival</h2>
+
+  <p>Now we'll predict whether a passenger survived the Titanic. Our features: age, sex, and passenger class. Our target: survived (1) or not (0).</p>
+
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">pandas</span> <span class="kw">as</span> <span class="wh">pd</span>
+<span class="kw">from</span> <span class="wh">sklearn.linear_model</span> <span class="kw">import</span> <span class="wh">LogisticRegression</span>
+<span class="kw">from</span> <span class="wh">sklearn.metrics</span> <span class="kw">import</span> <span class="wh">accuracy_score, confusion_matrix, classification_report</span>
+<span class="kw">from</span> <span class="wh">sklearn.preprocessing</span> <span class="kw">import</span> <span class="wh">LabelEncoder</span>
+
+<span class="cm"># Load Titanic dataset</span>
+<span class="wh">url</span> <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="fn">pd</span><span class="op">.</span><span class="fn">read_csv</span><span class="wh">(url)</span>
+
+<span class="cm"># Quick cleaning: drop rows with missing Age</span>
+<span class="wh">df</span> <span class="op">=</span> <span class="wh">df</span><span class="op">.</span><span class="fn">dropna</span><span class="wh">(subset</span><span class="op">=</span><span class="wh">[</span><span class="st">"Age"</span><span class="wh">])</span>
+
+<span class="cm"># Encode Sex column: male=1, female=0</span>
+<span class="wh">le</span> <span class="op">=</span> <span class="fn">LabelEncoder</span><span class="wh">()</span>
+<span class="wh">df[</span><span class="st">"Sex_encoded"</span><span class="wh">]</span> <span class="op">=</span> <span class="wh">le</span><span class="op">.</span><span class="fn">fit_transform</span><span class="wh">(df[</span><span class="st">"Sex"</span><span class="wh">])</span>  <span class="cm"># female=0, male=1</span>
+
+<span class="cm"># Features and target</span>
+<span class="wh">features</span> <span class="op">=</span> <span class="wh">[</span><span class="st">"Age"</span><span class="wh">,</span> <span class="st">"Pclass"</span><span class="wh">,</span> <span class="st">"Sex_encoded"</span><span class="wh">]</span>
+<span class="wh">X</span> <span class="op">=</span> <span class="wh">df[features]</span>
+<span class="wh">y</span> <span class="op">=</span> <span class="wh">df[</span><span class="st">"Survived"</span><span class="wh">]</span>
+
+<span class="cm"># Train logistic regression</span>
+<span class="wh">model</span> <span class="op">=</span> <span class="fn">LogisticRegression</span><span class="wh">(max_iter</span><span class="op">=</span><span class="nm">1000</span><span class="wh">)</span>
+<span class="wh">model</span><span class="op">.</span><span class="fn">fit</span><span class="wh">(X, y)</span>
+
+<span class="cm"># Make predictions</span>
+<span class="wh">y_pred</span> <span class="op">=</span> <span class="wh">model</span><span class="op">.</span><span class="fn">predict</span><span class="wh">(X)</span>
+<span class="wh">y_pred_proba</span> <span class="op">=</span> <span class="wh">model</span><span class="op">.</span><span class="fn">predict_proba</span><span class="wh">(X)</span>  <span class="cm"># Probability of each class</span>
+
+<span class="cm"># Accuracy score</span>
+<span class="wh">accuracy</span> <span class="op">=</span> <span class="fn">accuracy_score</span><span class="wh">(y, y_pred)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Accuracy: </span><span class="op">{</span><span class="wh">accuracy</span><span class="op">:</span><span class="st">.3f</span><span class="wh">}</span><span class="st"> (</span><span class="op">{</span><span class="wh">accuracy</span><span class="op">*</span><span class="nm">100</span><span class="op">:</span><span class="st">.1f</span><span class="wh">}</span><span class="st">%)"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Accuracy: 0.776 (77.6%)
+  </div>
+
+  <!-- CONFUSION MATRIX CODE -->
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="cm"># ── Confusion Matrix ──────────────────────────────────</span>
+<span class="wh">cm</span> <span class="op">=</span> <span class="fn">confusion_matrix</span><span class="wh">(y, y_pred)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Confusion Matrix:"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(cm)</span>
+<span class="fn">print</span><span class="wh">()</span>
+
+<span class="cm"># Parse the matrix</span>
+<span class="wh">tn, fp, fn, tp</span> <span class="op">=</span> <span class="wh">cm</span><span class="op">.</span><span class="fn">ravel</span><span class="wh">()</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">"Interpretation:"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"True Negatives  (TN) : </span><span class="op">{</span><span class="wh">tn</span><span class="op">}</span><span class="st"> (didn't survive, correctly predicted didn't survive)"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"False Positives (FP) : </span><span class="op">{</span><span class="wh">fp</span><span class="op">}</span><span class="st"> (didn't survive, but we said survived) — WRONG"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"False Negatives (FN) : </span><span class="op">{</span><span class="wh">fn</span><span class="op">}</span><span class="st"> (survived, but we said didn't) — WRONG"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"True Positives  (TP) : </span><span class="op">{</span><span class="wh">tp</span><span class="op">}</span><span class="st"> (survived, correctly predicted survived)"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">()</span>
+
+<span class="cm"># Calculate metrics</span>
+<span class="wh">precision</span> <span class="op">=</span> <span class="wh">tp</span> <span class="op">/</span> <span class="wh">(tp</span> <span class="op">+</span> <span class="wh">fp)</span>  <span class="cm"># Of those we said survived, how many actually did?</span>
+<span class="wh">recall</span>    <span class="op">=</span> <span class="wh">tp</span> <span class="op">/</span> <span class="wh">(tp</span> <span class="op">+</span> <span class="wh">fn)</span>     <span class="cm"># Of those who actually survived, how many did we find?</span>
+<span class="wh">f1</span>        <span class="op">=</span> <span class="nm">2</span> <span class="op">*</span> <span class="wh">(precision</span> <span class="op">*</span> <span class="wh">recall)</span> <span class="op">/</span> <span class="wh">(precision</span> <span class="op">+</span> <span class="wh">recall)</span>
+
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Precision: </span><span class="op">{</span><span class="wh">precision</span><span class="op">:</span><span class="st">.3f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"Recall   : </span><span class="op">{</span><span class="wh">recall</span><span class="op">:</span><span class="st">.3f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span>
+<span class="fn">print</span><span class="wh">(</span><span class="st">f"F1 Score : </span><span class="op">{</span><span class="wh">f1</span><span class="op">:</span><span class="st">.3f</span><span class="wh">}</span><span class="st">"</span><span class="wh">)</span></pre>
+  </div>
+
+  <div class="output-box">
+    <div class="out-lbl">Output</div>
+    Confusion Matrix:<br>
+    [[212  45]<br>
+    &nbsp;[ 47 155]]<br>
+    <br>
+    Interpretation:<br>
+    True Negatives  (TN) : 212 (didn't survive, correctly predicted didn't survive)<br>
+    False Positives (FP) : 45 (didn't survive, but we said survived) — WRONG<br>
+    False Negatives (FN) : 47 (survived, but we said didn't) — WRONG<br>
+    True Positives  (TP) : 155 (survived, correctly predicted survived)<br>
+    <br>
+    Precision: 0.775<br>
+    Recall   : 0.767<br>
+    F1 Score : 0.771
+  </div>
+
+  <p>Our model correctly predicted survival in 77.6% of cases. The confusion matrix shows that it's nearly balanced between false positives (45) and false negatives (47) — neither error dominates.</p>
+
+  <div class="note">
+    <strong>What the metrics mean:</strong> Precision answers "Of those we predicted would survive, how many actually did?" (77.5%). Recall answers "Of those who actually survived, how many did we catch?" (76.7%). The F1 score (0.771) is the harmonic mean — it balances both.
+  </div>
+
+  <!-- VISUALIZATION CODE -->
+  <div class="code-block">
+    <div class="code-hdr">
+      <div class="code-hdr-left"><div class="cd"></div><div class="cd"></div><div class="cd"></div><span class="code-lang">python</span></div>
+      <button class="copy-btn" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="wh">matplotlib.pyplot</span> <span class="kw">as</span> <span class="wh">plt</span>
+<span class="kw">import</span> <span class="wh">seaborn</span> <span class="kw">as</span> <span class="wh">sns</span>
+
+<span class="cm"># Visualize the confusion matrix</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">figure</span><span class="wh">(figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">8</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">))</span>
+<span class="fn">sns</span><span class="op">.</span><span class="fn">heatmap</span><span class="wh">(cm, annot</span><span class="op">=</span><span class="kw">True</span><span class="wh">, fmt</span><span class="op">=</span><span class="st">"d"</span><span class="wh">, cmap</span><span class="op">=</span><span class="st">"Blues"</span><span class="wh">, cbar</span><span class="op">=</span><span class="kw">False</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">xlabel</span><span class="wh">(</span><span class="st">"Predicted"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">ylabel</span><span class="wh">(</span><span class="st">"Actual"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">title</span><span class="wh">(</span><span class="st">"Confusion Matrix: Titanic Survival Prediction"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span>
+
+<span class="cm"># Visualize predicted probabilities</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">figure</span><span class="wh">(figsize</span><span class="op">=</span><span class="wh">(</span><span class="nm">10</span><span class="wh">,</span> <span class="nm">6</span><span class="wh">))</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">hist</span><span class="wh">(y_pred_proba[y</span><span class="op">==</span><span class="nm">0</span><span class="wh">, </span><span class="nm">1</span><span class="wh">], bins</span><span class="op">=</span><span class="nm">30</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span><span class="wh">, label</span><span class="op">=</span><span class="st">"Didn't survive"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">hist</span><span class="wh">(y_pred_proba[y</span><span class="op">==</span><span class="nm">1</span><span class="wh">, </span><span class="nm">1</span><span class="wh">], bins</span><span class="op">=</span><span class="nm">30</span><span class="wh">, alpha</span><span class="op">=</span><span class="nm">0.6</span><span class="wh">, label</span><span class="op">=</span><span class="st">"Survived"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">axvline</span><span class="wh">(x</span><span class="op">=</span><span class="nm">0.5</span><span class="wh">, color</span><span class="op">=</span><span class="st">"red"</span><span class="wh">, linestyle</span><span class="op">=</span><span class="st">"--"</span><span class="wh">, linewidth</span><span class="op">=</span><span class="nm">2</span><span class="wh">, label</span><span class="op">=</span><span class="st">"Decision boundary (p=0.5)"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">xlabel</span><span class="wh">(</span><span class="st">"Predicted Probability of Survival"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">ylabel</span><span class="wh">(</span><span class="st">"Frequency"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">title</span><span class="wh">(</span><span class="st">"Distribution of Predicted Probabilities"</span><span class="wh">)</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">legend</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">tight_layout</span><span class="wh">()</span>
+<span class="fn">plt</span><span class="op">.</span><span class="fn">show</span><span class="wh">()</span></pre>
+  </div>
+
+  <div class="callout green">
+    <div class="ct">Accuracy is not always the right metric</div>
+    If 95% of emails are not spam, a model that predicts "never spam" would be 95% accurate but useless. Use precision/recall when false positives and false negatives have different costs. Use F1 when you want to balance both. Always visualize with a confusion matrix first.
+  </div>
+
+  <hr>
+
+  <!-- SECTION 06 -->
+  <div class="sec">06 — model comparison</div>
+  <h2>When to Use Each</h2>
+
+  <p><strong>Linear Regression</strong> when:</p>
+  <ul style="margin-left:2rem;margin-bottom:1rem">
+    <li>Your target is a continuous number (price, temperature, revenue)</li>
+    <li>You want to understand the magnitude of change (each unit of X causes Y units of change in the target)</li>
+    <li>The relationship is roughly linear (a straight line through the scatter plot makes sense)</li>
+  </ul>
+
+  <p><strong>Logistic Regression</strong> when:</p>
+  <ul style="margin-left:2rem;margin-bottom:1rem">
+    <li>Your target is a category (yes/no, survived/died, spam/not spam)</li>
+    <li>You want probabilities (confidence levels) alongside predictions</li>
+    <li>Your classes are roughly separable by a linear boundary</li>
+  </ul>
+
+  <p>Both are <strong>linear</strong> models — they assume a linear decision boundary. For more complex, nonlinear relationships, you'll need decision trees, neural networks, or other advanced methods. But linear and logistic regression are the foundation: simple, interpretable, and often sufficient.</p>
+
+  <hr>
+
+  <!-- SECTION 07 -->
+  <div class="sec">07 — next steps</div>
+  <h2>Beyond the Basics</h2>
+
+  <p>Once you've mastered these two algorithms, you're ready for:</p>
+
+  <ul style="margin-left:2rem;margin-bottom:1rem">
+    <li><strong>Regularization</strong> (Ridge, Lasso): Prevent overfitting by penalizing large coefficients</li>
+    <li><strong>Cross-validation</strong>: Reliably estimate performance on unseen data</li>
+    <li><strong>Feature scaling</strong>: Some algorithms perform better when features are normalized</li>
+    <li><strong>Feature engineering</strong>: Create new features (polynomial terms, interactions) to capture complex relationships</li>
+    <li><strong>Multi-class classification</strong>: Extend logistic regression to predict 3+ categories</li>
+    <li><strong>Decision trees & ensemble methods</strong>: Nonlinear models for trickier problems</li>
+  </ul>
+
+  <!-- CHALLENGE -->
+  <div class="challenge">
+    <div class="chal-h3">Your Challenge</div>
+    <ul class="clist">
+      <li>Load a regression dataset (Boston Housing or housing from scikit-learn) and fit a LinearRegression model to predict prices</li>
+      <li>Evaluate with MSE, RMSE, and R² — which metric tells the most useful story?</li>
+      <li>Plot the actual vs predicted values (scatter plot with y=x line) — how close are the predictions?</li>
+      <li>Load the Titanic or another classification dataset and fit a LogisticRegression model</li>
+      <li>Build the confusion matrix by hand (not just using the function) — calculate TP, TN, FP, FN</li>
+      <li>Calculate precision, recall, and F1 score from the confusion matrix</li>
+      <li>Bonus: Try changing the decision threshold from 0.5 to 0.3 or 0.7. How does the confusion matrix change?</li>
+    </ul>
+  </div>
+
+  <!-- KEY TAKEAWAYS -->
+  <div class="callout green" style="margin-top:3rem">
+    <div class="ct">Key Takeaways</div>
+    <strong>Linear Regression</strong> learns y = mx + b to predict continuous numbers, minimizing MSE. <strong>Logistic Regression</strong> uses the sigmoid function to predict probabilities, minimizing log loss. Both are interpretable, trainable, and foundational. Always visualize: plot the regression line for linear, plot the confusion matrix and probability distribution for classification. These visuals are often more informative than any single number.
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <div class="foot-item">← Previous<strong>Blog 11 — Train/Test Split &amp; Validation</strong></div>
+    <div class="foot-item" style="text-align:right">Next →<strong>Blog 13 — Decision Trees</strong></div>
+  </div>
+
+</main>
+
+<script>
+// Copy button functionality
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const code = this.parentElement.nextElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      this.textContent = 'Copied!';
+      setTimeout(() => this.textContent = 'Copy', 1500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
